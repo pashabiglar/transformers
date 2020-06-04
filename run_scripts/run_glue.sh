@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 export GLUE_DIR="/Users/mordor/research/huggingface/src/transformers/data/datasets/MNLI"
-export TASK_NAME=SNLI
+export TASK_NAME=MNLI
 
 python ../examples/text-classification/run_glue.py \
     --model_name_or_path bert-base-uncased \
