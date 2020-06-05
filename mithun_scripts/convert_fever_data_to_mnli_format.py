@@ -1,8 +1,8 @@
 import pandas as pd
 import csv
 
-input_filepath="/Users/mordor/research/huggingface/src/transformers/data/datasets/FEVER/train.tsv"
-output_filepath="/Users/mordor/research/huggingface/src/transformers/data/datasets/FEVER/train_mnli.tsv"
+input_filepath="/Users/mordor/research/huggingface/src/transformers/data/datasets/FeverInDomain/dev_sandeep_bert_format.tsv"
+output_filepath="/Users/mordor/research/huggingface/src/transformers/data/datasets/FeverInDomain/dev_mnli_format.tsv"
 
 def reader(input_filepath):
     with open(input_filepath,"r",encoding="utf-8-sig") as filepath:

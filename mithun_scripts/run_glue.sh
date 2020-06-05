@@ -22,3 +22,6 @@ python ../examples/text-classification/run_glue.py \
 
 #mnlI version for edit configurations in pycharm
 # --model_name_or_path bert-base-uncased     --task_name MNLI      --do_train     --do_eval      --data_dir /Users/mordor/research/huggingface/src/transformers/data/datasets/MNLI/      --max_seq_length 128      --per_device_eval_batch_size=8        --per_device_train_batch_size=8        --learning_rate 2e-5      --num_train_epochs 1.0      --output_dir /tmp/MNLI/
+
+#run parameters for feverindomain
+# --model_name_or_path bert-base-uncased     --task_name feverindomain      --do_train     --do_eval      --data_dir /Users/mordor/research/huggingface/src/transformers/data/datasets/feverindomain/      --max_seq_length 128      --per_device_eval_batch_size=8        --per_device_train_batch_size=8        --learning_rate 2e-5      --num_train_epochs 1.0      --output_dir /tmp/feverindomain/
