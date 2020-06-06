@@ -34,8 +34,7 @@ def writer(data,file_path):
 
 args = parse_commandline_args()
 if not (os.path.exists(args.file_path)):
-    raise ValueError(
-        f"input file ({args.file_path}) doesn't exist")
+    raise ValueError("input file ({args.file_path}) doesn't exist")
 
 read_data=reader(args.file_path)
 write_data=writer(read_data,args.file_path)
