@@ -12,7 +12,7 @@
 ### Leading 0's can be omitted e.g 48:0:0 sets 48 hours
 #PBS -l cput=1344:00:00
 ### Walltime is how long your job will run
-#PBS -l walltime=1:00:00
+#PBS -l walltime=48:00:00
 #PBS -oe /home/u11/mithunpaul/xdisk/huggingface/hpc_errors_outputs/
 
 #####module load cuda80/neuralnet/6/6.0
@@ -21,12 +21,6 @@ module load singularity/2/2.6.1
 
 cd $PBS_O_WORKDIR
 
-export MODEL_DIR=/xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/BERT_QA/bert_latest/BERT_base_uncased
-export GLUE_DIR=/xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/bert_input_files/FNC/in-domain/lex
-export OUT_DIR=/xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/pretrained_bert_output_models/FEVER/cross-domain/lex/lex-64/e-5
-
-export TRAINED_MODEL=/xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/bert_output_models/FEVER/cross-domain/lex/lex-64/e-5
-export OUT_DIR_2=/xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/bert_output_models/FEVER/cross-domain/train-fever-test-fnc/lex/seq-64/e-5/test
 #train
-#eval
-singularity run --nv /xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/ocelote_BERT_singularity.img /xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/BERT_QA/bert_latest/bert/run_classifier_ARC_DETAILED_sandeep.py --task_name=fevercd --do_predict=true --data_dir=$GLUE_DIR --vocab_file=$MODEL_DIR/vocab.txt --bert_config_file=$MODEL_DIR/bert_config.json --init_checkpoint=$TRAINED_MODEL --max_seq_length=64 --output_dir=$OUT_DIR_2 --do_lower_case=true
+#singularity run --nv /xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/ocelote_BERT_singularity.img /xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/BERT_QA/bert_latest/bert/run_classifier_ARC_DETAILED_sandeep.py --task_name=fevercd --do_predict=true --data_dir=$GLUE_DIR --vocab_file=$MODEL_DIR/vocab.txt --bert_config_file=$MODEL_DIR/bert_config.json --init_checkpoint=$TRAINED_MODEL --max_seq_length=64 --output_dir=$OUT_DIR_2 --do_lower_case=true
+singularity run --nv /xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/ocelote_BERT_singularity.img /home/u11/mithunpaul/xdisk/huggingface/transformers/mithun_scripts/run_all.sh
