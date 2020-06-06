@@ -27,8 +27,8 @@ export PYTHONPATH="/home/u11/mithunpaul/xdisk/huggingface/transformers/src/"
 export GLUE_DIR="/home/u11/mithunpaul/xdisk/huggingface/transformers/src/transformers/data/datasets/fever/feverindomain/lex/"
 export TASK_NAME=feverindomain
 
-singularity run --nv /xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/ocelote_BERT_singularity.img /xdisk/msurdeanu/mithunpaul/huggingface/transformers/mithun_scripts/install_stuff.sh
-singularity run --nv /xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/ocelote_BERT_singularity.img /xdisk/msurdeanu/mithunpaul/huggingface/transformers/examples/text-classification/run_glue.py --model_name_or_path bert-base-uncased     --task_name $TASK_NAME      --do_train     --do_eval      --data_dir $GLUE_DIR    --max_seq_length 128      --per_device_eval_batch_size=8        --per_device_train_batch_size=8        --learning_rate 2e-5      --num_train_epochs 5.0      --output_dir /tmp/$TASK_NAME --overwrite_output_dir
+singularity exec --nv  /xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/ocelote_BERT_singularity.img bash /xdisk/msurdeanu/mithunpaul/huggingface/transformers/mithun_scripts/install_stuff.sh
+singularity exec --nv /xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/ocelote_BERT_singularity.img python /xdisk/msurdeanu/mithunpaul/huggingface/transformers/examples/text-classification/run_glue.py --model_name_or_path bert-base-uncased     --task_name $TASK_NAME      --do_train     --do_eval      --data_dir $GLUE_DIR    --max_seq_length 128      --per_device_eval_batch_size=8        --per_device_train_batch_size=8        --learning_rate 2e-5      --num_train_epochs 5.0      --output_dir /tmp/$TASK_NAME --overwrite_output_dir
 
 
 
