@@ -13,8 +13,9 @@ python ../examples/text-classification/run_glue.py \
     --per_device_train_batch_size=8   \
     --learning_rate 2e-5 \
     --num_train_epochs 3.0 \
-    --output_dir /tmp/$TASK_NAME
-    --cache_dir /tmp/cache/$TASK_NAME
+    --output_dir /tmp/$TASK_NAME \
+    --cache_dir /tmp/cache/$TASK_NAME \
+    --overwrite_output_dir \
 
 
 
