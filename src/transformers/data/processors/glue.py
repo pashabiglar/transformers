@@ -600,7 +600,7 @@ class WnliProcessor(DataProcessor):
             examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
 
-
+print("just before ppicking labels in processors")
 glue_tasks_num_labels = {
     "cola": 2,
     "mnli": 3,
@@ -611,7 +611,7 @@ glue_tasks_num_labels = {
     "qnli": 2,
     "rte": 2,
     "wnli": 2,
-    "feverindomain": 3,
+    "feverindomain": 3
 }
 
 glue_processors = {

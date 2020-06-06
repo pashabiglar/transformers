@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-export GLUE_DIR="/Users/mordor/research/huggingface/src/transformers/data/datasets/fever/feverindomain/lex/"
+
+#change these to corresponding locations
+export PYTHONPATH="../src/"
+export GLUE_DIR="../src/transformers/data/datasets/fever/feverindomain/lex/"
 export TASK_NAME=feverindomain
 
 #python ../examples/text-classification/run_glue.py \
