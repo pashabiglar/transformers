@@ -24,4 +24,4 @@ cd $PBS_O_WORKDIR
 
 #train
 #singularity run --nv /xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/ocelote_BERT_singularity.img /xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/BERT_QA/bert_latest/bert/run_classifier_ARC_DETAILED_sandeep.py --task_name=fevercd --do_predict=true --data_dir=$GLUE_DIR --vocab_file=$MODEL_DIR/vocab.txt --bert_config_file=$MODEL_DIR/bert_config.json --init_checkpoint=$TRAINED_MODEL --max_seq_length=64 --output_dir=$OUT_DIR_2 --do_lower_case=true
-singularity run --nv /xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/ocelote_BERT_singularity.img /home/u11/mithunpaul/xdisk/huggingface/transformers/mithun_scripts/run_all.sh
+singularity run --nv /xdisk/msurdeanu/mithunpaul/BERT_REPLICATION/ocelote_BERT_singularity.img /home/u11/mithunpaul/xdisk/huggingface/transformers/mithun_scripts/run_all_hpc.sh
