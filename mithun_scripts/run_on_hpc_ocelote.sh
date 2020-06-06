@@ -13,7 +13,8 @@
 #PBS -l cput=1344:00:00
 ### Walltime is how long your job will run
 #PBS -l walltime=48:00:00
-#PBS -oe /home/u11/mithunpaul/xdisk/huggingface/hpc_errors_outputs/
+#PBS -e /home/u11/mithunpaul/xdisk/huggingface/hpc_errors_outputs/
+#PBS -o /home/u11/mithunpaul/xdisk/huggingface/hpc_errors_outputs/
 
 #####module load cuda80/neuralnet/6/6.0
 #####module load cuda80/toolkit/8.0.61
