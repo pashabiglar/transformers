@@ -611,7 +611,7 @@ glue_tasks_num_labels = {
     "qnli": 2,
     "rte": 2,
     "wnli": 2,
-    "feverindomain": 4,
+    "feverindomain": 3,
 }
 
 glue_processors = {

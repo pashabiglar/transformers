@@ -5,7 +5,7 @@ export BASE_DATA_DIR="../src/transformers/data/datasets/"
 
 cd $BASE_DATA_DIR
 #comment this folder removal only if you are sure that the data you have is in fever tsv format. else its better to remove and download data fresh.
-#rm -rf fever
+rm -rf fever
 
 #pick according to which kind of dataset you want to use for  train, dev, test on. Eg: train on fever, test on fnc
 
