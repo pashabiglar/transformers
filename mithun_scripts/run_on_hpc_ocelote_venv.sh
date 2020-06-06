@@ -22,12 +22,13 @@ source my_virtual_env/bin/activate
 
 pip install --upgrade pip
 #pip install torch==1.5.0+cu92 torchvision==0.6.0+cu92 -f https://download.pytorch.org/whl/torch_stable.html
-pip install -r requirements.txt
+
 
 
 
 #####my code part
 cd /xdisk/msurdeanu/mithunpaul/huggingface/transformers/mithun_scripts/
+pip install -r /xdisk/msurdeanu/mithunpaul/huggingface/transformers/examples/requirements.txt
 export PYTHONPATH="/xdisk/msurdeanu/mithunpaul/huggingface//transformers/src/"
 
 
