@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-export BASE_DATA_DIR="../src/transformers/data/datasets/"
+export BASE_DATA_DIR="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/data/datasets/"
 
 cd $BASE_DATA_DIR
 #comment this folder removal only if you are sure that the data you have is in fever tsv format. else its better to remove and download data fresh.

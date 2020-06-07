@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-bert_format_base_folder_path="../src/transformers/data/datasets/fever"
+bert_format_base_folder_path="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/data/datasets/fever"
 
 
 for complete_path in $(find $bert_format_base_folder_path -name '*.tsv');
