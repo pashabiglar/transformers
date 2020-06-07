@@ -65,16 +65,16 @@ def main():
     # See all possible arguments in src/transformers/training_args.py
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
-    print("reaching here1")
+
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
-    print("reaching here2")
+
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
         # let's parse it to get our arguments.
         model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
-    print("reaching here3")
+
     if (
         os.path.exists(training_args.output_dir)
         and os.listdir(training_args.output_dir)
@@ -84,7 +84,7 @@ def main():
         raise ValueError(
             f"Output directory ({training_args.output_dir}) already exists and is not empty. Use --overwrite_output_dir to overcome."
         )
-    print("reaching here4")
+
     # Setup logging
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
@@ -105,14 +105,9 @@ def main():
     set_seed(training_args.seed)
 
     try:
-        print("reaching here4.5")
-        print(data_args.task_name)
+
         num_labels = glue_tasks_num_labels[data_args.task_name]
-        print("reaching here5")
-        print(num_labels)
         output_mode = glue_output_modes[data_args.task_name]
-        print("reaching here6")
-        print(output_mode)
 
     except KeyError:
         raise ValueError("Task not found: %s" % (data_args.task_name))

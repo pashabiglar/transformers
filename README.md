@@ -32,6 +32,9 @@ However instead of MNLI we feed in [FEVER](https://fever.ai/2018/task.html) and 
 - source activate huggingface
 - pip install -r `./examples/requirements.txt` 
 - cd `mithun_scripts/`
+- make sure parameters in `./run_glue.sh` points to what you want. 
+   - e.g: $TASK_NAME= fevercrossdomain
+    - epochs=5.0
 - ./run_all.sh
 
 
