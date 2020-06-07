@@ -7,7 +7,7 @@
 #PBS -o /home/u11/mithunpaul/xdisk/huggingface/hpc_errors_outputs/
 
 
-cd /home/u11/mithunpaul/
+cd /xdisk/msurdeanu/mithunpaul/
 module load cuda90/neuralnet/7/7.3.1.20
 module load python/3.6/3.6.5
 

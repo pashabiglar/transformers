@@ -52,6 +52,6 @@ FILE=fever/fevercrossdomain/lex/test.tsv
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/dev.tsv -O $FILE
+    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/lex/dev.tsv -O $FILE
 fi
 
