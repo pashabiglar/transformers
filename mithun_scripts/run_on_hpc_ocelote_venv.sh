@@ -23,18 +23,13 @@ source my_virtual_env/bin/activate
 pip install --upgrade pip
 #pip install torch==1.5.0+cu92 torchvision==0.6.0+cu92 -f https://download.pytorch.org/whl/torch_stable.html
 
-#remember to manually run run_all.sh (sans the run_glue.sh) if you want to run run_glue from hpc
 
 
 #####my code part
-cd /xdisk/msurdeanu/mithunpaul/huggingface/transformers/mithun_scripts/
+
 pip install -r /xdisk/msurdeanu/mithunpaul/huggingface/transformers/examples/requirements.txt
-export PYTHONPATH="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/src/"
 
-
-export GLUE_DIR="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/src/transformers/data/datasets/fever/feverindomain/lex/"
-export TASK_NAME=fevercrossdomain
-
+cd /xdisk/msurdeanu/mithunpaul/huggingface/transformers/mithun_scripts/
 bash /xdisk/msurdeanu/mithunpaul/huggingface/transformers/mithun_scripts/run_all.sh
 
 
