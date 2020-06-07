@@ -2,7 +2,7 @@
 
 #change these to corresponding locations
 export PYTHONPATH="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/"
-export GLUE_DIR="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/mithun_scripts//data/datasets/fever/fevercrossdomain/lex/"
+export GLUE_DIR="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/src/transformers/data/datasets/fever/fevercrossdomain/lex"
 export TASK_NAME=fevercrossdomain
 
 mkdir -p /xdisk/msurdeanu/mithunpaul/huggingface/transformers/examples/text-classification/output
