@@ -1,7 +1,10 @@
 #!/bin/bash
 
 
-export BASE_DATA_DIR="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/src/transformers/data/datasets/"
+#export BASE_DATA_DIR="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/src/transformers/data/datasets/"
+
+#line which worked from june 6th noon
+export BASE_DATA_DIR="../src/transformers/data/datasets/"
 
 cd $BASE_DATA_DIR
 #comment this folder removal only if you are sure that the data you have is in fever tsv format. else its better to remove and download data fresh.
@@ -30,28 +33,28 @@ fi
 
 #######fevercrossdomain (trainign and dev will be in fever (with 4 labels), and test on fnc-dev partition)
 
-mkdir -p fever/fevercrossdomain/lex
-
-FILE=fever/fevercrossdomain/lex/train.tsv
-if test -f "$FILE";then
-    echo "$FILE exists"
-else
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/train.tsv     -O $FILE
-fi
-
-FILE=fever/fevercrossdomain/lex/dev.tsv
-if test -f "$FILE";then
-    echo "$FILE exists"
-else
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/dev.tsv -O $FILE
-fi
-
-
-#note that the test file is from
-FILE=fever/fevercrossdomain/lex/test.tsv
-if test -f "$FILE";then
-    echo "$FILE exists"
-else
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/lex/dev.tsv -O $FILE
-fi
+#mkdir -p fever/fevercrossdomain/lex
+#
+#FILE=fever/fevercrossdomain/lex/train.tsv
+#if test -f "$FILE";then
+#    echo "$FILE exists"
+#else
+#    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/train.tsv     -O $FILE
+#fi
+#
+#FILE=fever/fevercrossdomain/lex/dev.tsv
+#if test -f "$FILE";then
+#    echo "$FILE exists"
+#else
+#    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/dev.tsv -O $FILE
+#fi
+#
+#
+##note that the test file is from
+#FILE=fever/fevercrossdomain/lex/test.tsv
+#if test -f "$FILE";then
+#    echo "$FILE exists"
+#else
+#    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/lex/dev.tsv -O $FILE
+#fi
 

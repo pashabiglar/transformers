@@ -7,7 +7,10 @@
 #PBS -o /home/u11/mithunpaul/xdisk/huggingface/hpc_errors_outputs/
 
 
-cd /xdisk/msurdeanu/mithunpaul/
+
+
+cd /home/u11/mithunpaul/
+
 module load cuda90/neuralnet/7/7.3.1.20
 module load python/3.6/3.6.5
 
@@ -27,10 +30,24 @@ pip install --upgrade pip
 
 #####my code part
 
-pip install -r /xdisk/msurdeanu/mithunpaul/huggingface/transformers/examples/requirements.txt
+#pip install -r /xdisk/msurdeanu/mithunpaul/huggingface/transformers/examples/requirements.txt
+#
+#cd /xdisk/msurdeanu/mithunpaul/huggingface/transformers/mithun_scripts/
+#bash /xdisk/msurdeanu/mithunpaul/huggingface/transformers/mithun_scripts/run_all.sh
 
+
+
+#one which worked at noon june 6th 2020
 cd /xdisk/msurdeanu/mithunpaul/huggingface/transformers/mithun_scripts/
+pip install -r /xdisk/msurdeanu/mithunpaul/huggingface/transformers/examples/requirements.txt
+export PYTHONPATH="/xdisk/msurdeanu/mithunpaul/huggingface//transformers/src/"
+
+
+export GLUE_DIR="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/src/transformers/data/datasets/fever/feverindomain/lex/"
+export TASK_NAME=feverindomain
+
 bash /xdisk/msurdeanu/mithunpaul/huggingface/transformers/mithun_scripts/run_all.sh
+
 
 
 
