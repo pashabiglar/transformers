@@ -10,7 +10,7 @@
 
 #relatives paths that worked on june 6th
 export PYTHONPATH="../src/"
-export GLUE_DIR="../src/transformers/data/datasets/fever/feverindomain/lex/"
+export GLUE_DIR="../src/transformers/data/datasets/fever/fevercrossdomain/lex/"
 export TASK_NAME=fevercrossdomain
 
 

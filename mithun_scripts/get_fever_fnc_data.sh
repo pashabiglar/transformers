@@ -33,28 +33,28 @@ fi
 
 #######fevercrossdomain (trainign and dev will be in fever (with 4 labels), and test on fnc-dev partition)
 
-#mkdir -p fever/fevercrossdomain/lex
-#
-#FILE=fever/fevercrossdomain/lex/train.tsv
-#if test -f "$FILE";then
-#    echo "$FILE exists"
-#else
-#    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/train.tsv     -O $FILE
-#fi
-#
-#FILE=fever/fevercrossdomain/lex/dev.tsv
-#if test -f "$FILE";then
-#    echo "$FILE exists"
-#else
-#    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/dev.tsv -O $FILE
-#fi
-#
-#
-##note that the test file is from
-#FILE=fever/fevercrossdomain/lex/test.tsv
-#if test -f "$FILE";then
-#    echo "$FILE exists"
-#else
-#    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/lex/dev.tsv -O $FILE
-#fi
+mkdir -p fever/fevercrossdomain/lex
+
+FILE=fever/fevercrossdomain/lex/train.tsv
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/train.tsv     -O $FILE
+fi
+
+FILE=fever/fevercrossdomain/lex/dev.tsv
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/dev.tsv -O $FILE
+fi
+
+
+#note that the test file is from
+FILE=fever/fevercrossdomain/lex/test.tsv
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/lex/dev.tsv -O $FILE
+fi
 
