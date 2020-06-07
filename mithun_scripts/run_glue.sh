@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 #change these to corresponding locations
-export PYTHONPATH="../src/"
-export GLUE_DIR="../src/transformers/data/datasets/fever/fevercrossdomain/lex/"
+export PYTHONPATH="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/"
+export GLUE_DIR="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/mithun_scripts//data/datasets/fever/fevercrossdomain/lex/"
 export TASK_NAME=fevercrossdomain
 
 mkdir -p output
