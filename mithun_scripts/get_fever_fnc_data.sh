@@ -1,8 +1,6 @@
 #!/bin/bash
 
 
-#export BASE_DATA_DIR="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/src/transformers/data/datasets/"
-
 #line which worked from june 6th noon
 export BASE_DATA_DIR="../src/transformers/data/datasets/"
 

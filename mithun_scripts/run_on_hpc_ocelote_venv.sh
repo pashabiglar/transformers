@@ -1,12 +1,20 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# Your job will use 1 node, 28 cores, and 168gb of memory total.
 #PBS -q standard
-#PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
+#PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1
+### Specify a name for the job
+#PBS -N fdf
+### Specify the group name
 #PBS -W group_list=msurdeanu
-#PBS -l walltime=48:00:00
-#PBS -e /home/u11/mithunpaul/xdisk/huggingface/hpc_errors_outputs/
-#PBS -o /home/u11/mithunpaul/xdisk/huggingface/hpc_errors_outputs/
-
-
+### Used if job requires partial node only
+#PBS -l place=pack:exclhost
+### CPUtime required in hhh:mm:ss.
+### Leading 0's can be omitted e.g 48:0:0 sets 48 hours
+#PBS -l cput=359:20:00
+### Walltime is how long your job will run
+#PBS -l walltime=12:50:00
+### Joins standard error and standard out
+#PBS -j oe
 
 
 cd /home/u11/mithunpaul/
@@ -38,13 +46,13 @@ pip install --upgrade pip
 
 
 #one which worked at noon june 6th 2020
-cd /xdisk/msurdeanu/mithunpaul/huggingface/transformers/mithun_scripts/
-pip install -r /xdisk/msurdeanu/mithunpaul/huggingface/transformers/examples/requirements.txt
-export PYTHONPATH="/xdisk/msurdeanu/mithunpaul/huggingface//transformers/src/"
+cd /home/u11/mithunpaul/huggingfacev2/mithun_scripts/
+pip install -r requirements.txt
+#export PYTHONPATH="/xdisk/msurdeanu/mithunpaul/huggingface//transformers/src/"
 
 
-export GLUE_DIR="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/src/transformers/data/datasets/fever/feverindomain/lex/"
-export TASK_NAME=feverindomain
+#export GLUE_DIR="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/src/transformers/data/datasets/fever/feverindomain/lex/"
+#export TASK_NAME=fevercrossdomain
 
 bash /xdisk/msurdeanu/mithunpaul/huggingface/transformers/mithun_scripts/run_all.sh
 

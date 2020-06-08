@@ -7,15 +7,16 @@
 #mkdir -p /xdisk/msurdeanu/mithunpaul/huggingface/transformers/examples/text-classification/output
 #export OUTPUT_DIR="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/examples/text-classification/output"
 
-
+cd /home/u11/mithunpaul/huggingfacev2/mithun_scripts/
 #relatives paths that worked on june 6th
 export PYTHONPATH="../src/"
 export GLUE_DIR="../src/transformers/data/datasets/fever/fevercrossdomain/lex/"
 export TASK_NAME=fevercrossdomain
+OUTPUT_DIR="output/"
 
-
+mkdir -p output
 #python /xdisk/msurdeanu/mithunpaul/huggingface/transformers/examples/text-classification/run_glue.py  --model_name_or_path bert-base-uncased     --task_name $TASK_NAME      --do_train     --do_eval   --do_predict   --data_dir $GLUE_DIR    --max_seq_length 128      --per_device_eval_batch_size=8        --per_device_train_batch_size=8        --learning_rate 2e-5      --num_train_epochs 1.0      --output_dir $OUTPUT_DIR --overwrite_output_dir
-python3.6 ../examples/text-classification/run_glue.py --model_name_or_path bert-base-uncased     --task_name $TASK_NAME      --do_train  --do_predict --do_eval      --data_dir $GLUE_DIR    --max_seq_length 128      --per_device_eval_batch_size=8        --per_device_train_batch_size=8        --learning_rate 2e-5      --num_train_epochs 5.0      --output_dir "./output" --overwrite_output_dir
+python3.6 ../examples/text-classification/run_glue.py --model_name_or_path bert-base-uncased     --task_name $TASK_NAME      --do_train  --do_predict --do_eval      --data_dir $GLUE_DIR    --max_seq_length 128      --per_device_eval_batch_size=8        --per_device_train_batch_size=8        --learning_rate 2e-5      --num_train_epochs 5.0      --output_dir $OUTPUT_DIR --overwrite_output_dir
 
 
 # expanded run parameters for feverindomain

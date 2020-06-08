@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-
+cd /home/u11/mithunpaul/huggingfacev2/mithun_scripts/
 #bert_format_base_folder_path="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/src/transformers/data/datasets/fever/"
 bert_format_base_folder_path="../src/transformers/data/datasets/fever"
 
