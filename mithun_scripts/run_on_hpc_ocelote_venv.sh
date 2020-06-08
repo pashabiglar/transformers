@@ -32,7 +32,7 @@ source my_virtual_env/bin/activate
 
 
 pip install --upgrade pip
-#pip install torch==1.5.0+cu92 torchvision==0.6.0+cu92 -f https://download.pytorch.org/whl/torch_stable.html
+#pip install torch==1.5.0+cu92 torchvision==0.6.0+cu92-f https://download.pytorch.org/whl/torch_stable.html
 
 
 
@@ -54,7 +54,7 @@ pip install -r requirements.txt
 #export GLUE_DIR="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/src/transformers/data/datasets/fever/feverindomain/lex/"
 #export TASK_NAME=fevercrossdomain
 
-bash /xdisk/msurdeanu/mithunpaul/huggingface/transformers/mithun_scripts/run_all.sh
+bash run_all.sh
 
 
 
