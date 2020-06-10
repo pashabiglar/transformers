@@ -170,15 +170,15 @@ def main():
     )
 
     # Training
-    if training_args.do_train:
-        trainer.train(
-            model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
-        )
-        trainer.save_model()
-        # For convenience, we also re-save the tokenizer to the same directory,
-        # so that you can share your model easily on huggingface.co/models =)
-        if trainer.is_world_master():
-            tokenizer.save_pretrained(training_args.output_dir)
+    # if training_args.do_train:
+    #     trainer.train(
+    #         model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
+    #     )
+    #     trainer.save_model()
+    #     # For convenience, we also re-save the tokenizer to the same directory,
+    #     # so that you can share your model easily on huggingface.co/models =)
+    #     if trainer.is_world_master():
+    #         tokenizer.save_pretrained(training_args.output_dir)
 
     # Evaluation
     eval_results = {}
