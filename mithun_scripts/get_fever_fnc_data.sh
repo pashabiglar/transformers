@@ -30,47 +30,48 @@ rm -rf fever
 
 
 ##############in domain fever delex oaner
-mkdir -p fever/feverindomain/delex
-
-FILE=fever/feverindomain/delex/train.tsv
-if test -f "$FILE";then
-    echo "$FILE exists"
-else
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/in-domain/oa/train.tsv -O $FILE
-fi
-
-FILE=fever/feverindomain/delex/dev.tsv
-if test -f "$FILE";then
-    echo "$FILE exists"
-else
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/in-domain/oa/dev.tsv -O $FILE
-fi
+#mkdir -p fever/feverindomain/delex
+#
+#FILE=fever/feverindomain/delex/train.tsv
+#if test -f "$FILE";then
+#    echo "$FILE exists"
+#else
+#    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/in-domain/oa/train.tsv -O $FILE
+#fi
+#
+#FILE=fever/feverindomain/delex/dev.tsv
+#if test -f "$FILE";then
+#    echo "$FILE exists"
+#else
+#    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/in-domain/oa/dev.tsv -O $FILE
+#fi
 
 
 #######fevercrossdomain (trainign and dev will be in fever (with 4 labels), and test on fnc-dev partition)
 
-#mkdir -p fever/fevercrossdomain/lex
-#
-#FILE=fever/fevercrossdomain/lex/train.tsv
-#if test -f "$FILE";then
-#    echo "$FILE exists"
-#else
-#    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/train.tsv     -O $FILE
-#fi
-##note that the dev file is fnc dev partition
-#FILE=fever/fevercrossdomain/lex/dev.tsv
-#if test -f "$FILE";then
-#    echo "$FILE exists"
-#else
-#    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/lex/dev.tsv -O $FILE
-#fi
-#
-#
-##note that the test file is fnc test partition
-#FILE=fever/fevercrossdomain/lex/test.tsv
-#if test -f "$FILE";then
-#    echo "$FILE exists"
-#else
-#    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/lex/test.tsv -O $FILE
-#fi
+mkdir -p fever/fevercrossdomain/lex
+
+FILE=fever/fevercrossdomain/lex/train.tsv
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/train.tsv     -O $FILE
+fi
+#note that the dev file is fnc dev partition
+FILE=fever/fevercrossdomain/lex/dev.tsv
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/lex/dev.tsv -O $FILE
+fi
+
+
+#note that the test file is fnc test partition
+#update @june 10th 2020. will predict on dev to calculate fnc-score
+FILE=fever/fevercrossdomain/lex/test.tsv
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/lex/dev.tsv -O $FILE
+fi
 
