@@ -66,11 +66,15 @@ class GlueDataset(Dataset):
 
     def __init__(
         self,
+
         args: GlueDataTrainingArguments,
         tokenizer: PreTrainedTokenizer,
+        task_type: Optional[str] = None,
         limit_length: Optional[int] = None,
         mode: Union[str, Split] = Split.train,
         cache_dir: Optional[str] = None,
+
+
     ):
         self.args = args
         self.processor = glue_processors[args.task_name]()
@@ -116,7 +120,10 @@ class GlueDataset(Dataset):
                 elif mode == Split.test:
                     examples = self.processor.get_test_examples(args.data_dir)
                 else:
-                    examples = self.processor.get_train_examples(args.data_dir)
+                    #find the right training data based on task type like lex delex etc-this is usually used for
+                    #a student teacher setup when each model has a different type of data it sees
+                    data_dir=os.path.join(args.data_dir,task_type)
+                    examples = self.processor.get_train_examples(data_dir)
                 if limit_length is not None:
                     examples = examples[:limit_length]
                 self.features = glue_convert_examples_to_features(

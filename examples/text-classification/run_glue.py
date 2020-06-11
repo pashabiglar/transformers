@@ -136,16 +136,27 @@ def main():
     )
 
     # Get datasets
+
+    #in a student teacher model teacher sees the lex data and student sees the delexicalized version
+
+    #specify the cache directory explicitly. This is because if not, it wont let me read from two diferent datadirectories.
+    # It looks for the lock from lex when it tries to read delex, finds the lock in the lex folder and
+    #  then just loads lex itself as delex
+    task_type = "lex"
+    cache_dir = os.path.join(data_args.data_dir, task_type)
     train_dataset_lex = (
-        GlueDataset(data_args, tokenizer=tokenizer, cache_dir=model_args.cache_dir) if training_args.do_train else None
+        GlueDataset(args=data_args, tokenizer=tokenizer, task_type=task_type,cache_dir=cache_dir) if training_args.do_train else None
     )
 
+    task_type = "delex"
+    cache_dir = os.path.join(data_args.data_dir, task_type)
+
     train_dataset_delex = (
-        GlueDataset(data_args, tokenizer=tokenizer, cache_dir=model_args.cache_dir) if training_args.do_train else None
+        GlueDataset(args=data_args,tokenizer=tokenizer,task_type="delex", cache_dir=cache_dir) if training_args.do_train else None
     )
 
     eval_dataset = (
-        GlueDataset(data_args, tokenizer=tokenizer, mode="dev", cache_dir=model_args.cache_dir)
+        GlueDataset(args=data_args, tokenizer=tokenizer, mode="dev", cache_dir=model_args.cache_dir)
         if training_args.do_eval
         else None
     )
