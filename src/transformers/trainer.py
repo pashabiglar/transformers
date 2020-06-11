@@ -449,6 +449,8 @@ class Trainer:
         train_iterator = trange(
             epochs_trained, int(num_train_epochs), desc="Epoch", disable=not self.is_local_master()
         )
+
+        #for each epoch
         for epoch in train_iterator:
             if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
                 train_dataloader.sampler.set_epoch(epoch)
@@ -461,6 +463,7 @@ class Trainer:
             else:
                 epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=not self.is_local_master())
 
+            #for each batch
             for step, inputs in enumerate(epoch_iterator):
 
                 # Skip past any already trained steps if resuming training
@@ -468,6 +471,7 @@ class Trainer:
                     steps_trained_in_current_epoch -= 1
                     continue
 
+                    #this is where they do loss.backward()
                 tr_loss += self._training_step(model, inputs, optimizer)
 
                 if (step + 1) % self.args.gradient_accumulation_steps == 0 or (

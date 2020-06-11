@@ -136,9 +136,14 @@ def main():
     )
 
     # Get datasets
-    train_dataset = (
+    train_dataset_lex = (
         GlueDataset(data_args, tokenizer=tokenizer, cache_dir=model_args.cache_dir) if training_args.do_train else None
     )
+
+    train_dataset_delex = (
+        GlueDataset(data_args, tokenizer=tokenizer, cache_dir=model_args.cache_dir) if training_args.do_train else None
+    )
+
     eval_dataset = (
         GlueDataset(data_args, tokenizer=tokenizer, mode="dev", cache_dir=model_args.cache_dir)
         if training_args.do_eval
@@ -164,7 +169,7 @@ def main():
     trainer = Trainer(
         model=model,
         args=training_args,
-        train_dataset=train_dataset,
+        train_dataset=train_dataset_lex,
         eval_dataset=eval_dataset,
         compute_metrics=build_compute_metrics_fn(data_args.task_name),
     )
