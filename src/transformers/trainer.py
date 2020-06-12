@@ -225,20 +225,41 @@ class StudentTeacherTrainer:
             # We'll find a more elegant and not need to do this in the future.
             self.model.config.xla_device = True
 
-    def get_train_dataloader(self) -> DataLoader:
-        if self.train_dataset is None:
+    # def get_train_dataloader(self) -> DataLoader:
+    #     if self.train_dataset is None:
+    #         raise ValueError("Trainer: training requires a train_dataset.")
+    #     if is_tpu_available():
+    #         train_sampler = get_tpu_sampler(self.train_dataset)
+    #     else:
+    #         train_sampler = (
+    #             RandomSampler(self.train_dataset)
+    #             if self.args.local_rank == -1
+    #             else DistributedSampler(self.train_dataset)
+    #         )
+    #
+    #     data_loader = DataLoader(
+    #         self.train_dataset,
+    #         batch_size=self.args.train_batch_size,
+    #         sampler=train_sampler,
+    #         collate_fn=self.data_collator.collate_batch,
+    #     )
+    #
+    #     return data_loader
+
+    def get_teacher_train_dataloader(self) -> DataLoader:
+        if self.train_dataset_lex_teacher is None:
             raise ValueError("Trainer: training requires a train_dataset.")
         if is_tpu_available():
-            train_sampler = get_tpu_sampler(self.train_dataset)
+            train_sampler = get_tpu_sampler(self.train_dataset_lex_teacher)
         else:
             train_sampler = (
-                RandomSampler(self.train_dataset)
+                RandomSampler(self.train_dataset_lex_teacher)
                 if self.args.local_rank == -1
-                else DistributedSampler(self.train_dataset)
+                else DistributedSampler(self.train_dataset_lex_teacher)
             )
 
         data_loader = DataLoader(
-            self.train_dataset,
+            self.train_dataset_lex_teacher,
             batch_size=self.args.train_batch_size,
             sampler=train_sampler,
             collate_fn=self.data_collator.collate_batch,
@@ -246,6 +267,26 @@ class StudentTeacherTrainer:
 
         return data_loader
 
+    def get_student_train_dataloader(self) -> DataLoader:
+        if self.train_dataset_delex_student is None:
+            raise ValueError("Trainer: training requires a train_dataset.")
+        if is_tpu_available():
+            train_sampler = get_tpu_sampler(self.train_dataset_delex_student)
+        else:
+            train_sampler = (
+                RandomSampler(self.train_dataset_delex_student)
+                if self.args.local_rank == -1
+                else DistributedSampler(self.train_dataset_delex_student)
+            )
+
+        data_loader = DataLoader(
+            self.train_dataset_delex_student,
+            batch_size=self.args.train_batch_size,
+            sampler=train_sampler,
+            collate_fn=self.data_collator.collate_batch,
+        )
+
+        return data_loader
     def get_eval_dataloader(self, eval_dataset: Optional[Dataset] = None) -> DataLoader:
         if eval_dataset is None and self.eval_dataset is None:
             raise ValueError("Trainer: evaluation requires an eval_dataset.")
@@ -556,56 +597,69 @@ class StudentTeacherTrainer:
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
         return TrainOutput(self.global_step, tr_loss / self.global_step)
 
-    def train_1student_1teacher(self, model_student,model_teacher):
+    def train_1teacher_1student(self,model_path: Optional[str] = None):
         """
         Main training entry point.
 
         Args:
-            model_student:
+            model_path:
                 (Optional) Local path to model if model to train has been instantiated from a local path
                 If present, we will try reloading the optimizer/scheduler states from there.
         """
-        train_dataloader = self.get_train_dataloader()
+        train_teacher_lex_dataloader = self.get_teacher_train_dataloader()
+        train_student_delex_dataloader = self.get_student_train_dataloader()
+        assert (len(train_teacher_lex_dataloader))==(len(train_student_delex_dataloader))
         if self.args.max_steps > 0:
             t_total = self.args.max_steps
             num_train_epochs = (
-                self.args.max_steps // (len(train_dataloader) // self.args.gradient_accumulation_steps) + 1
+                self.args.max_steps // (len(train_teacher_lex_dataloader) // self.args.gradient_accumulation_steps) + 1
             )
         else:
-            t_total = int(len(train_dataloader) // self.args.gradient_accumulation_steps * self.args.num_train_epochs)
+            t_total = int(len(train_teacher_lex_dataloader) // self.args.gradient_accumulation_steps * self.args.num_train_epochs)
             num_train_epochs = self.args.num_train_epochs
 
+        #todo: add two optimixers, one each for each model
         optimizer, scheduler = self.get_optimizers(num_training_steps=t_total)
 
         # Check if saved optimizer or scheduler states exist
         if (
-            model_student is not None
-            and os.path.isfile(os.path.join(model_student, "optimizer.pt"))
-            and os.path.isfile(os.path.join(model_student, "scheduler.pt"))
+            model_path is not None
+            and os.path.isfile(os.path.join(model_path, "optimizer.pt"))
+            and os.path.isfile(os.path.join(model_path, "scheduler.pt"))
         ):
             # Load in optimizer and scheduler states
             optimizer.load_state_dict(
-                torch.load(os.path.join(model_student, "optimizer.pt"), map_location=self.args.device)
+                torch.load(os.path.join(model_path, "optimizer.pt"), map_location=self.args.device)
             )
-            scheduler.load_state_dict(torch.load(os.path.join(model_student, "scheduler.pt")))
+            scheduler.load_state_dict(torch.load(os.path.join(model_path, "scheduler.pt")))
 
-        model = self.model
+        model_teacher = self.lex_teacher_model
+        model_student = self.delex_student_model
         if self.args.fp16:
             if not is_apex_available():
                 raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
-            model, optimizer = amp.initialize(model, optimizer, opt_level=self.args.fp16_opt_level)
+            model_teacher, optimizer = amp.initialize(model_teacher, optimizer, opt_level=self.args.fp16_opt_level)
+            model_student, optimizer = amp.initialize(model_student, optimizer, opt_level=self.args.fp16_opt_level)
 
         # multi-gpu training (should be after apex fp16 initialization)
         if self.args.n_gpu > 1:
-            model = torch.nn.DataParallel(model)
+            model_teacher = torch.nn.DataParallel(model_teacher)
+            model_student = torch.nn.DataParallel(model_student)
 
         # Distributed training (should be after apex fp16 initialization)
         if self.args.local_rank != -1:
-            model = torch.nn.parallel.DistributedDataParallel(
-                model,
+            model_teacher = torch.nn.parallel.DistributedDataParallel(
+                model_teacher,
                 device_ids=[self.args.local_rank],
                 output_device=self.args.local_rank,
                 find_unused_parameters=True,
+            )
+        if self.args.local_rank != -1:
+            model_student = torch.nn.parallel.DistributedDataParallel(
+            model_student,
+            device_ids=[self.args.local_rank],
+            output_device=self.args.local_rank,
+            find_unused_parameters=True,
             )
 
         if self.tb_writer is not None:
@@ -622,7 +676,7 @@ class StudentTeacherTrainer:
                 * (torch.distributed.get_world_size() if self.args.local_rank != -1 else 1)
             )
         logger.info("***** Running training *****")
-        logger.info("  Num examples = %d", self.num_examples(train_dataloader))
+        logger.info("  Num examples = %d", self.num_examples(train_teacher_lex_dataloader))
         logger.info("  Num Epochs = %d", num_train_epochs)
         logger.info("  Instantaneous batch size per device = %d", self.args.per_device_train_batch_size)
         logger.info("  Total train batch size (w. parallel, distributed & accumulation) = %d", total_train_batch_size)
@@ -634,13 +688,13 @@ class StudentTeacherTrainer:
         epochs_trained = 0
         steps_trained_in_current_epoch = 0
         # Check if continuing training from a checkpoint
-        if model_student is not None:
+        if model_path is not None:
             # set global_step to global_step of last saved checkpoint from model path
             try:
-                self.global_step = int(model_student.split("-")[-1].split("/")[0])
-                epochs_trained = self.global_step // (len(train_dataloader) // self.args.gradient_accumulation_steps)
+                self.global_step = int(model_path.split("-")[-1].split("/")[0])
+                epochs_trained = self.global_step // (len(train_teacher_lex_dataloader) // self.args.gradient_accumulation_steps)
                 steps_trained_in_current_epoch = self.global_step % (
-                    len(train_dataloader) // self.args.gradient_accumulation_steps
+                    len(train_teacher_lex_dataloader) // self.args.gradient_accumulation_steps
                 )
 
                 logger.info("  Continuing training from checkpoint, will skip to saved global_step")
@@ -654,27 +708,35 @@ class StudentTeacherTrainer:
         tr_loss = 0.0
         tr_loss_delex = 0.0
         logging_loss = 0.0
-        model.zero_grad()
+        model_teacher.zero_grad()
+        model_student.zero_grad()
         train_iterator = trange(
             epochs_trained, int(num_train_epochs), desc="Epoch", disable=not self.is_local_master()
         )
 
         #for each epoch
         for epoch in train_iterator:
-            if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
-                train_dataloader.sampler.set_epoch(epoch)
+            if isinstance(train_teacher_lex_dataloader, DataLoader) and isinstance(train_teacher_lex_dataloader.sampler, DistributedSampler):
+                train_teacher_lex_dataloader.sampler.set_epoch(epoch)
+            if isinstance(train_student_delex_dataloader, DataLoader) and isinstance(train_student_delex_dataloader.sampler, DistributedSampler):
+                train_student_delex_dataloader.sampler.set_epoch(epoch)
 
             if is_tpu_available():
-                parallel_loader = pl.ParallelLoader(train_dataloader, [self.args.device]).per_device_loader(
+                parallel_loader = pl.ParallelLoader(train_teacher_lex_dataloader, [self.args.device]).per_device_loader(
                     self.args.device
                 )
-                epoch_iterator = tqdm(parallel_loader, desc="batches", disable=not self.is_local_master())
+                epoch_iterator_teacher_lex = tqdm(parallel_loader, desc="batches", disable=not self.is_local_master())
+
+                parallel_loader = pl.ParallelLoader(train_student_delex_dataloader, [self.args.device]).per_device_loader(
+                    self.args.device
+                )
+                epoch_iterator_student_delex = tqdm(parallel_loader, desc="batches", disable=not self.is_local_master())
             else:
-                epoch_iterator1 = tqdm(train_dataloader, desc="batches", disable=not self.is_local_master())
-                epoch_iterator2 = tqdm(train_dataloader, desc="batches", disable=not self.is_local_master())
+                epoch_iterator_teacher_lex = tqdm(train_teacher_lex_dataloader, desc="batches", disable=not self.is_local_master())
+                epoch_iterator_student_delex = tqdm(train_student_delex_dataloader, desc="batches", disable=not self.is_local_master())
 
 
-            combined_iterators=zip(epoch_iterator1,epoch_iterator2)
+            combined_iterators=zip(epoch_iterator_teacher_lex,epoch_iterator_student_delex)
             #for each batch
             for step, (input_lex,input_delex) in enumerate(combined_iterators):
 
@@ -684,18 +746,20 @@ class StudentTeacherTrainer:
                     continue
 
                     #this is where they do loss.backward()
-                tr_loss += self._training_step(model, input_lex, optimizer)
-                tr_loss_delex += self._training_step(model, input_delex, optimizer)
+                tr_loss += self._training_step(model_teacher, input_lex, optimizer)
+                tr_loss_delex += self._training_step(model_student, input_delex, optimizer)
 
                 if (step + 1) % self.args.gradient_accumulation_steps == 0 or (
                     # last step in epoch but step is always smaller than gradient_accumulation_steps
-                    len(epoch_iterator) <= self.args.gradient_accumulation_steps
-                    and (step + 1) == len(epoch_iterator)
+                    len(epoch_iterator_teacher_lex) <= self.args.gradient_accumulation_steps
+                    and (step + 1) == len(epoch_iterator_teacher_lex)
                 ):
                     if self.args.fp16:
                         torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), self.args.max_grad_norm)
                     else:
-                        torch.nn.utils.clip_grad_norm_(model.parameters(), self.args.max_grad_norm)
+                        torch.nn.utils.clip_grad_norm_(model_teacher.parameters(), self.args.max_grad_norm)
+                        torch.nn.utils.clip_grad_norm_(model_student.parameters(), self.args.max_grad_norm)
+
 
                     if is_tpu_available():
                         xm.optimizer_step(optimizer)
@@ -703,9 +767,11 @@ class StudentTeacherTrainer:
                         optimizer.step()
 
                     scheduler.step()
-                    model.zero_grad()
+                    model_teacher.zero_grad()
+                    model_student.zero_grad()
+
                     self.global_step += 1
-                    self.epoch = epoch + (step + 1) / len(epoch_iterator)
+                    self.epoch = epoch + (step + 1) / len(epoch_iterator_teacher_lex)
 
                     if (self.args.logging_steps > 0 and self.global_step % self.args.logging_steps == 0) or (
                         self.global_step == 1 and self.args.logging_first_step
@@ -728,13 +794,20 @@ class StudentTeacherTrainer:
                     if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0:
                         # In all cases (even distributed/parallel), self.model is always a reference
                         # to the model we want to save.
-                        if hasattr(model, "module"):
-                            assert model.module is self.model
+                        if hasattr(model_teacher, "module"):
+                            assert model_teacher.module is self.lex_teacher_model
                         else:
-                            assert model is self.model
+                            assert model_teacher is self.lex_teacher_model
                         # Save model checkpoint
-                        output_dir = os.path.join(self.args.output_dir, f"{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
+                        output_dir = os.path.join(self.args.output_dir, f"model_teacher_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
+                        self.save_model(output_dir)
 
+                        if hasattr(model_student, "module"):
+                            assert model_student.module is self.delex_student_model
+                        else:
+                            assert model_student is self.delex_student_model
+                        # Save model checkpoint
+                        output_dir = os.path.join(self.args.output_dir, f"model_student_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
                         self.save_model(output_dir)
 
                         if self.is_world_master():
@@ -749,7 +822,8 @@ class StudentTeacherTrainer:
                             torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
 
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
-                    epoch_iterator.close()
+                    epoch_iterator_teacher_lex.close()
+                    epoch_iterator_student_delex.close()
                     break
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()

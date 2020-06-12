@@ -201,8 +201,8 @@ def main():
 
     # Training for two
     if training_args.do_train:
-        trainer.train_1student_1teacher(
-            model_student=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
+        trainer.train_1teacher_1student(
+            model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
         )
         trainer.save_model()
         # For convenience, we also re-save the tokenizer to the same directory,
