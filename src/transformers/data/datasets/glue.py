@@ -114,15 +114,15 @@ class GlueDataset(Dataset):
                 )
             else:
                 logger.info(f"Creating features from dataset file at {args.data_dir}")
-
+                data_dir = os.path.join(args.data_dir, task_type)
                 if mode == Split.dev:
-                    examples = self.processor.get_dev_examples(args.data_dir)
+                    examples = self.processor.get_dev_examples(data_dir)
                 elif mode == Split.test:
-                    examples = self.processor.get_test_examples(args.data_dir)
+                    examples = self.processor.get_test_examples(data_dir)
                 else:
                     #find the right training data based on task type like lex delex etc-this is usually used for
                     #a student teacher setup when each model has a different type of data it sees
-                    data_dir=os.path.join(args.data_dir,task_type)
+
                     examples = self.processor.get_train_examples(data_dir)
                 if limit_length is not None:
                     examples = examples[:limit_length]

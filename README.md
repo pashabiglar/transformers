@@ -26,7 +26,7 @@
 This code is based on the huggingface's code which does fine tuning bert on MNLI. 
 However instead of MNLI we feed in [FEVER](https://fever.ai/2018/task.html) and [fake news challenge](http://www.fakenewschallenge.org/) datasets
 
-#steps
+### steps for training
 - from home folder (i.e `/huggingface/`) do:
 - conda create --name huggingface python=3
 - source activate huggingface
@@ -36,6 +36,10 @@ However instead of MNLI we feed in [FEVER](https://fever.ai/2018/task.html) and 
    - e.g: $TASK_NAME= fevercrossdomain
     - epochs=5.0
 - ./run_all.sh
+
+
+### to load a trained model and do dev (--do_eval) or predict on test (--do_predict) pass    `--model_name_or_path`
+e.g.;python3.6 ../examples/text-classification/run_glue.py --model_name_or_path "../trained_models/checkpoint-37000/"
 
 
 🤗 Transformers (formerly known as `pytorch-transformers` and `pytorch-pretrained-bert`) provides state-of-the-art general-purpose architectures (BERT, GPT-2, RoBERTa, XLM, DistilBert, XLNet, T5, CTRL...) for Natural Language Understanding (NLU) and Natural Language Generation (NLG) with over thousands of pretrained models in 100+ languages and deep interoperability between PyTorch & TensorFlow 2.0.

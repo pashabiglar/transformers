@@ -57,14 +57,15 @@ if test -f "$FILE";then
 else
     wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/train.tsv     -O $FILE
 fi
-#note that the dev file is fnc dev partition
+
 FILE=fever/fevercrossdomain/lex/dev.tsv
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/lex/dev.tsv -O $FILE
+    wget https://storage.googleapis.com/fact_verification_mithun_files/FEVER/cross-domain/lex/dev.tsv -O $FILE
 fi
 
+#note that the test file is fnc dev partition
 FILE=fever/fevercrossdomain/lex/test.tsv
 if test -f "$FILE";then
     echo "$FILE exists"
@@ -90,6 +91,8 @@ else
     wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/oa/dev.tsv -O $FILE
 fi
 
+#note that we are already replacing the file to be tested as test file. this way during run time you have to just
+# load all files as is e.g #if do_predict is true load from folder fevercrossdomain/delex/test.tsv- which the code already does.
 
 FILE=fever/fevercrossdomain/delex/test.tsv
 if test -f "$FILE";then

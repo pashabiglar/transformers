@@ -155,13 +155,19 @@ def main():
         GlueDataset(args=data_args,tokenizer=tokenizer,task_type="delex", cache_dir=cache_dir) if training_args.do_train else None
     )
 
+    # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
+    # combined model performs in a delexicalized dataset. This will serve as a verification point
+    #to confirm the accuracy (we got 92.91% for fever delx in domain) if something goes wrong in the prediction phase below
+
     eval_dataset = (
-        GlueDataset(args=data_args, tokenizer=tokenizer, mode="dev", cache_dir=model_args.cache_dir)
+        GlueDataset(args=data_args, tokenizer=tokenizer,task_type="delex", mode="dev", cache_dir=model_args.cache_dir)
         if training_args.do_eval
         else None
     )
+
+    # in the student teacher mode the evaluation always happens in the delex cross domain dev data. so it will
     test_dataset = (
-        GlueDataset(data_args, tokenizer=tokenizer, mode="test", cache_dir=model_args.cache_dir)
+        GlueDataset(data_args, tokenizer=tokenizer,task_type="delex", mode="test", cache_dir=model_args.cache_dir)
         if training_args.do_predict
         else None
     )
