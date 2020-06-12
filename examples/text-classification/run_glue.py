@@ -191,9 +191,9 @@ def main():
         compute_metrics=build_compute_metrics_fn(data_args.task_name),
     )
 
-    # Training
+    # Training for two
     if training_args.do_train:
-        trainer.train(
+        trainer.train_1student_1teacher(
             model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
         )
         trainer.save_model()
