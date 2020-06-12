@@ -4,6 +4,12 @@
 cd /home/u11/mithunpaul/huggingfacev2/mithun_scripts/
 #relative paths that worked on june 6th
 export PYTHONPATH="../src/"
+
+#laptop
+export PYTHONPATH="/Users/mordor/research/huggingface"
+
+
+
 export DATA_DIR_BASE="../src/transformers/data/datasets/fever/"
 export TASK_NAME="fevercrossdomain"
 export DATA_DIR="$DATA_DIR_BASE$TASK_NAME"

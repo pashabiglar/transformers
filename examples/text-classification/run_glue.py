@@ -30,6 +30,7 @@ from transformers import GlueDataTrainingArguments as DataTrainingArguments
 from transformers import (
     HfArgumentParser,
     Trainer,
+    StudentTeacherTrainer,
     TrainingArguments,
     glue_compute_metrics,
     glue_output_modes,
@@ -112,11 +113,11 @@ def main():
     except KeyError:
         raise ValueError("Task not found: %s" % (data_args.task_name))
 
-    # Load pretrained model and tokenizer
+    # Load pretrained model_teacher and tokenizer
     #
     # Distributed training:
     # The .from_pretrained methods guarantee that only one local process can concurrently
-    # download model & vocab.
+    # download model_teacher & vocab.
 
     config = AutoConfig.from_pretrained(
         model_args.config_name if model_args.config_name else model_args.model_name_or_path,
@@ -128,7 +129,14 @@ def main():
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
     )
-    model = AutoModelForSequenceClassification.from_pretrained(
+
+    model_teacher = AutoModelForSequenceClassification.from_pretrained(
+        model_args.model_name_or_path,
+        from_tf=bool(".ckpt" in model_args.model_name_or_path),
+        config=config,
+        cache_dir=model_args.cache_dir,
+    )
+    model_student = AutoModelForSequenceClassification.from_pretrained(
         model_args.model_name_or_path,
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
         config=config,
@@ -137,7 +145,7 @@ def main():
 
     # Get datasets
 
-    #in a student teacher model teacher sees the lex data and student sees the delexicalized version
+    #in a student teacher model_teacher teacher sees the lex data and student sees the delexicalized version
 
     #specify the cache directory explicitly. This is because if not, it wont let me read from two diferent datadirectories.
     # It looks for the lock from lex when it tries to read delex, finds the lock in the lex folder and
@@ -156,7 +164,7 @@ def main():
     )
 
     # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
-    # combined model performs in a delexicalized dataset. This will serve as a verification point
+    # combined model_teacher performs in a delexicalized dataset. This will serve as a verification point
     #to confirm the accuracy (we got 92.91% for fever delx in domain) if something goes wrong in the prediction phase below
 
     eval_dataset = (
@@ -183,10 +191,10 @@ def main():
         return compute_metrics_fn
 
     # Initialize our Trainer
-    trainer = Trainer(
-        model=model,
+    trainer = StudentTeacherTrainer(
+        models={"teacher":model_teacher,"student":model_student},
         args=training_args,
-        train_dataset=train_dataset_lex,
+        train_datasets={"teacher":train_dataset_lex,"student":train_dataset_delex},
         eval_dataset=eval_dataset,
         compute_metrics=build_compute_metrics_fn(data_args.task_name),
     )
@@ -194,11 +202,11 @@ def main():
     # Training for two
     if training_args.do_train:
         trainer.train_1student_1teacher(
-            model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
+            model_student=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
         )
         trainer.save_model()
         # For convenience, we also re-save the tokenizer to the same directory,
-        # so that you can share your model easily on huggingface.co/models =)
+        # so that you can share your model_teacher easily on huggingface.co/models =)
         if trainer.is_world_master():
             tokenizer.save_pretrained(training_args.output_dir)
 
