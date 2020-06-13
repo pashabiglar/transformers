@@ -340,6 +340,7 @@ class StudentTeacherTrainer:
         We provide a reasonable default that works well.
         If you want to use something else, you can pass a tuple in the Trainer's init,
         or override this method in a subclass.
+        update: will combine parameters
         """
         if self.optimizers is not None:
             return self.optimizers
@@ -347,11 +348,20 @@ class StudentTeacherTrainer:
         no_decay = ["bias", "LayerNorm.weight"]
         optimizer_grouped_parameters = [
             {
-                "params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
+                "params": [p for n, p in self.lex_teacher_model.named_parameters() if not any(nd in n for nd in no_decay)],
                 "weight_decay": self.args.weight_decay,
             },
             {
-                "params": [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
+                "params": [p for n, p in self.lex_teacher_model.named_parameters() if any(nd in n for nd in no_decay)],
+                "weight_decay": 0.0,
+            },
+            {
+                "params": [p for n, p in self.delex_student_model.named_parameters() if
+                           not any(nd in n for nd in no_decay)],
+                "weight_decay": self.args.weight_decay,
+            },
+            {
+                "params": [p for n, p in self.delex_student_model.named_parameters() if any(nd in n for nd in no_decay)],
                 "weight_decay": 0.0,
             },
         ]
