@@ -8,6 +8,8 @@ cd $BASE_DATA_DIR
 #comment this folder removal only if you are sure that the data you have is in fever tsv format. else its better to remove and download data fresh.
 rm -rf fever
 
+#options for task type include lex,delex,and empty"". Empty is used in case of student teacher architecture which will load a paralleldataset from both lex and delex folders
+export TASK_TYPE="lex/"
 #pick according to which kind of dataset you want to use for  train, dev, test on. Eg: train on fever, test on fnc
 
 #######indomain fever lex

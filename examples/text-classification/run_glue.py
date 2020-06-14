@@ -129,36 +129,43 @@ def main():
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
     )
-
-    model_teacher = AutoModelForSequenceClassification.from_pretrained(
+    if (training_args.do_train_1student_1teacher == True):
+        model_teacher = AutoModelForSequenceClassification.from_pretrained(
         model_args.model_name_or_path,
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
         config=config,
         cache_dir=model_args.cache_dir,
-    )
-    model_student = AutoModelForSequenceClassification.from_pretrained(
+        )
+        model_student = AutoModelForSequenceClassification.from_pretrained(
         model_args.model_name_or_path,
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
         config=config,
         cache_dir=model_args.cache_dir,
-    )
+        )
+    else:
+        model = AutoModelForSequenceClassification.from_pretrained(
+            model_args.model_name_or_path,
+            from_tf=bool(".ckpt" in model_args.model_name_or_path),
+            config=config,
+            cache_dir=model_args.cache_dir,
+        )
 
     # Get datasets
 
-
-
-    #specify the cache directory explicitly here . something other than lex or delex data directories. also for some reason
-    #code doesnt allow it to be passed as a command line argument
-    #task_type = "combined"
-    #cache_dir = os.path.join(data_args.data_dir, task_type)
-
     # in a student teacher model_teacher teacher sees the lex data and student sees the delexicalized version of the same data
     # This is taken care of inside the ParallelDataDataset
-    train_dataset_both_lex_delex = (
-        ParallelDataDataset(args=data_args, tokenizer=tokenizer, data_type_1="lex", data_type_2="delex",
-                            cache_dir=model_args.cache_dir) if training_args.do_train else None
-    )
-
+    if(training_args.do_train_1student_1teacher ==True):
+        train_dataset = (
+            ParallelDataDataset(args=data_args, tokenizer=tokenizer, data_type_1="lex", data_type_2="delex",
+                                cache_dir=model_args.cache_dir) if training_args.do_train else None
+        )
+    else:
+        train_dataset = (
+            GlueDataset(args=data_args, tokenizer=tokenizer, task_type="lex", mode="dev",
+                        cache_dir=model_args.cache_dir)
+            if training_args.do_train
+            else None
+        )
 
     # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
     # combined model_teacher performs in a delexicalized dataset. This will serve as a verification point
@@ -188,24 +195,39 @@ def main():
         return compute_metrics_fn
 
     # Initialize our Trainer
-    trainer = StudentTeacherTrainer(
+    if training_args.do_train_1student_1teacher:
+            trainer = StudentTeacherTrainer(
         models={"teacher":model_teacher,"student":model_student},
         args=training_args,
-        train_datasets={"combined":train_dataset_both_lex_delex},
+        train_datasets={"combined":train_dataset},
         eval_dataset=eval_dataset,
         compute_metrics=build_compute_metrics_fn(data_args.task_name),
     )
-
-    # Training for two
-    if training_args.do_train:
-        trainer.train_1teacher_1student(
-            model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
+    else:
+        trainer = Trainer(
+            model=model,
+            args=training_args,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            compute_metrics=build_compute_metrics_fn(data_args.task_name),
         )
+
+    if training_args.do_train:
+        if (training_args.do_train_1student_1teacher == True):
+            # Training for two
+            trainer.train_1teacher_1student(
+                model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
+            )
+        else:
+            trainer.train(
+                model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
+            )
         trainer.save_model()
         # For convenience, we also re-save the tokenizer to the same directory,
         # so that you can share your model_teacher easily on huggingface.co/models =)
         if trainer.is_world_master():
             tokenizer.save_pretrained(training_args.output_dir)
+
 
     # Evaluation
     eval_results = {}

@@ -243,6 +243,24 @@ class StudentTeacherTrainer:
         )
         return data_loader
 
+    def get_train_dataloader_two_parallel_datasets(self) -> DataLoader:
+        if self.train_dataset_combined is None:
+            raise ValueError("Trainer: training requires a train_dataset.")
+        if is_tpu_available():
+            train_sampler = get_tpu_sampler(self.train_dataset_combined)
+        else:
+            train_sampler = (
+                RandomSampler(self.train_dataset_combined)
+                if self.args.local_rank == -1
+                else DistributedSampler(self.train_dataset_combined)
+            )
+        data_loader = DataLoader(
+            self.train_dataset_combined,
+            batch_size=self.args.train_batch_size,
+            sampler=train_sampler,
+            collate_fn=self.data_collator.collate_batch_parallel_datasets,
+        )
+        return data_loader
 
     def get_eval_dataloader(self, eval_dataset: Optional[Dataset] = None) -> DataLoader:
         if eval_dataset is None and self.eval_dataset is None:
@@ -573,7 +591,7 @@ class StudentTeacherTrainer:
                 (Optional) Local path to model if model to train has been instantiated from a local path
                 If present, we will try reloading the optimizer/scheduler states from there.
         """
-        train_dataloader = self.get_train_dataloader()
+        train_dataloader = self.get_train_dataloader_two_parallel_datasets()
         if self.args.max_steps > 0:
             t_total = self.args.max_steps
             num_train_epochs = (
@@ -699,7 +717,7 @@ class StudentTeacherTrainer:
                 if steps_trained_in_current_epoch > 0:
                     steps_trained_in_current_epoch -= 1
                     continue
-                assert input_lex['labels']==input_delex['labels']
+                assert input_lex['labels'].tolist()==input_delex['labels'].tolist()
 
                 #this is where they do loss.backward()
                 tr_loss += self._training_step(model_teacher, input_lex, optimizer)
