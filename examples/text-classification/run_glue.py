@@ -145,31 +145,20 @@ def main():
 
     # Get datasets
 
-    #in a student teacher model_teacher teacher sees the lex data and student sees the delexicalized version
 
-    #specify the cache directory explicitly. This is because if not, it wont let me read from two diferent datadirectories.
-    # It looks for the lock from lex when it tries to read delex, finds the lock in the lex folder and
-    #  then just loads lex itself as delex
-    task_type = "lex"
-    cache_dir = os.path.join(data_args.data_dir, task_type)
 
+    #specify the cache directory explicitly here . something other than lex or delex data directories. also for some reason
+    #code doesnt allow it to be passed as a command line argument
+    #task_type = "combined"
+    #cache_dir = os.path.join(data_args.data_dir, task_type)
+
+    # in a student teacher model_teacher teacher sees the lex data and student sees the delexicalized version of the same data
+    # This is taken care of inside the ParallelDataDataset
     train_dataset_both_lex_delex = (
         ParallelDataDataset(args=data_args, tokenizer=tokenizer, data_type_1="lex", data_type_2="delex",
-                            cache_dir=cache_dir) if training_args.do_train else None
+                            cache_dir=model_args.cache_dir) if training_args.do_train else None
     )
 
-    train_dataset_lex = (
-        GlueDataset(args=data_args, tokenizer=tokenizer, task_type="lex",
-                    cache_dir=cache_dir) if training_args.do_train else None
-    )
-
-
-    task_type = "delex"
-    cache_dir = os.path.join(data_args.data_dir, task_type)
-
-    train_dataset_delex = (
-        GlueDataset(args=data_args,tokenizer=tokenizer,task_type="delex", cache_dir=cache_dir) if training_args.do_train else None
-    )
 
     # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
     # combined model_teacher performs in a delexicalized dataset. This will serve as a verification point
@@ -202,7 +191,7 @@ def main():
     trainer = StudentTeacherTrainer(
         models={"teacher":model_teacher,"student":model_student},
         args=training_args,
-        train_datasets={"teacher":train_dataset_both_lex_delex,"student":train_dataset_delex},
+        train_datasets={"combined":train_dataset_both_lex_delex},
         eval_dataset=eval_dataset,
         compute_metrics=build_compute_metrics_fn(data_args.task_name),
     )

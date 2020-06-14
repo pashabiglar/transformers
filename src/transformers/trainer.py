@@ -195,8 +195,7 @@ class StudentTeacherTrainer:
             self.data_collator = data_collator
         else:
             self.data_collator = DefaultDataCollator()
-        self.train_dataset_lex_teacher = train_datasets.get("teacher")
-        self.train_dataset_delex_student = train_datasets.get("student")
+        self.train_dataset_combined = train_datasets.get("combined")
         self.eval_dataset = eval_dataset
         self.compute_metrics = compute_metrics
         self.prediction_loss_only = prediction_loss_only
@@ -225,68 +224,26 @@ class StudentTeacherTrainer:
             # We'll find a more elegant and not need to do this in the future.
             self.model.config.xla_device = True
 
-    # def get_train_dataloader(self) -> DataLoader:
-    #     if self.train_dataset is None:
-    #         raise ValueError("Trainer: training requires a train_dataset.")
-    #     if is_tpu_available():
-    #         train_sampler = get_tpu_sampler(self.train_dataset)
-    #     else:
-    #         train_sampler = (
-    #             RandomSampler(self.train_dataset)
-    #             if self.args.local_rank == -1
-    #             else DistributedSampler(self.train_dataset)
-    #         )
-    #
-    #     data_loader = DataLoader(
-    #         self.train_dataset,
-    #         batch_size=self.args.train_batch_size,
-    #         sampler=train_sampler,
-    #         collate_fn=self.data_collator.collate_batch,
-    #     )
-    #
-    #     return data_loader
-
-    def get_teacher_train_dataloader(self) -> DataLoader:
-        if self.train_dataset_lex_teacher is None:
+    def get_train_dataloader(self) -> DataLoader:
+        if self.train_dataset_combined is None:
             raise ValueError("Trainer: training requires a train_dataset.")
         if is_tpu_available():
-            train_sampler = get_tpu_sampler(self.train_dataset_lex_teacher)
+            train_sampler = get_tpu_sampler(self.train_dataset_combined)
         else:
             train_sampler = (
-                RandomSampler(self.train_dataset_lex_teacher)
+                RandomSampler(self.train_dataset_combined)
                 if self.args.local_rank == -1
-                else DistributedSampler(self.train_dataset_lex_teacher)
+                else DistributedSampler(self.train_dataset_combined)
             )
-
         data_loader = DataLoader(
-            self.train_dataset_lex_teacher,
+            self.train_dataset_combined,
             batch_size=self.args.train_batch_size,
             sampler=train_sampler,
             collate_fn=self.data_collator.collate_batch,
         )
-
         return data_loader
 
-    def get_student_train_dataloader(self) -> DataLoader:
-        if self.train_dataset_delex_student is None:
-            raise ValueError("Trainer: training requires a train_dataset.")
-        if is_tpu_available():
-            train_sampler = get_tpu_sampler(self.train_dataset_delex_student)
-        else:
-            train_sampler = (
-                RandomSampler(self.train_dataset_delex_student)
-                if self.args.local_rank == -1
-                else DistributedSampler(self.train_dataset_delex_student)
-            )
 
-        data_loader = DataLoader(
-            self.train_dataset_delex_student,
-            batch_size=self.args.train_batch_size,
-            sampler=train_sampler,
-            collate_fn=self.data_collator.collate_batch,
-        )
-
-        return data_loader
     def get_eval_dataloader(self, eval_dataset: Optional[Dataset] = None) -> DataLoader:
         if eval_dataset is None and self.eval_dataset is None:
             raise ValueError("Trainer: evaluation requires an eval_dataset.")
@@ -616,16 +573,14 @@ class StudentTeacherTrainer:
                 (Optional) Local path to model if model to train has been instantiated from a local path
                 If present, we will try reloading the optimizer/scheduler states from there.
         """
-        train_teacher_lex_dataloader = self.get_teacher_train_dataloader()
-        train_student_delex_dataloader = self.get_student_train_dataloader()
-        assert (len(train_teacher_lex_dataloader))==(len(train_student_delex_dataloader))
+        train_dataloader = self.get_train_dataloader()
         if self.args.max_steps > 0:
             t_total = self.args.max_steps
             num_train_epochs = (
-                self.args.max_steps // (len(train_teacher_lex_dataloader) // self.args.gradient_accumulation_steps) + 1
+                self.args.max_steps // (len(train_dataloader) // self.args.gradient_accumulation_steps) + 1
             )
         else:
-            t_total = int(len(train_teacher_lex_dataloader) // self.args.gradient_accumulation_steps * self.args.num_train_epochs)
+            t_total = int(len(train_dataloader) // self.args.gradient_accumulation_steps * self.args.num_train_epochs)
             num_train_epochs = self.args.num_train_epochs
 
 
@@ -686,7 +641,7 @@ class StudentTeacherTrainer:
                 * (torch.distributed.get_world_size() if self.args.local_rank != -1 else 1)
             )
         logger.info("***** Running training *****")
-        logger.info("  Num examples = %d", self.num_examples(train_teacher_lex_dataloader))
+        logger.info("  Num examples = %d", self.num_examples(train_dataloader))
         logger.info("  Num Epochs = %d", num_train_epochs)
         logger.info("  Instantaneous batch size per device = %d", self.args.per_device_train_batch_size)
         logger.info("  Total train batch size (w. parallel, distributed & accumulation) = %d", total_train_batch_size)
@@ -702,9 +657,9 @@ class StudentTeacherTrainer:
             # set global_step to global_step of last saved checkpoint from model path
             try:
                 self.global_step = int(model_path.split("-")[-1].split("/")[0])
-                epochs_trained = self.global_step // (len(train_teacher_lex_dataloader) // self.args.gradient_accumulation_steps)
+                epochs_trained = self.global_step // (len(train_dataloader) // self.args.gradient_accumulation_steps)
                 steps_trained_in_current_epoch = self.global_step % (
-                    len(train_teacher_lex_dataloader) // self.args.gradient_accumulation_steps
+                    len(train_dataloader) // self.args.gradient_accumulation_steps
                 )
 
                 logger.info("  Continuing training from checkpoint, will skip to saved global_step")
@@ -726,27 +681,17 @@ class StudentTeacherTrainer:
 
         #for each epoch
         for epoch in train_iterator:
-            if isinstance(train_teacher_lex_dataloader, DataLoader) and isinstance(train_teacher_lex_dataloader.sampler, DistributedSampler):
-                train_teacher_lex_dataloader.sampler.set_epoch(epoch)
-            if isinstance(train_student_delex_dataloader, DataLoader) and isinstance(train_student_delex_dataloader.sampler, DistributedSampler):
-                train_student_delex_dataloader.sampler.set_epoch(epoch)
+            if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
+                train_dataloader.sampler.set_epoch(epoch)
 
             if is_tpu_available():
-                parallel_loader = pl.ParallelLoader(train_teacher_lex_dataloader, [self.args.device]).per_device_loader(
+                parallel_loader = pl.ParallelLoader(train_dataloader, [self.args.device]).per_device_loader(
                     self.args.device
                 )
                 epoch_iterator_teacher_lex = tqdm(parallel_loader, desc="batches", disable=not self.is_local_master())
-
-                parallel_loader = pl.ParallelLoader(train_student_delex_dataloader, [self.args.device]).per_device_loader(
-                    self.args.device
-                )
-                epoch_iterator_student_delex = tqdm(parallel_loader, desc="batches", disable=not self.is_local_master())
             else:
-                epoch_iterator_teacher_lex = tqdm(train_teacher_lex_dataloader, desc="batches", disable=not self.is_local_master())
-                epoch_iterator_student_delex = tqdm(train_student_delex_dataloader, desc="batches", disable=not self.is_local_master())
+                epoch_iterator_teacher_lex = tqdm(train_dataloader, desc="batches", disable=not self.is_local_master())
 
-
-            #combined_iterators=zip(epoch_iterator_teacher_lex,epoch_iterator_student_delex)
             #for each batch
             for step, (input_lex,input_delex) in enumerate(epoch_iterator_teacher_lex):
 
@@ -754,8 +699,9 @@ class StudentTeacherTrainer:
                 if steps_trained_in_current_epoch > 0:
                     steps_trained_in_current_epoch -= 1
                     continue
+                assert input_lex['labels']==input_delex['labels']
 
-                    #this is where they do loss.backward()
+                #this is where they do loss.backward()
                 tr_loss += self._training_step(model_teacher, input_lex, optimizer)
                 tr_loss_delex += self._training_step(model_student, input_delex, optimizer)
 
