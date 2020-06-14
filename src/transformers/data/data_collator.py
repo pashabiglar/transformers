@@ -98,10 +98,13 @@ class DefaultDataCollator(DataCollator):
         # Again, we will use the first element to figure out which key/values are not None for this model.
         for k, v in vars(first).items():
             if k not in ("label", "label_ids") and v is not None and not isinstance(v, str):
-                k_list = []
+                k_list_lex = []
+                k_list_delex = []
                 for tuple_feature in features:
-                     k_list.append(getattr(tuple_feature[0], k))
-                batch_lex[k] = torch.tensor(k_list, dtype=torch.long)
+                    k_list_lex.append(getattr(tuple_feature[0], k))
+                    k_list_delex.append(getattr(tuple_feature[1], k))
+                batch_lex[k] = torch.tensor(k_list_lex, dtype=torch.long)
+                batch_delex[k] = torch.tensor(k_list_delex, dtype=torch.long)
 
 
         return (batch_lex,batch_delex)

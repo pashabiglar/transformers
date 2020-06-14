@@ -25,7 +25,7 @@ from typing import Callable, Dict, Optional
 
 import numpy as np
 
-from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer, EvalPrediction, GlueDataset
+from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer, EvalPrediction, GlueDataset,ParallelDataDataset
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
 from transformers import (
     HfArgumentParser,
@@ -152,9 +152,17 @@ def main():
     #  then just loads lex itself as delex
     task_type = "lex"
     cache_dir = os.path.join(data_args.data_dir, task_type)
-    train_dataset_lex = (
-        GlueDataset(args=data_args, tokenizer=tokenizer, task_type=task_type,cache_dir=cache_dir) if training_args.do_train else None
+
+    train_dataset_both_lex_delex = (
+        ParallelDataDataset(args=data_args, tokenizer=tokenizer, data_type_1="lex", data_type_2="delex",
+                            cache_dir=cache_dir) if training_args.do_train else None
     )
+
+    train_dataset_lex = (
+        GlueDataset(args=data_args, tokenizer=tokenizer, task_type="lex",
+                    cache_dir=cache_dir) if training_args.do_train else None
+    )
+
 
     task_type = "delex"
     cache_dir = os.path.join(data_args.data_dir, task_type)
@@ -194,7 +202,7 @@ def main():
     trainer = StudentTeacherTrainer(
         models={"teacher":model_teacher,"student":model_student},
         args=training_args,
-        train_datasets={"teacher":train_dataset_lex,"student":train_dataset_delex},
+        train_datasets={"teacher":train_dataset_both_lex_delex,"student":train_dataset_delex},
         eval_dataset=eval_dataset,
         compute_metrics=build_compute_metrics_fn(data_args.task_name),
     )

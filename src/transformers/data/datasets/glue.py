@@ -12,7 +12,7 @@ from torch.utils.data.dataset import Dataset
 from ...tokenization_roberta import RobertaTokenizer, RobertaTokenizerFast
 from ...tokenization_utils import PreTrainedTokenizer
 from ...tokenization_xlm_roberta import XLMRobertaTokenizer
-from ..processors.glue import glue_convert_examples_to_features, glue_output_modes, glue_processors
+from ..processors.glue import glue_convert_examples_to_features, glue_output_modes, glue_processors,glue_convert_pair_examples_to_features
 from ..processors.utils import InputFeatures
 
 
@@ -105,7 +105,6 @@ class GlueDataset(Dataset):
         # and the others will use the cache.
         lock_path = cached_features_file + ".lock"
         with FileLock(lock_path):
-
             if os.path.exists(cached_features_file) and not args.overwrite_cache:
                 start = time.time()
                 self.features = torch.load(cached_features_file)
@@ -166,7 +165,8 @@ class ParallelDataDataset(Dataset):
 
         args: GlueDataTrainingArguments,
         tokenizer: PreTrainedTokenizer,
-        task_type: Optional[str] = None,
+        data_type_1: Optional[str] = None,
+        data_type_2: Optional[str] = None,
         limit_length: Optional[int] = None,
         mode: Union[str, Split] = Split.train,
         cache_dir: Optional[str] = None,
@@ -211,20 +211,24 @@ class ParallelDataDataset(Dataset):
                 )
             else:
                 logger.info(f"Creating features from dataset file at {args.data_dir}")
-                data_dir = os.path.join(args.data_dir, task_type)
+                data_dir = os.path.join(args.data_dir, data_type_1)
                 if mode == Split.dev:
                     examples = self.processor.get_dev_examples(data_dir)
                 elif mode == Split.test:
                     examples = self.processor.get_test_examples(data_dir)
                 else:
-                    #find the right training data based on task type like lex delex etc-this is usually used for
-                    #a student teacher setup when each model has a different type of data it sees
-
-                    examples = self.processor.get_train_examples(data_dir)
+                    #when using parallel datasets get two features of examples and pass it to glue_convert_pair_examples_to_features
+                    #which in turn creates features and combines them both
+                    data_dir1 = os.path.join(args.data_dir, data_type_1)
+                    examples1 = self.processor.get_train_examples(data_dir1)
+                    data_dir2 = os.path.join(args.data_dir, data_type_2)
+                    examples2 = self.processor.get_train_examples(data_dir2)
                 if limit_length is not None:
-                    examples = examples[:limit_length]
-                self.features = glue_convert_examples_to_features(
-                    examples,
+                    examples1 = examples1[:limit_length]
+                    examples2 = examples2[:limit_length]
+                self.features = glue_convert_pair_examples_to_features(
+                    examples1,
+                    examples2,
                     tokenizer,
                     max_length=args.max_seq_length,
                     label_list=label_list,
