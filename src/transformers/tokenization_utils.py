@@ -1734,12 +1734,11 @@ class PreTrainedTokenizer(SpecialTokensMixin):
             )
 
         input_ids = []
-        for ids_or_pair_ids in batch_text_or_text_pairs:
+        for index,ids_or_pair_ids in enumerate(batch_text_or_text_pairs):
             if isinstance(ids_or_pair_ids, (list, tuple)) and len(ids_or_pair_ids) == 2 and not is_pretokenized:
                 ids, pair_ids = ids_or_pair_ids
             else:
                 ids, pair_ids = ids_or_pair_ids, None
-
             first_ids = get_input_ids(ids)
             second_ids = get_input_ids(pair_ids) if pair_ids is not None else None
             input_ids.append((first_ids, second_ids))
@@ -1757,7 +1756,7 @@ class PreTrainedTokenizer(SpecialTokensMixin):
             max_length = max([total_sequence_length(ids) for ids in input_ids])
 
         batch_outputs = {}
-        for first_ids, second_ids in input_ids:
+        for index,(first_ids, second_ids) in enumerate(input_ids):
             # Prepares a sequence of input id, or a pair of sequences of inputs ids so that it can be used by
             # the model. It adds special tokens, truncates sequences if overflowing while taking into account
             # the special tokens and manages a window stride for overflowing tokens
