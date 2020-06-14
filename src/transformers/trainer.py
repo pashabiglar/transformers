@@ -628,7 +628,7 @@ class StudentTeacherTrainer:
             t_total = int(len(train_teacher_lex_dataloader) // self.args.gradient_accumulation_steps * self.args.num_train_epochs)
             num_train_epochs = self.args.num_train_epochs
 
-        #todo: add two optimixers, one each for each model
+
         optimizer, scheduler = self.get_optimizers(num_training_steps=t_total)
 
         # Check if saved optimizer or scheduler states exist
@@ -746,9 +746,9 @@ class StudentTeacherTrainer:
                 epoch_iterator_student_delex = tqdm(train_student_delex_dataloader, desc="batches", disable=not self.is_local_master())
 
 
-            combined_iterators=zip(epoch_iterator_teacher_lex,epoch_iterator_student_delex)
+            #combined_iterators=zip(epoch_iterator_teacher_lex,epoch_iterator_student_delex)
             #for each batch
-            for step, (input_lex,input_delex) in enumerate(combined_iterators):
+            for step, (input_lex,input_delex) in enumerate(epoch_iterator_teacher_lex):
 
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:

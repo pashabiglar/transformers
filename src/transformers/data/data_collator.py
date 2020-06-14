@@ -47,17 +47,44 @@ class DefaultDataCollator(DataCollator):
         # have the same attributes.
         # So we will look at the first element as a proxy for what attributes exist
         # on the whole batch.
-        first = features[0]
+
+        #for reading lex and delex versions as a single tuple
+        first = features[0][0]
+        #first = features[0]
 
         # Special handling for labels.
         # Ensure that tensor is created with the correct type
         # (it should be automatically the case, but let's make sure of it.)
         if hasattr(first, "label") and first.label is not None:
             if type(first.label) is int:
-                labels = torch.tensor([f.label for f in features], dtype=torch.long)
+                #labels = torch.tensor([f.label for f in features], dtype=torch.long)
+                #for reading lex and delex versions as a single tuple
+                labels_lex=[]
+                labels_delex=[]
+                for f in features:
+                    labels_lex.append(f[0].label)
+                    labels_delex.append(f[1].label)
+
+                assert labels_lex == labels_delex
+                labels_lex_tf = torch.tensor(labels_lex, dtype=torch.long)
+                labels_delex_tf = torch.tensor(labels_delex, dtype=torch.long)
+                labels=labels_lex_tf
+
             else:
-                labels = torch.tensor([f.label for f in features], dtype=torch.float)
-            batch = {"labels": labels}
+                #labels = torch.tensor([f.label for f in features], dtype=torch.float)
+                labels_lex = []
+                labels_delex = []
+                for f in features:
+                    labels_lex.append(f[0].label)
+                    labels_delex.append(f[1].label)
+
+                assert labels_lex == labels_delex
+                labels_lex_tf = torch.tensor(labels_lex, dtype=torch.float)
+                labels_delex_tf = torch.tensor(labels_delex, dtype=torch.float)
+                labels = labels_lex_tf
+            batch_lex = {"labels": labels}
+            batch_delex = {"labels": labels}
+
         elif hasattr(first, "label_ids") and first.label_ids is not None:
             if type(first.label_ids[0]) is int:
                 labels = torch.tensor([f.label_ids for f in features], dtype=torch.long)
@@ -71,8 +98,13 @@ class DefaultDataCollator(DataCollator):
         # Again, we will use the first element to figure out which key/values are not None for this model.
         for k, v in vars(first).items():
             if k not in ("label", "label_ids") and v is not None and not isinstance(v, str):
-                batch[k] = torch.tensor([getattr(f, k) for f in features], dtype=torch.long)
-        return batch
+                k_list = []
+                for tuple_feature in features:
+                     k_list.append(getattr(tuple_feature[0], k))
+                batch_lex[k] = torch.tensor(k_list, dtype=torch.long)
+
+
+        return (batch_lex,batch_delex)
 
 
 @dataclass
