@@ -65,7 +65,7 @@ class HfArgumentParser(ArgumentParser):
                 if field.default is not dataclasses.MISSING:
                     kwargs["default"] = field.default
             elif field.type is bool:
-                #kwargs["action"] = "store_false" if field.default is True else "store_true"
+                kwargs["action"] = "store_false" if field.default is True else "store_true"
                 if field.default is True:
                     field_name = f"--no-{field.name}"
                     kwargs["dest"] = field.name

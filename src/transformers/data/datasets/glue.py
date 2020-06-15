@@ -220,9 +220,9 @@ class ParallelDataDataset(Dataset):
                     #when using parallel datasets get two features of examples and pass it to glue_convert_pair_examples_to_features
                     #which in turn creates features and combines them both
                     data_dir1 = os.path.join(args.data_dir, data_type_1)
-                    examples1 = self.processor.get_train_examples(data_dir1)
+                    examples1 = self.processor.get_train_examples_set1(data_dir1)
                     data_dir2 = os.path.join(args.data_dir, data_type_2)
-                    examples2 = self.processor.get_train_examples(data_dir2)
+                    examples2 = self.processor.get_train_examples_set2(data_dir2)
                 if limit_length is not None:
                     examples1 = examples1[:limit_length]
                     examples2 = examples2[:limit_length]

@@ -317,6 +317,14 @@ class MnliProcessor(DataProcessor):
         """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
 
+    def get_train_examples_set1(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+
+    def get_train_examples_set2(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+
     def get_dev_examples(self, data_dir):
         """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev_matched.tsv")), "dev_matched")
