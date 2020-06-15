@@ -24,7 +24,7 @@ from .modeling_utils import PreTrainedModel
 from .optimization import AdamW, get_linear_schedule_with_warmup
 from .trainer_utils import PREFIX_CHECKPOINT_DIR, EvalPrediction, PredictionOutput, TrainOutput
 from .training_args import TrainingArguments, is_tpu_available
-
+from torch.nn import CrossEntropyLoss, MSELoss
 
 try:
     from apex import amp
@@ -724,15 +724,24 @@ class StudentTeacherTrainer:
                 assert input_lex['labels'].tolist()==input_delex['labels'].tolist()
 
                 #this is where they do loss.backward()
-                tr_loss_lex = self._training_step_return_loss(model_teacher, input_lex, optimizer)
-                tr_loss_delex = self._training_step_return_loss(model_student, input_delex, optimizer)
 
+                #model returns # (loss), logits, (hidden_states), (attentions)
+                tr_loss_lex,outputs_lex = self.get_classification_loss(model_teacher, input_lex, optimizer)
+                tr_loss_delex,outputs_delex = self.get_classification_loss(model_student, input_delex, optimizer)
                 combined_classification_loss=tr_loss_lex+tr_loss_delex
+
+
+                # outputs contains in that order # (loss), logits, (hidden_states), (attentions)-src/transformers/modeling_bert.py
+                logits_lex = outputs_lex[1]
+                logits_delex=outputs_delex[1]
+                consistency_loss = self.get_consistency_loss(logits_lex,logits_delex,"mse")
+                combined_loss=combined_classification_loss+consistency_loss
+
                 if self.args.fp16:
-                    with amp.scale_loss(combined_classification_loss, optimizer) as scaled_loss:
+                    with amp.scale_loss(combined_loss, optimizer) as scaled_loss:
                         scaled_loss.backward()
                 else:
-                    combined_classification_loss.backward()
+                    combined_loss.backward()
 
                 tr_loss_lex_float+=tr_loss_lex.item()
                 tr_loss_delex_float+=tr_loss_delex.item()
@@ -863,7 +872,7 @@ class StudentTeacherTrainer:
 
         return loss.item()
 
-    def _training_step_return_loss(
+    def get_classification_loss(
             self, model: nn.Module, inputs: Dict[str, torch.Tensor], optimizer: torch.optim.Optimizer
     ) -> float:
         '''
@@ -882,6 +891,51 @@ class StudentTeacherTrainer:
 
         outputs = model(**inputs)
         loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
+
+        if self.args.n_gpu > 1:
+            loss = loss.mean()  # mean() to average on multi-gpu parallel training
+        if self.args.gradient_accumulation_steps > 1:
+            loss = loss / self.args.gradient_accumulation_steps
+
+        return loss,outputs
+
+    def get_logits(
+            self, model: nn.Module, inputs: Dict[str, torch.Tensor], optimizer: torch.optim.Optimizer
+    ) :
+        '''
+        similar to _training_step however returns loss instead of doing .backward
+        Args:
+            model:
+            inputs:
+            optimizer:
+
+        Returns:loss
+
+        '''
+        model.train()
+        for k, v in inputs.items():
+            inputs[k] = v.to(self.args.device)
+
+        outputs = model(**inputs)
+        return outputs
+
+    def get_consistency_loss(
+            self, logit1,logit2,loss_function):
+        '''
+        similar to _training_step however returns loss instead of doing .backward
+        Args:
+            model:
+            inputs:
+            optimizer:
+
+        Returns:loss
+
+        '''\
+
+        if(loss_function=="mse"):
+            loss_fct = MSELoss()
+            loss = loss_fct(logit1.view(-1), logit2.view(-1))
+
 
         if self.args.n_gpu > 1:
             loss = loss.mean()  # mean() to average on multi-gpu parallel training
