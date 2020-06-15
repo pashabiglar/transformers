@@ -688,8 +688,8 @@ class StudentTeacherTrainer:
                 self.global_step = 0
                 logger.info("  Starting fine-tuning.")
 
-        tr_loss = 0.0
-        tr_loss_delex = 0.0
+        tr_loss_lex_float = 0.0
+        tr_loss_delex_float = 0.0
         logging_loss = 0.0
         model_teacher.zero_grad()
         model_student.zero_grad()
@@ -706,12 +706,12 @@ class StudentTeacherTrainer:
                 parallel_loader = pl.ParallelLoader(train_dataloader, [self.args.device]).per_device_loader(
                     self.args.device
                 )
-                epoch_iterator_teacher_lex = tqdm(parallel_loader, desc="batches", disable=not self.is_local_master())
+                epoch_iterator = tqdm(parallel_loader, desc="batches", disable=not self.is_local_master())
             else:
-                epoch_iterator_teacher_lex = tqdm(train_dataloader, desc="batches", disable=not self.is_local_master())
+                epoch_iterator = tqdm(train_dataloader, desc="batches", disable=not self.is_local_master())
 
             #for each batch
-            for step, (input_lex,input_delex) in enumerate(epoch_iterator_teacher_lex):
+            for step, (input_lex,input_delex) in enumerate(epoch_iterator):
 
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:
@@ -720,13 +720,23 @@ class StudentTeacherTrainer:
                 assert input_lex['labels'].tolist()==input_delex['labels'].tolist()
 
                 #this is where they do loss.backward()
-                tr_loss += self._training_step(model_teacher, input_lex, optimizer)
-                tr_loss_delex += self._training_step(model_student, input_delex, optimizer)
+                tr_loss_lex = self._training_step_return_loss(model_teacher, input_lex, optimizer)
+                tr_loss_delex = self._training_step_return_loss(model_student, input_delex, optimizer)
+
+                combined_classification_loss=tr_loss_lex+tr_loss_delex
+                if self.args.fp16:
+                    with amp.scale_loss(combined_classification_loss, optimizer) as scaled_loss:
+                        scaled_loss.backward()
+                else:
+                    combined_classification_loss.backward()
+
+                tr_loss_lex_float+=tr_loss_lex.item()
+                tr_loss_delex_float+=tr_loss_delex.item()
 
                 if (step + 1) % self.args.gradient_accumulation_steps == 0 or (
                     # last step in epoch but step is always smaller than gradient_accumulation_steps
-                    len(epoch_iterator_teacher_lex) <= self.args.gradient_accumulation_steps
-                    and (step + 1) == len(epoch_iterator_teacher_lex)
+                    len(epoch_iterator) <= self.args.gradient_accumulation_steps
+                    and (step + 1) == len(epoch_iterator)
                 ):
                     if self.args.fp16:
                         torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), self.args.max_grad_norm)
@@ -745,20 +755,20 @@ class StudentTeacherTrainer:
                     model_student.zero_grad()
 
                     self.global_step += 1
-                    self.epoch = epoch + (step + 1) / len(epoch_iterator_teacher_lex)
+                    self.epoch = epoch + (step + 1) / len(epoch_iterator)
 
                     if (self.args.logging_steps > 0 and self.global_step % self.args.logging_steps == 0) or (
                         self.global_step == 1 and self.args.logging_first_step
                     ):
                         logs: Dict[str, float] = {}
-                        logs["loss"] = (tr_loss - logging_loss) / self.args.logging_steps
+                        logs["loss"] = (tr_loss_lex_float - logging_loss) / self.args.logging_steps
                         # backward compatibility for pytorch schedulers
                         logs["learning_rate"] = (
                             scheduler.get_last_lr()[0]
                             if version.parse(torch.__version__) >= version.parse("1.4")
                             else scheduler.get_lr()[0]
                         )
-                        logging_loss = tr_loss
+                        logging_loss = tr_loss_lex_float
 
                         self._log(logs)
 
@@ -796,8 +806,7 @@ class StudentTeacherTrainer:
                             torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
 
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
-                    epoch_iterator_teacher_lex.close()
-                    epoch_iterator_student_delex.close()
+                    epoch_iterator.close()
                     break
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
@@ -810,7 +819,7 @@ class StudentTeacherTrainer:
             self.tb_writer.close()
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
-        return TrainOutput(self.global_step, tr_loss / self.global_step)
+        return TrainOutput(self.global_step, tr_loss_lex_float / self.global_step)
 
     def _log(self, logs: Dict[str, float], iterator: Optional[tqdm] = None) -> None:
         if self.epoch is not None:
@@ -849,6 +858,33 @@ class StudentTeacherTrainer:
             loss.backward()
 
         return loss.item()
+
+    def _training_step_return_loss(
+            self, model: nn.Module, inputs: Dict[str, torch.Tensor], optimizer: torch.optim.Optimizer
+    ) -> float:
+        '''
+        similar to _training_step however returns loss instead of doing .backward
+        Args:
+            model:
+            inputs:
+            optimizer:
+
+        Returns:loss
+
+        '''
+        model.train()
+        for k, v in inputs.items():
+            inputs[k] = v.to(self.args.device)
+
+        outputs = model(**inputs)
+        loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
+
+        if self.args.n_gpu > 1:
+            loss = loss.mean()  # mean() to average on multi-gpu parallel training
+        if self.args.gradient_accumulation_steps > 1:
+            loss = loss / self.args.gradient_accumulation_steps
+
+        return loss
 
     def is_local_master(self) -> bool:
         if is_tpu_available():

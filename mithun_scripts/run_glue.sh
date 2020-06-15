@@ -31,8 +31,7 @@ echo "data_dir is $DATA_DIR"
 
 
 mkdir -p output
-#python3.6 ../examples/text-classification/run_glue.py --model_name_or_path bert-base-uncased     --task_name $TASK_NAME      --do_train   --do_eval --do_train_1student_1teacher  --do_predict    --data_dir $DATA_DIR    --max_seq_length 128      --per_device_eval_batch_size=16        --per_device_train_batch_size=16       --learning_rate 1e-5      --num_train_epochs 5.0      --output_dir $OUTPUT_DIR --overwrite_output_dir  --save_steps 37000 --weight_decay 0.01 --adam_epsilon 1e-6
-
+#python3.6 ../examples/text-classification/run_glue.py $args
 #for laptop run from terminal
 python3 ../examples/text-classification/run_glue.py $args
 
