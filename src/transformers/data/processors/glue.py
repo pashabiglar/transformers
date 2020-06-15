@@ -319,11 +319,11 @@ class MnliProcessor(DataProcessor):
 
     def get_train_examples_set1(self, data_dir):
         """See base class."""
-        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train1.tsv")), "train")
 
     def get_train_examples_set2(self, data_dir):
         """See base class."""
-        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train2.tsv")), "train")
 
     def get_dev_examples(self, data_dir):
         """See base class."""
@@ -366,6 +366,13 @@ class FeverInDomainProcessor(DataProcessor):
     def get_train_examples(self, data_dir):
         """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+    def get_train_examples_set1(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train1.tsv")), "train")
+
+    def get_train_examples_set2(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train2.tsv")), "train")
 
     def get_dev_examples(self, data_dir):
         """See base class."""
@@ -407,7 +414,13 @@ class FeverCrossDomainProcessor(DataProcessor):
     def get_train_examples(self, data_dir):
         """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+    def get_train_examples_set1(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train1.tsv")), "train")
 
+    def get_train_examples_set2(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train2.tsv")), "train")
     def get_dev_examples(self, data_dir):
         """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")

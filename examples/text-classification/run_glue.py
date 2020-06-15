@@ -161,7 +161,7 @@ def main():
         )
     else:
         train_dataset = (
-            GlueDataset(args=data_args, tokenizer=tokenizer, task_type="lex", mode="dev",
+            GlueDataset(args=data_args, tokenizer=tokenizer, task_type="lex", mode="train",
                         cache_dir=model_args.cache_dir)
             if training_args.do_train
             else None
