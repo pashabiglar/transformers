@@ -4,7 +4,7 @@
 
 #cd /home/u11/mithunpaul/huggingfacev2/mithun_scripts/
 #relative paths that worked on june 6th
-export PYTHONPATH="/home/u11/mithunpaul/huggingfacev2/"
+export PYTHONPATH="/home/u11/mithunpaul/huggingfacev2/src/transformers/"
 export OUTPUT_DIR="output/"
 
 
