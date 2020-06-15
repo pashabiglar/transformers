@@ -41,6 +41,8 @@ However instead of MNLI we feed in [FEVER](https://fever.ai/2018/task.html) and 
 ### to load a trained model and do dev (--do_eval) or predict on test (--do_predict) pass    `--model_name_or_path`
 e.g.;python3.6 ../examples/text-classification/run_glue.py --model_name_or_path "../trained_models/checkpoint-37000/"
 
+Notes:
+- argparse in our code is is overridden from the huggingface transformers where you will have to explicitly pass bool values e.g; ` --do_train  True`
 
 🤗 Transformers (formerly known as `pytorch-transformers` and `pytorch-pretrained-bert`) provides state-of-the-art general-purpose architectures (BERT, GPT-2, RoBERTa, XLM, DistilBert, XLNet, T5, CTRL...) for Natural Language Understanding (NLU) and Natural Language Generation (NLG) with over thousands of pretrained models in 100+ languages and deep interoperability between PyTorch & TensorFlow 2.0.
 

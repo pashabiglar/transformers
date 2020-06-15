@@ -52,7 +52,8 @@ class TrainingArguments:
     )
 
     do_train: bool = field(default=False, metadata={"help": "Whether to run training."})
-    do_train_1student_1teacher: bool = field(default=False, metadata={"help": "Whether to run training the teacher student model as opposed to one model alone."})
+    do_train_1student_1teacher: bool = field(default=False, metadata={"help": "Whether to run training the "
+                                                                              "teacher student model as opposed to one model alone."})
 
     do_eval: bool = field(default=False, metadata={"help": "Whether to run eval on the dev set."})
     do_predict: bool = field(default=False, metadata={"help": "Whether to run predictions on the test set."})
