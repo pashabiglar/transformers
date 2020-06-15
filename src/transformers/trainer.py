@@ -190,6 +190,10 @@ class StudentTeacherTrainer:
         """
         self.lex_teacher_model = models.get("teacher").to(args.device)
         self.delex_student_model = models.get("student").to(args.device)
+
+        #even though we train two models using student teacher architecture we weill only use the student model to do evaluation on fnc-dev delex dataset
+        self.model=self.delex_student_model
+
         self.args = args
         if data_collator is not None:
             self.data_collator = data_collator
