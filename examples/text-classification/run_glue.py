@@ -216,7 +216,7 @@ def main():
 
         if (training_args.do_train_1student_1teacher == True):
             print("found that training is for do_train_1student_1teacher")
-            import sys
+
             sys.exit()
             trainer.train_1teacher_1student(
                 model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
