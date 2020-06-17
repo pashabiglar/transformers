@@ -148,3 +148,7 @@ debug.env
 
 #ctags
 tags
+
+src/transformers/data/datasets/*
+*.DS_Store*
+trained_models

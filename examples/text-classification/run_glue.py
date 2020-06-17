@@ -25,11 +25,12 @@ from typing import Callable, Dict, Optional
 
 import numpy as np
 
-from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer, EvalPrediction, GlueDataset
+from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer, EvalPrediction, GlueDataset,ParallelDataDataset
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
 from transformers import (
     HfArgumentParser,
     Trainer,
+    StudentTeacherTrainer,
     TrainingArguments,
     glue_compute_metrics,
     glue_output_modes,
@@ -112,11 +113,11 @@ def main():
     except KeyError:
         raise ValueError("Task not found: %s" % (data_args.task_name))
 
-    # Load pretrained model and tokenizer
+    # Load pretrained model_teacher and tokenizer
     #
     # Distributed training:
     # The .from_pretrained methods guarantee that only one local process can concurrently
-    # download model & vocab.
+    # download model_teacher & vocab.
 
     config = AutoConfig.from_pretrained(
         model_args.config_name if model_args.config_name else model_args.model_name_or_path,
@@ -128,24 +129,57 @@ def main():
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
     )
-    model = AutoModelForSequenceClassification.from_pretrained(
+    if (training_args.do_train_1student_1teacher == True):
+        model_teacher = AutoModelForSequenceClassification.from_pretrained(
         model_args.model_name_or_path,
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
         config=config,
         cache_dir=model_args.cache_dir,
-    )
+        )
+        model_student = AutoModelForSequenceClassification.from_pretrained(
+        model_args.model_name_or_path,
+        from_tf=bool(".ckpt" in model_args.model_name_or_path),
+        config=config,
+        cache_dir=model_args.cache_dir,
+        )
+    else:
+        model = AutoModelForSequenceClassification.from_pretrained(
+            model_args.model_name_or_path,
+            from_tf=bool(".ckpt" in model_args.model_name_or_path),
+            config=config,
+            cache_dir=model_args.cache_dir,
+        )
 
     # Get datasets
-    train_dataset = (
-        GlueDataset(data_args, tokenizer=tokenizer, cache_dir=model_args.cache_dir) if training_args.do_train else None
-    )
+
+    # in a student teacher model_teacher teacher sees the lex data and student sees the delexicalized version of the same data
+    # This is taken care of inside the ParallelDataDataset
+    if(training_args.do_train_1student_1teacher ==True):
+        train_dataset = (
+            ParallelDataDataset(args=data_args, tokenizer=tokenizer, data_type_1="lex", data_type_2="delex",
+                                cache_dir=model_args.cache_dir) if training_args.do_train else None
+        )
+    else:
+        train_dataset = (
+            GlueDataset(args=data_args, tokenizer=tokenizer, task_type="lex", mode="train",
+                        cache_dir=model_args.cache_dir)
+            if training_args.do_train
+            else None
+        )
+
+    # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
+    # combined model_teacher performs in a delexicalized dataset. This will serve as a verification point
+    #to confirm the accuracy (we got 92.91% for fever delx in domain) if something goes wrong in the prediction phase below
+
     eval_dataset = (
-        GlueDataset(data_args, tokenizer=tokenizer, mode="dev", cache_dir=model_args.cache_dir)
+        GlueDataset(args=data_args, tokenizer=tokenizer,task_type="delex", mode="dev", cache_dir=model_args.cache_dir)
         if training_args.do_eval
         else None
     )
+
+    # in the student teacher mode the evaluation always happens in the delex cross domain dev data. so it will
     test_dataset = (
-        GlueDataset(data_args, tokenizer=tokenizer, mode="test", cache_dir=model_args.cache_dir)
+        GlueDataset(data_args, tokenizer=tokenizer,task_type="delex", mode="test", cache_dir=model_args.cache_dir)
         if training_args.do_predict
         else None
     )
@@ -161,24 +195,39 @@ def main():
         return compute_metrics_fn
 
     # Initialize our Trainer
-    trainer = Trainer(
-        model=model,
+    if training_args.do_train_1student_1teacher:
+            trainer = StudentTeacherTrainer(
+        models={"teacher":model_teacher,"student":model_student},
         args=training_args,
-        train_dataset=train_dataset,
+        train_datasets={"combined":train_dataset},
         eval_dataset=eval_dataset,
         compute_metrics=build_compute_metrics_fn(data_args.task_name),
     )
-
-    # Training
-    if training_args.do_train:
-        trainer.train(
-            model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
+    else:
+        trainer = Trainer(
+            model=model,
+            args=training_args,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            compute_metrics=build_compute_metrics_fn(data_args.task_name),
         )
+
+    if training_args.do_train:
+
+        if (training_args.do_train_1student_1teacher == True):
+            trainer.train_1teacher_1student(
+                model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
+            )
+        else:
+            trainer.train(
+                model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
+            )
         trainer.save_model()
         # For convenience, we also re-save the tokenizer to the same directory,
-        # so that you can share your model easily on huggingface.co/models =)
+        # so that you can share your model_teacher easily on huggingface.co/models =)
         if trainer.is_world_master():
             tokenizer.save_pretrained(training_args.output_dir)
+
 
     # Evaluation
     eval_results = {}

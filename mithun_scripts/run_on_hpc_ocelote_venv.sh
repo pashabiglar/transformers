@@ -3,7 +3,7 @@
 #PBS -q standard
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
-#PBS -N fdf
+#PBS -N hf_teacher_student
 ### Specify the group name
 #PBS -W group_list=msurdeanu
 ### Used if job requires partial node only
@@ -30,7 +30,7 @@ python3 -m venv my_virtual_env
 #this is the only line you need if you already have a virtual_env set up
 source my_virtual_env/bin/activate
 
-
+export PYTHONPATH="/home/u11/mithunpaul/huggingfacev2/src"
 pip install --upgrade pip
 #pip install torch==1.5.0+cu92 torchvision==0.6.0+cu92-f https://download.pytorch.org/whl/torch_stable.html
 
