@@ -57,7 +57,7 @@ def report_score(actual,predicted):
 
 #read tsv predictions from sandeeps tensorflow code
 #test_prediction_logits=pd.read_csv("data/5epochs_hugging_face_test_results_fevercrossdomain.txt",sep="\t",header=None)
-test_prediction_logits=pd.read_csv("data/with_sandeep_vocab_oaner_5epochs_test_results_fevercrossdomain.txt",sep="\t",header=None)
+test_prediction_logits=pd.read_csv("data/4labels_personc1_vocab_1s1t_fnc_dev_predictions.txt",sep="\t",header=None)
 test_gold=pd.read_csv("data/fnc_dev_gold.tsv",sep="\t",header=None)
 
 
@@ -80,7 +80,7 @@ for (pred,actual_row) in zip(test_prediction_logits.values,test_gold.values):
 
 #assuming there is no corresponding prediction for 1st gold value/datapoint
 # for index,predictions_row in enumerate(test_prediction_logits.values):
-#     if index<25411:
+#     if index<25411:seed
 #         label_index=(np.argmax(predictions_row.tolist()))
 #         label_string=LABELS[label_index]
 #         pred_labels.append(label_string)
