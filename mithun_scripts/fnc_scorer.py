@@ -57,7 +57,7 @@ def report_score(actual,predicted):
 
 #read tsv predictions from sandeeps tensorflow code
 #test_prediction_logits=pd.read_csv("data/5epochs_hugging_face_test_results_fevercrossdomain.txt",sep="\t",header=None)
-test_prediction_logits=pd.read_csv("data/4labels_personc1_vocab_1s1t_fnc_dev_predictions.txt",sep="\t",header=None)
+test_prediction_logits=pd.read_csv("data/sandeeps_personc1_vocab_student_teacher_seed384.txt",sep="\t",header=None)
 test_gold=pd.read_csv("data/fnc_dev_gold.tsv",sep="\t",header=None)
 
 
