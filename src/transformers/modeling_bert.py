@@ -1155,6 +1155,9 @@ class BertForSequenceClassification(BertPreTrainedModel):
         loss, logits = outputs[:2]
 
         """
+        for p in self.bert.embeddings.parameters():
+            if(p.requires_grad==False):
+                print(f"Found an embedding which is not being updated. parameter={p} and p.requires_grad={p.requires_grad}")
 
         outputs = self.bert(
             input_ids,
