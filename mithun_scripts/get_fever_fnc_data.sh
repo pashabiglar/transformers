@@ -77,11 +77,13 @@ else
     wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/lex/dev.tsv -O $FILE
 fi
 fi
-########fevercrossdomain delex (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
-if [ "$TASK_TYPE" = "delex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] ; then
-echo "found task type is lex and task name as fever cross domain"
+########fevercrossdomain delex where delexicalization was done using overlap aware (oa) technique (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
+if [ "$TASK_TYPE" = "delex" ] && [ "$TASK_NAME" = "fevercrossdomain" ]  && [ "$SUB_TASK_TYPE" = "oa" ]; then
+echo "found task type is lex and task name as fever cross domain and SUB_TASK_TYPE is oa"
 echo $DATA_DIR
 mkdir -p $DATA_DIR
+
+
 
 FILE=$DATA_DIR/train.tsv
 if test -f "$FILE";then
@@ -107,6 +109,40 @@ else
 wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/oa/dev.tsv -O $FILE
 fi
 fi
+
+
+########fevercrossdomain delex where delexicalixation was done with figer-specific technique (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
+if [ "$TASK_TYPE" = "delex" ] && [ "$TASK_NAME" = "fevercrossdomain" ]  && [ "$SUB_TASK_TYPE" = "figerspecific" ]; then
+echo "found task type is lex and task name as fever cross domain and sub task type ==figerspecific"
+echo $DATA_DIR
+mkdir -p $DATA_DIR
+
+
+FILE=$DATA_DIR/train.tsv
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/figer_specific/train.tsv -O $FILE
+fi
+
+FILE=$DATA_DIR/dev.tsv
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+   wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/figer_specific/dev.tsv -O $FILE
+fi
+
+#We are loading the cross domain dev file (eg: fnc-dev file) as the test partition
+# This is just a hack so that the code produces/predicts results in single go, as opposed to having to reload a trained model
+FILE=$DATA_DIR/test.tsv
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/cross-domain/figer_specific/dev.tsv -O $FILE
+fi
+fi
+
+exit
 ####################################for cross domain student teacher, there will be two training files.-one for lex and another for delex
 
 
