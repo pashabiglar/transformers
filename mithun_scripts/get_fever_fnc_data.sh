@@ -142,7 +142,7 @@ else
 fi
 fi
 
-exit
+
 ####################################for cross domain student teacher, there will be two training files.-one for lex and another for delex
 
 
