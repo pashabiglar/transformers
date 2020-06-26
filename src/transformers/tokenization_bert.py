@@ -35,7 +35,7 @@ PRETRAINED_VOCAB_FILES_MAP = {
         #"bert-base-uncased": "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-vocab.txt",
         #for uofa's student teacher model we use a vocab file built on top of bert-base-uncased-vocab.txt, but has mappings for delex tokens like PERSON-C1
         "bert-base-uncased": "https://storage.googleapis.com/fact_verification_mithun_files/bert_related/bert_base_uncased/vocab.txt",
-        #"bert-large-uncased": "https://s3.amazonaws.com/models.huggingface.co/bert/bert-large-uncased-vocab.txt",
+        "bert-large-uncased": "https://s3.amazonaws.com/models.huggingface.co/bert/bert-large-uncased-vocab.txt",
         "bert-base-cased": "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-cased-vocab.txt",
         "bert-large-cased": "https://s3.amazonaws.com/models.huggingface.co/bert/bert-large-cased-vocab.txt",
         "bert-base-multilingual-uncased": "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-multilingual-uncased-vocab.txt",
