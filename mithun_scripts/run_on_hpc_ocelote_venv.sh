@@ -46,7 +46,7 @@ pip install --upgrade pip
 
 
 #one which worked at noon june 6th 2020
-cd /home/u11/mithunpaul/huggingfacev2/mithun_scripts/
+cd /home/u11/mithunpaul/tuning_huggingface/mithun_scripts/
 pip install -r requirements.txt
 #export PYTHONPATH="/xdisk/msurdeanu/mithunpaul/huggingface//transformers/src/"
 
