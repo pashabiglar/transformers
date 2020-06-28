@@ -9,7 +9,7 @@ export OUTPUT_DIR="output/"
 
 
 
-args="--model_name_or_path bert-base-uncased    --task_name $TASK_NAME      --do_train   --do_eval   --do_predict    --data_dir $DATA_DIR    --max_seq_length 128      --per_device_eval_batch_size=16        --per_device_train_batch_size=16       --learning_rate 1e-5      --num_train_epochs 5.0      --output_dir $OUTPUT_DIR --overwrite_output_dir  --save_steps 74000 --weight_decay 0.01 --adam_epsilon 1e-6 --overwrite_cache"
+args="--model_name_or_path bert-base-cased    --task_name $TASK_NAME      --do_train   --do_eval   --do_predict    --data_dir $DATA_DIR    --max_seq_length 128      --per_device_eval_batch_size=16        --per_device_train_batch_size=16       --learning_rate 1e-5      --num_train_epochs 5.0      --output_dir $OUTPUT_DIR --overwrite_output_dir  --save_steps 74000 --weight_decay 0.01 --adam_epsilon 1e-6 --overwrite_cache"
 
 echo "TASK_TYPE is $TASK_TYPE"
 if [ "$TASK_TYPE" = "delex" ] ; then
@@ -51,4 +51,7 @@ echo $args
 #to load a trained model
 #python3.6 ../examples/text-classification/run_glue.py --model_name_or_path "output/checkpoint-37000/" --tokenizer_name  bert-base-uncased    --task_name fevercrossdomain   --do_predict     --data_dir "../src/transformers/data/datasets/fever/fevercrossdomain/lex"     --max_seq_length 128      --per_device_eval_batch_size=8       --per_device_train_batch_size=8        --learning_rate 2e-5      --num_train_epochs 1.0      --output_dir "./output" --overwrite_output_dir --save_steps 14000 --weight_decay 0.01 --adam_epsilon 1e-6
 #cross domain lex bert cased
-#--model_name_or_path bert-base-cased --task_name fevercrossdomain --do_train --do_eval --do_predict --data_dir /Users/mordor/research/transformers/src/transformers/data/datasets/fever/fevercrossdomain/lex --max_seq_length 128 --per_device_eval_batch_size=16 --per_device_train_batch_size=16 --learning_rate 1e-5 --num_train_epochs 1.0 --output_dir output/ --overwrite_output_dir --save_steps 74000 --weight_decay 0.01 --adam_epsilon 1e-6 --overwrite_cache
+#--model_name_or_path bert-base-cased --task_name fevercrossdomain --do_train --do_eval --do_predict --data_dir /Users/mordor/research/transformers/src/transformers/data/datasets/fever/fevercrossdomain/lex/figerspecific --max_seq_length 128 --per_device_eval_batch_size=16 --per_device_train_batch_size=16 --learning_rate 1e-5 --num_train_epochs 1.0 --output_dir output/ --overwrite_output_dir --save_steps 74000 --weight_decay 0.01 --adam_epsilon 1e-6 --overwrite_cache
+
+#cross domain delex bert cased
+#--model_name_or_path bert-base-cased --task_name fevercrossdomain --do_train --do_eval --do_predict --data_dir /Users/mordor/research/transformers/src/transformers/data/datasets/fever/fevercrossdomain/delex/figerspecific --max_seq_length 128 --per_device_eval_batch_size=16 --per_device_train_batch_size=16 --learning_rate 1e-5 --num_train_epochs 1.0 --output_dir output/ --overwrite_output_dir --save_steps 74000 --weight_decay 0.01 --adam_epsilon 1e-6 --overwrite_cache
