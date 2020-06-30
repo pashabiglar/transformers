@@ -383,6 +383,8 @@ class StudentTeacherTrainer:
         """
         return len(dataloader.dataset)
 
+
+
     def train(self, model_path: Optional[str] = None):
         """
         Main training entry point.
@@ -1558,9 +1560,13 @@ class Trainer:
                             torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                             torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
 
+
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                     epoch_iterator.close()
                     break
+            # mithuns feature. do eval on dev after every epoch of training
+            self.call_eval()
+
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
                 break
@@ -1702,6 +1708,36 @@ class Trainer:
             logger.info("Deleting older checkpoint [{}] due to args.save_total_limit".format(checkpoint))
             shutil.rmtree(checkpoint)
 
+
+
+    def call_eval(self):
+
+        """
+        Helper function to call eval() method if and when you want to evaluate after say each epoch,
+        instead having to wait till the end of all epochs
+        Returns:
+
+        """
+        eval_results = {}
+        if self.args.do_eval:
+            logger.info("*** Evaluate ***")
+
+            # Loop to handle MNLI double evaluation (matched, mis-matched)
+            eval_datasets = [self.eval_dataset]
+            for eval_dataset in eval_datasets:
+                eval_result = self.evaluate(eval_dataset=eval_dataset)
+
+                output_eval_file = os.path.join(
+                    self.args.output_dir, f"eval_results_{eval_dataset.args.task_name}.txt"
+                )
+                if self.is_world_master():
+                    with open(output_eval_file, "w") as writer:
+                        logger.info("***** Eval results {} *****".format(eval_dataset.args.task_name))
+                        for key, value in eval_result.items():
+                            logger.info("  %s = %s", key, value)
+                            writer.write("%s = %s\n" % (key, value))
+
+                eval_results.update(eval_result)
     def evaluate(
         self, eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
     ) -> Dict[str, float]:

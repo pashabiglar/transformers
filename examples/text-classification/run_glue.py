@@ -213,7 +213,7 @@ def main():
             eval_dataset=eval_dataset,
             compute_metrics=build_compute_metrics_fn(data_args.task_name),
         )
-
+    trainer.compute_metrics = build_compute_metrics_fn(eval_dataset.args.task_name)
     if training_args.do_train:
 
         if (training_args.do_train_1student_1teacher == True):
