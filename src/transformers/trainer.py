@@ -1565,7 +1565,7 @@ class Trainer:
                     epoch_iterator.close()
                     break
             # mithuns feature. do eval on dev after every epoch of training
-            self.call_eval()
+            self._intermediate_eval()
 
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
@@ -1710,7 +1710,7 @@ class Trainer:
 
 
 
-    def call_eval(self):
+    def _intermediate_eval(self):
 
         """
         Helper function to call eval() method if and when you want to evaluate after say each epoch,
@@ -1736,8 +1736,11 @@ class Trainer:
                         for key, value in eval_result.items():
                             logger.info("  %s = %s", key, value)
                             writer.write("%s = %s\n" % (key, value))
+                if is_wandb_available():
+                    wandb.log({'epoch': eval_result['eval_acc'], 'loss': eval_result['epoch']})
+            eval_results.update(eval_result)
+                #                wandb.log(logs, step=self.global_step)
 
-                eval_results.update(eval_result)
     def evaluate(
         self, eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
     ) -> Dict[str, float]:
