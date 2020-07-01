@@ -1490,6 +1490,9 @@ class Trainer:
             else:
                 epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=not self.is_local_master())
 
+            #log training loss etc at the end of every epoch.len(epoch_iterator)==no of batches
+            self.args.logging_steps=len(epoch_iterator)
+
             for step, inputs in enumerate(epoch_iterator):
 
                 # Skip past any already trained steps if resuming training
@@ -1564,6 +1567,8 @@ class Trainer:
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                     epoch_iterator.close()
                     break
+
+            wandb.log({'mithun_training_loss': logging_loss}, step=epoch)
             # mithuns feature. do eval on dev after every epoch of training
             self._intermediate_eval()
 
@@ -1739,7 +1744,7 @@ class Trainer:
                 if is_wandb_available():
                     wandb.log({'eval_acc': eval_result['eval_acc']},step=eval_result['epoch'])
             eval_results.update(eval_result)
-                #                wandb.log(logs, step=self.global_step)
+
 
     def evaluate(
         self, eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
