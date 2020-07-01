@@ -1737,7 +1737,7 @@ class Trainer:
                             logger.info("  %s = %s", key, value)
                             writer.write("%s = %s\n" % (key, value))
                 if is_wandb_available():
-                    wandb.log({'epoch': eval_result['eval_acc'], 'loss': eval_result['epoch']})
+                    wandb.log({'eval_acc': eval_result['eval_acc']},step=eval_result['epoch'])
             eval_results.update(eval_result)
                 #                wandb.log(logs, step=self.global_step)
 
