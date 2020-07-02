@@ -1749,12 +1749,11 @@ class Trainer:
                 )
                 if self.is_world_master():
                     with open(output_eval_file, "w") as writer:
-                        logger.info("***** Eval results {} *****".format(eval_dataset.args.task_name))
+                        logger.info("***** evaluation results on {} *****".format(description))
                         for key, value in eval_result.items():
                             logger.info("  %s = %s", key, value)
                             writer.write("%s = %s\n" % (key, value))
-                if is_wandb_available():
-                    wandb.log({'eval_acc': eval_result['eval_acc']},step=eval_result['epoch'])
+
             eval_results.update(eval_result)
 
 
