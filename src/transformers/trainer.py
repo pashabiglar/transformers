@@ -1544,7 +1544,6 @@ class Trainer:
                         )
                         logging_loss = tr_loss
 
-                        self._log(logs)
 
                         if self.args.evaluate_during_training:
                             self.evaluate()
@@ -1578,11 +1577,10 @@ class Trainer:
                     break
 
             # mithuns feature. do evaluation on dev (or test) n after every epoch of training
-            assert self.compute_metrics==None
             self.compute_metrics=self.dev_compute_metrics
-            self._intermediate_eval(eval_dataset=self.eval_dataset,description="dev_partition")
+            self._intermediate_eval(eval_dataset=self.eval_dataset,description="fever_dev",epoch=epoch)
             self.compute_metrics = self.test_compute_metrics
-            self._intermediate_eval(eval_dataset=self.test_dataset, description="test_partition")
+            self._intermediate_eval(eval_dataset=self.test_dataset, description="fnc_dev",epoch=epoch)
 
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
@@ -1728,7 +1726,7 @@ class Trainer:
 
 
 
-    def _intermediate_eval(self,eval_dataset,description):
+    def _intermediate_eval(self,eval_dataset,description,epoch):
 
         """
         Helper function to call eval() method if and when you want to evaluate after say each epoch,
@@ -1753,8 +1751,8 @@ class Trainer:
                         for key, value in eval_result.items():
                             logger.info("  %s = %s", key, value)
                             writer.write("%s = %s\n" % (key, value))
-
-            eval_results.update(eval_result)
+                            wandb.log({key:value}, step = epoch)
+        return eval_result
 
 
     def evaluate(
@@ -1778,7 +1776,7 @@ class Trainer:
 
         output = self._prediction_loop(eval_dataloader, description=description)
 
-        self._log(output.metrics)
+        #self._log(output.metrics)
 
         if self.args.tpu_metrics_debug:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
