@@ -1190,7 +1190,10 @@ class Trainer:
     data_collator: DataCollator
     train_dataset: Optional[Dataset]
     eval_dataset: Optional[Dataset]
+    test_dataset: Optional[Dataset]
     compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
+    dev_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
+    test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     prediction_loss_only: bool
     tb_writer: Optional["SummaryWriter"] = None
     optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = None
@@ -1204,7 +1207,10 @@ class Trainer:
         data_collator: Optional[DataCollator] = None,
         train_dataset: Optional[Dataset] = None,
         eval_dataset: Optional[Dataset] = None,
+        test_dataset: Optional[Dataset] = None,
         compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
+        dev_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
+        test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
         prediction_loss_only=False,
         tb_writer: Optional["SummaryWriter"] = None,
         optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = None,
@@ -1225,7 +1231,10 @@ class Trainer:
             self.data_collator = DefaultDataCollator()
         self.train_dataset = train_dataset
         self.eval_dataset = eval_dataset
+        self.test_dataset = test_dataset
         self.compute_metrics = compute_metrics
+        self.dev_compute_metrics = dev_compute_metrics
+        self.test_compute_metrics = test_compute_metrics
         self.prediction_loss_only = prediction_loss_only
         self.optimizers = optimizers
         if tb_writer is not None:
@@ -1568,9 +1577,12 @@ class Trainer:
                     epoch_iterator.close()
                     break
 
-            wandb.log({'mithun_training_loss': logging_loss}, step=epoch)
-            # mithuns feature. do eval on dev after every epoch of training
-            self._intermediate_eval()
+            # mithuns feature. do evaluation on dev (or test) n after every epoch of training
+            assert self.compute_metrics==None
+            self.compute_metrics=self.dev_compute_metrics
+            self._intermediate_eval(eval_dataset=self.eval_dataset,description="dev_partition")
+            self.compute_metrics = self.test_compute_metrics
+            self._intermediate_eval(eval_dataset=self.test_dataset, description="test_partition")
 
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
@@ -1715,7 +1727,8 @@ class Trainer:
 
 
 
-    def _intermediate_eval(self):
+
+    def _intermediate_eval(self,eval_dataset,description):
 
         """
         Helper function to call eval() method if and when you want to evaluate after say each epoch,
@@ -1725,15 +1738,14 @@ class Trainer:
         """
         eval_results = {}
         if self.args.do_eval:
-            logger.info("*** Evaluate ***")
+            logger.info("*** Evaluating on  ***"+description)
 
-            # Loop to handle MNLI double evaluation (matched, mis-matched)
-            eval_datasets = [self.eval_dataset]
+            eval_datasets = [eval_dataset]
             for eval_dataset in eval_datasets:
-                eval_result = self.evaluate(eval_dataset=eval_dataset)
+                eval_result = self.evaluate(eval_dataset=eval_dataset,description=description)
 
                 output_eval_file = os.path.join(
-                    self.args.output_dir, f"eval_results_{eval_dataset.args.task_name}.txt"
+                    self.args.output_dir, f"results_{description}.txt"
                 )
                 if self.is_world_master():
                     with open(output_eval_file, "w") as writer:
@@ -1747,7 +1759,7 @@ class Trainer:
 
 
     def evaluate(
-        self, eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
+        self, description:str,eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
     ) -> Dict[str, float]:
         """
         Run evaluation and return metrics.
@@ -1765,7 +1777,39 @@ class Trainer:
         """
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
 
-        output = self._prediction_loop(eval_dataloader, description="Evaluation")
+        output = self._prediction_loop(eval_dataloader, description=description)
+
+        self._log(output.metrics)
+
+        if self.args.tpu_metrics_debug:
+            # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
+            xm.master_print(met.metrics_report())
+
+        return output.metrics
+
+    def predict_evaluate(
+        self, test_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
+    ) -> Dict[str, float]:
+        """
+        overload of evaluate function
+        Run evaluation on test partition and return metrics.
+
+        Note: this is note a traditional test set where we dont have labels, this is infact the dev partition of a cross domain dataset.
+
+        The calling script will be responsible for providing a method to compute metrics, as they are
+        task-dependent.
+
+        Args:
+            test_dataset: (Optional) Pass a dataset if you wish to override
+            the one on the instance.
+        Returns:
+            A dict containing:
+                - the eval loss
+                - the potential metrics computed from the predictions
+        """
+        test_dataloader = self.get_test_dataloader(test_dataset)
+
+        output = self._prediction_loop(test_dataloader, description="Evaluation")
 
         self._log(output.metrics)
 
@@ -1787,7 +1831,7 @@ class Trainer:
         return self._prediction_loop(test_dataloader, description="Prediction")
 
     def _prediction_loop(
-        self, dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None
+        self,dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None
     ) -> PredictionOutput:
         """
         Prediction/evaluation loop, shared by `evaluate()` and `predict()`.
@@ -1869,10 +1913,10 @@ class Trainer:
         if len(eval_losses) > 0:
             metrics["eval_loss"] = np.mean(eval_losses)
 
-        # Prefix all keys with eval_
+        # Prefix all keys with description
         for key in list(metrics.keys()):
-            if not key.startswith("eval_"):
-                metrics[f"eval_{key}"] = metrics.pop(key)
+            #if not key.startswith("eval_"):
+            metrics[f"{description}_{key}"] = metrics.pop(key)
 
         return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics)
 

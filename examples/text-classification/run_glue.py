@@ -179,12 +179,19 @@ def main():
         else None
     )
 
-    # in the student teacher mode the evaluation always happens in the delex cross domain dev data. so it will
+    # in the uofas rte the test partition will be the dev-partition of delexicalized version of the  cross domain dataset.
+    #  so it will have labels since we need it to produce accuracy. Hence using the mode as "dev" instead of "test"
     test_dataset = (
-        GlueDataset(data_args, tokenizer=tokenizer,task_type="delex", mode="test", cache_dir=model_args.cache_dir)
+        GlueDataset(data_args, tokenizer=tokenizer,task_type="delex", mode="dev", cache_dir=model_args.cache_dir)
         if training_args.do_predict
         else None
     )
+
+    # test_dataset = (
+    #     GlueDataset(data_args, tokenizer=tokenizer, task_type="delex", mode="test", cache_dir=model_args.cache_dir)
+    #     if training_args.do_predict
+    #     else None
+    # )
 
     def build_compute_metrics_fn(task_name: str) -> Callable[[EvalPrediction], Dict]:
         def compute_metrics_fn(p: EvalPrediction):
@@ -196,6 +203,12 @@ def main():
 
         return compute_metrics_fn
 
+    # note: in the original huggingface's code base the type of metric calculation was declared/decided only after all training was done.
+    # However moving it here so that we will have a metric to use when eval is done after every epoch
+    dev_compute_metrics = build_compute_metrics_fn("feverindomain")
+    test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
+
+
     # Initialize our Trainer
     if training_args.do_train_1student_1teacher:
             trainer = StudentTeacherTrainer(
@@ -203,7 +216,10 @@ def main():
         args=training_args,
         train_datasets={"combined":train_dataset},
         eval_dataset=eval_dataset,
-        compute_metrics=build_compute_metrics_fn(data_args.task_name),
+        compute_metrics=None,
+        dev_compute_metrics=dev_compute_metrics,
+        test_compute_metrics=test_compute_metrics,
+
     )
     else:
         trainer = Trainer(
@@ -211,9 +227,13 @@ def main():
             args=training_args,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
-            compute_metrics=build_compute_metrics_fn(data_args.task_name),
+            test_dataset=test_dataset,
+            compute_metrics=None,
+            dev_compute_metrics=dev_compute_metrics,
+            test_compute_metrics=test_compute_metrics,
         )
-    trainer.compute_metrics = build_compute_metrics_fn(eval_dataset.args.task_name)
+
+
     if training_args.do_train:
 
         if (training_args.do_train_1student_1teacher == True):
