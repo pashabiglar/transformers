@@ -179,10 +179,9 @@ def main():
         else None
     )
 
-    # in the uofas rte the test partition will be the dev-partition of delexicalized version of the  cross domain dataset.
-    #  so it will have labels since we need it to produce accuracy. Hence using the mode as "dev" instead of "test"
+
     test_dataset = (
-        GlueDataset(data_args, tokenizer=tokenizer,task_type="delex", mode="dev", cache_dir=model_args.cache_dir)
+        GlueDataset(data_args, tokenizer=tokenizer,task_type="delex", mode="test", cache_dir=model_args.cache_dir)
         if training_args.do_predict
         else None
     )

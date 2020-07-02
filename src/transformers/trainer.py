@@ -1578,9 +1578,9 @@ class Trainer:
 
             # mithuns feature. do evaluation on dev (or test) n after every epoch of training
             self.compute_metrics=self.dev_compute_metrics
-            self._intermediate_eval(eval_dataset=self.eval_dataset,description="fever_dev",epoch=epoch)
+            self._intermediate_eval(eval_datasets_in=self.eval_dataset, description="fever_dev", epoch=epoch)
             self.compute_metrics = self.test_compute_metrics
-            self._intermediate_eval(eval_dataset=self.test_dataset, description="fnc_dev",epoch=epoch)
+            self._intermediate_eval(eval_datasets_in=self.test_dataset, description="fnc_dev", epoch=epoch)
 
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
@@ -1726,7 +1726,7 @@ class Trainer:
 
 
 
-    def _intermediate_eval(self,eval_dataset,description,epoch):
+    def _intermediate_eval(self, eval_datasets_in, description, epoch):
 
         """
         Helper function to call eval() method if and when you want to evaluate after say each epoch,
@@ -1738,9 +1738,9 @@ class Trainer:
         if self.args.do_eval:
             logger.info("*** Evaluating on  ***"+description)
 
-            eval_datasets = [eval_dataset]
-            for eval_dataset in eval_datasets:
-                eval_result = self.evaluate(eval_dataset=eval_dataset,description=description)
+            eval_datasets = [eval_datasets_in]
+            for eval_datasets_in in eval_datasets:
+                eval_result = self.evaluate(eval_dataset=eval_datasets_in, description=description)
 
                 output_eval_file = os.path.join(
                     self.args.output_dir, f"results_{description}.txt"
