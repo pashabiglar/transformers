@@ -39,7 +39,7 @@ pip install --upgrade pip
 #####my code part
 
 cd /home/u11/mithunpaul/huggingfacev2/mithun_scripts/
-#pip install -r requirements.txt
+pip install -r requirements.txt
 
 
 bash run_all.sh
