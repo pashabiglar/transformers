@@ -138,7 +138,7 @@ FILE=$DATA_DIR/test.tsv
 if test -f "$FILE";then
 echo "$FILE exists"
 else
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/cross-domain/figer_specific/dev.tsv -O $FILE
+    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/figer_specific/dev.tsv -O $FILE
 fi
 fi
 
