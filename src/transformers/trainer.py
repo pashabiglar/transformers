@@ -62,6 +62,7 @@ def is_tensorboard_available():
 
 
 # try:
+os.environ["WANDB_API_KEY"] = "de268c256c2d4acd9085ee4e05d91706c49090d7"
 print("just going to import wandb")
 import wandb
 wandb.login()
