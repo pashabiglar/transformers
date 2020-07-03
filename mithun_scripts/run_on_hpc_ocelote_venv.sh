@@ -44,7 +44,6 @@ pip install wandb
 WANDB_API_KEY=de268c256c2d4acd9085ee4e05d91706c49090d7
 wandb login
 export WANDB_NAME="from_hpc"
-exit
 bash run_all.sh
 
 
