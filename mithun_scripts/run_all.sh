@@ -12,7 +12,7 @@ WANDB_API_KEY=de268c256c2d4acd9085ee4e05d91706c49090d7
 rm -rf $basedir
 
 ./get_fever_fnc_data.sh
-./reduce_size.sh
+#./reduce_size.sh
 ./convert_to_mnli_format.sh
 #############end of commentable data sections
 ./run_glue.sh
