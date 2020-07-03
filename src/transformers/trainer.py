@@ -65,7 +65,7 @@ def is_tensorboard_available():
 os.environ["WANDB_API_KEY"] = "de268c256c2d4acd9085ee4e05d91706c49090d7"
 print("just going to import wandb")
 import wandb
-#wandb.login()
+
 wandb.ensure_configured()
 if wandb.api.api_key is None:
     _has_wandb = False
