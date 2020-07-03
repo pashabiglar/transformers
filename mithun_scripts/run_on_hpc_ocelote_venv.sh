@@ -39,7 +39,7 @@ export PYTHONPATH="/home/u11/mithunpaul/huggingfacev2/src"
 #####my code part
 
 cd /home/u11/mithunpaul/huggingfacev2/mithun_scripts/
-#pip install -r requirements.txt
+pip install -r requirements.txt
 #pip install wandb
 #WANDB_API_KEY=de268c256c2d4acd9085ee4e05d91706c49090d7
 #wandb login
