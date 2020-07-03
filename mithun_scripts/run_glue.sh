@@ -34,6 +34,9 @@ echo "data_dir is $DATA_DIR"
 
 
 mkdir -p output
+
+python3.6 test.py
+exit
 python3.6 ../examples/text-classification/run_glue.py $args
 #for laptop run from terminal
 echo $args
