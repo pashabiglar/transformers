@@ -4,6 +4,7 @@ import math
 import os
 import random
 import re
+import sys
 import shutil
 from contextlib import contextmanager
 from pathlib import Path
@@ -68,7 +69,11 @@ try:
         _has_wandb = False
         wandb.termwarn("W&B installed but not logged in.  Run `wandb login` or set the WANDB_API_KEY env variable.")
     else:
-        _has_wandb = False if os.getenv("WANDB_DISABLED") else True
+        if os.getenv("WANDB_DISABLED"):
+            print("found that WANDB_DISABLED is True ")
+            _has_wandb = False
+        else :
+            _has_wandb  =   True
 except ImportError:
     _has_wandb = False
 
@@ -214,13 +219,13 @@ class StudentTeacherTrainer:
             )
         if is_wandb_available():
             self._setup_wandb()
-            exit()
+            sys.exit()
         else:
             logger.info(
                 "You are instantiating a Trainer but W&B is not installed. To use wandb logging, "
                 "run `pip install wandb; wandb login` see https://docs.wandb.com/huggingface."
             )
-            exit(1)
+            sys.exit(1)
         set_seed(self.args.seed)
         # Create output directory if needed
         if self.is_world_master():
