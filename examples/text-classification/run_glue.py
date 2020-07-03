@@ -41,18 +41,6 @@ from transformers import (
 
 
 
-wandb.login()
-wandb.ensure_configured()
-if wandb.api.api_key is None:
-    _has_wandb = False
-    wandb.termwarn("W&B installed but not logged in.  Run `wandb login` or set the WANDB_API_KEY env variable.")
-else:
-    if os.getenv("WANDB_DISABLED"):
-        print("found that WANDB_DISABLED is True ")
-        _has_wandb = False
-    else :
-        _has_wandb  =   True
-
 
 logger = logging.getLogger(__name__)
 
