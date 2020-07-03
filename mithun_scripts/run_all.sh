@@ -10,8 +10,7 @@ export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE"
 
 #comment this section if you just downloaded and converted the data fresh using these.-useful for repeated runs
 rm -rf $basedir
-python test.py
-exit
+
 ./get_fever_fnc_data.sh
 ./reduce_size.sh
 ./convert_to_mnli_format.sh
