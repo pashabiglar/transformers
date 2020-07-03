@@ -214,11 +214,13 @@ class StudentTeacherTrainer:
             )
         if is_wandb_available():
             self._setup_wandb()
+            exit()
         else:
             logger.info(
                 "You are instantiating a Trainer but W&B is not installed. To use wandb logging, "
                 "run `pip install wandb; wandb login` see https://docs.wandb.com/huggingface."
             )
+            exit(1)
         set_seed(self.args.seed)
         # Create output directory if needed
         if self.is_world_master():
@@ -366,6 +368,7 @@ class StudentTeacherTrainer:
             WANDB_DISABLED:
                 (Optional): boolean - defaults to false, set to "true" to disable wandb entirely
         """
+        os.environ["WANDB_API_KEY"] = "de268c256c2d4acd9085ee4e05d91706c49090d7"
         logger.info('Automatic Weights & Biases logging enabled, to disable set os.environ["WANDB_DISABLED"] = "true"')
         wandb.init(project=os.getenv("WANDB_PROJECT", "huggingface"), config=vars(self.args))
         # keep track of model topology and gradients
