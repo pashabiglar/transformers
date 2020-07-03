@@ -33,9 +33,6 @@ fi
 echo "data_dir is $DATA_DIR"
 
 
-python test.py
-exit
-
 mkdir -p output
 python3.6 ../examples/text-classification/run_glue.py $args
 #for laptop run from terminal

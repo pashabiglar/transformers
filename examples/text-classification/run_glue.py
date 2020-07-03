@@ -15,6 +15,10 @@
 # limitations under the License.
 """ Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
 
+print("just going to import wandb")
+import wandb
+import sys
+sys.exit(1)
 
 import dataclasses
 import logging
@@ -39,8 +43,7 @@ from transformers import (
 )
 
 
-print("just going to import wandb")
-import wandb
+
 wandb.login()
 wandb.ensure_configured()
 if wandb.api.api_key is None:
