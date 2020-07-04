@@ -36,7 +36,7 @@ source my_virtual_env/bin/activate
 
 
 export PYTHONPATH="/home/u11/mithunpaul/huggingfacev2/src"
-#pip install --upgrade pip
+pip install --upgrade pip
 #pip install torch==1.5.0+cu92 torchvision==0.6.0+cu92-f https://download.pytorch.org/whl/torch_stable.html
 
 
