@@ -15,7 +15,7 @@ rm -rf $basedir
 #torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
 
 ./get_fever_fnc_data.sh
-#./reduce_size.sh
+./reduce_size.sh
 ./convert_to_mnli_format.sh
 #############end of commentable data sections
 ./run_glue.sh
