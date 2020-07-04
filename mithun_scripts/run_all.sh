@@ -11,6 +11,9 @@ WANDB_API_KEY=de268c256c2d4acd9085ee4e05d91706c49090d7
 #comment this section if you just downloaded and converted the data fresh using these.-useful for repeated runs
 rm -rf $basedir
 
+#for server clara
+#torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+
 ./get_fever_fnc_data.sh
 #./reduce_size.sh
 ./convert_to_mnli_format.sh
