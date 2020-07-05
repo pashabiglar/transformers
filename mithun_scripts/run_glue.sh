@@ -5,11 +5,11 @@
 #cd /home/u11/mithunpaul/huggingfacev2/mithun_scripts/
 #relative paths that worked on june 6th
 
-export OUTPUT_DIR="output/"
+export OUTPUT_DIR="/home/u11/mithunpaul/xdisk/model_storage/bert_uncased_figer_july4th2020/"
 
 
 
-args="--model_name_or_path bert-base-uncased    --task_name $TASK_NAME      --do_train   --do_eval   --do_predict    --data_dir $DATA_DIR    --max_seq_length 128      --per_device_eval_batch_size=16        --per_device_train_batch_size=16       --learning_rate 1e-5      --num_train_epochs 6.0      --output_dir $OUTPUT_DIR --overwrite_output_dir  --save_steps 74000 --weight_decay 0.01 --adam_epsilon 1e-6 --overwrite_cache "
+args="--model_name_or_path bert-base-uncased    --task_name $TASK_NAME      --do_train   --do_eval   --do_predict    --data_dir $DATA_DIR    --max_seq_length 128      --per_device_eval_batch_size=16        --per_device_train_batch_size=16       --learning_rate 1e-5      --num_train_epochs 25.0      --output_dir $OUTPUT_DIR --overwrite_output_dir  --save_steps 7449 --weight_decay 0.01 --adam_epsilon 1e-6 --overwrite_cache "
 
 echo "TASK_TYPE is $TASK_TYPE"
 if [ "$TASK_TYPE" = "delex" ] ; then
