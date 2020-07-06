@@ -4,6 +4,7 @@ import math
 import os
 import random
 import re
+import sys
 import shutil
 from contextlib import contextmanager
 from pathlib import Path
@@ -60,17 +61,23 @@ def is_tensorboard_available():
     return _has_tensorboard
 
 
-try:
-    import wandb
+# try:
+os.environ["WANDB_API_KEY"] = "de268c256c2d4acd9085ee4e05d91706c49090d7"
+print("just going to import wandb")
+import wandb
 
-    wandb.ensure_configured()
-    if wandb.api.api_key is None:
-        _has_wandb = False
-        wandb.termwarn("W&B installed but not logged in.  Run `wandb login` or set the WANDB_API_KEY env variable.")
-    else:
-        _has_wandb = False if os.getenv("WANDB_DISABLED") else True
-except ImportError:
+wandb.ensure_configured()
+if wandb.api.api_key is None:
     _has_wandb = False
+    wandb.termwarn("W&B installed but not logged in.  Run `wandb login` or set the WANDB_API_KEY env variable.")
+else:
+    if os.getenv("WANDB_DISABLED"):
+        print("found that WANDB_DISABLED is True ")
+        _has_wandb = False
+    else :
+        _has_wandb  =   True
+# except ImportError:
+#     _has_wandb = False
 
 
 def is_wandb_available():
@@ -214,11 +221,13 @@ class StudentTeacherTrainer:
             )
         if is_wandb_available():
             self._setup_wandb()
+            sys.exit()
         else:
             logger.info(
                 "You are instantiating a Trainer but W&B is not installed. To use wandb logging, "
                 "run `pip install wandb; wandb login` see https://docs.wandb.com/huggingface."
             )
+            sys.exit(1)
         set_seed(self.args.seed)
         # Create output directory if needed
         if self.is_world_master():
@@ -366,6 +375,7 @@ class StudentTeacherTrainer:
             WANDB_DISABLED:
                 (Optional): boolean - defaults to false, set to "true" to disable wandb entirely
         """
+        os.environ["WANDB_API_KEY"] = "de268c256c2d4acd9085ee4e05d91706c49090d7"
         logger.info('Automatic Weights & Biases logging enabled, to disable set os.environ["WANDB_DISABLED"] = "true"')
         wandb.init(project=os.getenv("WANDB_PROJECT", "huggingface"), config=vars(self.args))
         # keep track of model topology and gradients
@@ -382,6 +392,8 @@ class StudentTeacherTrainer:
         Helper to get num of examples from a DataLoader, by accessing its Dataset.
         """
         return len(dataloader.dataset)
+
+
 
     def train(self, model_path: Optional[str] = None):
         """
@@ -1188,7 +1200,10 @@ class Trainer:
     data_collator: DataCollator
     train_dataset: Optional[Dataset]
     eval_dataset: Optional[Dataset]
+    test_dataset: Optional[Dataset]
     compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
+    dev_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
+    test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     prediction_loss_only: bool
     tb_writer: Optional["SummaryWriter"] = None
     optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = None
@@ -1202,7 +1217,10 @@ class Trainer:
         data_collator: Optional[DataCollator] = None,
         train_dataset: Optional[Dataset] = None,
         eval_dataset: Optional[Dataset] = None,
+        test_dataset: Optional[Dataset] = None,
         compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
+        dev_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
+        test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
         prediction_loss_only=False,
         tb_writer: Optional["SummaryWriter"] = None,
         optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = None,
@@ -1223,7 +1241,10 @@ class Trainer:
             self.data_collator = DefaultDataCollator()
         self.train_dataset = train_dataset
         self.eval_dataset = eval_dataset
+        self.test_dataset = test_dataset
         self.compute_metrics = compute_metrics
+        self.dev_compute_metrics = dev_compute_metrics
+        self.test_compute_metrics = test_compute_metrics
         self.prediction_loss_only = prediction_loss_only
         self.optimizers = optimizers
         if tb_writer is not None:
@@ -1238,9 +1259,10 @@ class Trainer:
             self._setup_wandb()
         else:
             logger.info(
-                "You are instantiating a Trainer but W&B is not installed. To use wandb logging, "
+                "You are instantiatinggggg a Trainer but W&B is not installed. To use wandb logging, "
                 "run `pip install wandb; wandb login` see https://docs.wandb.com/huggingface."
             )
+            sys.exit()
         set_seed(self.args.seed)
         # Create output directory if needed
         if self.is_world_master():
@@ -1488,6 +1510,9 @@ class Trainer:
             else:
                 epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=not self.is_local_master())
 
+            #log training loss etc at the end of every epoch.len(epoch_iterator)==no of batches
+            self.args.logging_steps=len(epoch_iterator)
+
             for step, inputs in enumerate(epoch_iterator):
 
                 # Skip past any already trained steps if resuming training
@@ -1530,7 +1555,6 @@ class Trainer:
                         )
                         logging_loss = tr_loss
 
-                        self._log(logs)
 
                         if self.args.evaluate_during_training:
                             self.evaluate()
@@ -1558,9 +1582,17 @@ class Trainer:
                             torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                             torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
 
+
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                     epoch_iterator.close()
                     break
+
+            # mithuns feature. do evaluation on dev (or test) n after every epoch of training
+            self.compute_metrics=self.dev_compute_metrics
+            self._intermediate_eval(eval_datasets_in=self.eval_dataset, description="fever_dev", epoch=epoch)
+            self.compute_metrics = self.test_compute_metrics
+            self._intermediate_eval(eval_datasets_in=self.test_dataset, description="fnc_dev", epoch=epoch)
+
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
                 break
@@ -1702,8 +1734,40 @@ class Trainer:
             logger.info("Deleting older checkpoint [{}] due to args.save_total_limit".format(checkpoint))
             shutil.rmtree(checkpoint)
 
+
+
+
+    def _intermediate_eval(self, eval_datasets_in, description, epoch):
+
+        """
+        Helper function to call eval() method if and when you want to evaluate after say each epoch,
+        instead having to wait till the end of all epochs
+        Returns:
+
+        """
+        eval_results = {}
+        if self.args.do_eval:
+            logger.info("*** Evaluating on  ***"+description)
+
+            eval_datasets = [eval_datasets_in]
+            for eval_datasets_in in eval_datasets:
+                eval_result = self.evaluate(eval_dataset=eval_datasets_in, description=description)
+
+                output_eval_file = os.path.join(
+                    self.args.output_dir, f"results_{description}.txt"
+                )
+                if self.is_world_master():
+                    with open(output_eval_file, "w") as writer:
+                        logger.info("***** evaluation results on {} *****".format(description))
+                        for key, value in eval_result.items():
+                            logger.info("  %s = %s", key, value)
+                            writer.write("%s = %s\n" % (key, value))
+                            wandb.log({key:value}, step = epoch)
+        return eval_result
+
+
     def evaluate(
-        self, eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
+        self, description:str,eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
     ) -> Dict[str, float]:
         """
         Run evaluation and return metrics.
@@ -1721,7 +1785,39 @@ class Trainer:
         """
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
 
-        output = self._prediction_loop(eval_dataloader, description="Evaluation")
+        output = self._prediction_loop(eval_dataloader, description=description)
+
+        #self._log(output.metrics)
+
+        if self.args.tpu_metrics_debug:
+            # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
+            xm.master_print(met.metrics_report())
+
+        return output.metrics
+
+    def predict_evaluate(
+        self, test_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
+    ) -> Dict[str, float]:
+        """
+        overload of evaluate function
+        Run evaluation on test partition and return metrics.
+
+        Note: this is note a traditional test set where we dont have labels, this is infact the dev partition of a cross domain dataset.
+
+        The calling script will be responsible for providing a method to compute metrics, as they are
+        task-dependent.
+
+        Args:
+            test_dataset: (Optional) Pass a dataset if you wish to override
+            the one on the instance.
+        Returns:
+            A dict containing:
+                - the eval loss
+                - the potential metrics computed from the predictions
+        """
+        test_dataloader = self.get_test_dataloader(test_dataset)
+
+        output = self._prediction_loop(test_dataloader, description="Evaluation")
 
         self._log(output.metrics)
 
@@ -1743,7 +1839,7 @@ class Trainer:
         return self._prediction_loop(test_dataloader, description="Prediction")
 
     def _prediction_loop(
-        self, dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None
+        self,dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None
     ) -> PredictionOutput:
         """
         Prediction/evaluation loop, shared by `evaluate()` and `predict()`.
@@ -1825,10 +1921,10 @@ class Trainer:
         if len(eval_losses) > 0:
             metrics["eval_loss"] = np.mean(eval_losses)
 
-        # Prefix all keys with eval_
+        # Prefix all keys with description
         for key in list(metrics.keys()):
-            if not key.startswith("eval_"):
-                metrics[f"eval_{key}"] = metrics.pop(key)
+            #if not key.startswith("eval_"):
+            metrics[f"{description}_{key}"] = metrics.pop(key)
 
         return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics)
 

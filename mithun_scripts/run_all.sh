@@ -7,9 +7,13 @@ export SUB_TASK_TYPE="figerspecific" #options for TASK_SUB_TYPE (usually used on
 export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
 export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE"
 #export PYTHONPATH="/Users/mordor/research/transformers/src"
-
+WANDB_API_KEY=de268c256c2d4acd9085ee4e05d91706c49090d7
 #comment this section if you just downloaded and converted the data fresh using these.-useful for repeated runs
 rm -rf $basedir
+
+#for server clara
+#torch==1.5.1+cu101 torchvision==0.6.1+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+
 ./get_fever_fnc_data.sh
 #./reduce_size.sh
 ./convert_to_mnli_format.sh

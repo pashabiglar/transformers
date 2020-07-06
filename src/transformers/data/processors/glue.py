@@ -279,9 +279,12 @@ class MrpcProcessor(DataProcessor):
         """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
 
+    # update:in the uofas rte the test partition will be the dev-partition of delexicalized version of the  cross domain dataset.
+    #  so it will have labels since we need it to produce accuracy. Hence using the mode as "dev" instead of "test"
+
     def get_test_examples(self, data_dir):
         """See base class."""
-        return self._create_examples(self._read_tsv(os.path.join(data_dir, "test.tsv")), "test")
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "test.tsv")), "dev")
 
     def get_labels(self):
         """See base class."""
@@ -427,7 +430,7 @@ class FeverCrossDomainProcessor(DataProcessor):
 
     def get_test_examples(self, data_dir):
         """See base class."""
-        return self._create_examples(self._read_tsv(os.path.join(data_dir, "test.tsv")), "test")
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "test.tsv")), "devß")
 
     def get_labels(self):
         """See base class."""
