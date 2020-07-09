@@ -57,8 +57,8 @@ def report_score(actual,predicted):
 
 #read tsv predictions from sandeeps tensorflow code
 #test_prediction_logits=pd.read_csv("data/5epochs_hugging_face_test_results_fevercrossdomain.txt",sep="\t",header=None)
-test_prediction_logits=pd.read_csv("data/fnc_dev_bertBaseCased_baseVocab_delex_oaner_15epochs.txt",sep="\t",header=None)
-test_gold=pd.read_csv("data/fnc_dev_gold.tsv",sep="\t",header=None)
+test_prediction_logits=pd.read_csv("predictions/fnc_dev_predictions_from_116d87d249c71f722abcab172f52c2f862ac684f.txt",sep="\t",header=None)
+test_gold=pd.read_csv("predictions/fnc_dev_gold.tsv",sep="\t",header=None)
 
 
 #why are the lengths different?
