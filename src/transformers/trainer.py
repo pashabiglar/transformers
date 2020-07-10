@@ -1526,6 +1526,7 @@ class Trainer:
 
             #log training loss etc at the end of every epoch.len(epoch_iterator)==no of batches
             self.args.logging_steps=len(epoch_iterator)
+            self.args.save_steps=len(epoch_iterator)
 
             for step, inputs in enumerate(epoch_iterator):
 
@@ -1559,6 +1560,7 @@ class Trainer:
                     if (self.args.logging_steps > 0 and self.global_step % self.args.logging_steps == 0) or (
                         self.global_step == 1 and self.args.logging_first_step
                     ):
+
                         logs: Dict[str, float] = {}
                         logs["loss"] = (tr_loss - logging_loss) / self.args.logging_steps
                         # backward compatibility for pytorch schedulers
@@ -1572,10 +1574,13 @@ class Trainer:
 
                         if self.args.evaluate_during_training:
                             self.evaluate()
-
+                    
                     if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0:
                         # In all cases (even distributed/parallel), self.model is always a reference
                         # to the model we want to save.
+                        print(f"found save steps vs global step check works. going to save model.current epoch={epoch}, self.args.save_steps ={self.args.save_steps} and self.global_step"
+                              f"={self.global_step}")
+
                         if hasattr(model, "module"):
                             assert model.module is self.model
                         else:
