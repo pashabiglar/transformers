@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export MACHINE_TO_RUN_ON="server" #options include [laptop, server]
+export MACHINE_TO_RUN_ON="laptop" #options include [laptop, server]
 export DATA_DIR_BASE="../src/transformers/data/datasets"
 export DATASET="fever"
 export basedir="$DATA_DIR_BASE/$DATASET"
@@ -17,7 +17,7 @@ fi
 
 export OUTPUT_DIR="$OUTPUT_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE/$BERT_MODEL_NAME/$MAX_SEQ_LENGTH/"
 echo $OUTPUT_DIR
-exit
+
 
 #export PYTHONPATH="/Users/mordor/research/transformers/src"
 WANDB_API_KEY=de268c256c2d4acd9085ee4e05d91706c49090d7

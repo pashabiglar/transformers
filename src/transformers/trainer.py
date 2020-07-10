@@ -9,7 +9,7 @@ import shutil
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
-
+import git
 import numpy as np
 import torch
 from packaging import version
@@ -1498,6 +1498,17 @@ class Trainer:
         train_iterator = trange(
             epochs_trained, int(num_train_epochs), desc="Epoch", disable=not self.is_local_master()
         )
+
+        #create the files which will store the evaluation results (accuracy etc) on dev and test partitions
+        # empty out the predictions files once before all epochs . writing of predictions to disk will happen at early stopping
+        repo = git.Repo(search_parent_directories=True)
+        sha = repo.head.object.hexsha
+        description_dev="indomain_dev"
+        description_test = "cross_domain_dev"
+        dev_partition_evaluation_results_file = os.path.join(self.args.output_dir, f"results_{description_dev}_{sha}.txt")
+        test_partition_evaluation_results_file = os.path.join(self.args.output_dir,
+                                                             f"results_{description_test}_{sha}.txt")
+
         for epoch in train_iterator:
             if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
                 train_dataloader.sampler.set_epoch(epoch)
@@ -1589,9 +1600,9 @@ class Trainer:
 
             # mithuns feature. do evaluation on dev (or test) n after every epoch of training
             self.compute_metrics=self.dev_compute_metrics
-            self._intermediate_eval(eval_datasets_in=self.eval_dataset, description="fever_dev", epoch=epoch)
+            self._intermediate_eval(eval_datasets_in=self.eval_dataset, description=description_dev, epoch=epoch,output_eval_file= dev_partition_evaluation_results_file)
             self.compute_metrics = self.test_compute_metrics
-            self._intermediate_eval(eval_datasets_in=self.test_dataset, description="fnc_dev", epoch=epoch)
+            self._intermediate_eval(eval_datasets_in=self.test_dataset, description=description_test, epoch=epoch,output_eval_file=test_partition_evaluation_results_file)
 
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
@@ -1737,7 +1748,7 @@ class Trainer:
 
 
 
-    def _intermediate_eval(self, eval_datasets_in, description, epoch):
+    def _intermediate_eval(self, eval_datasets_in, description, epoch,output_eval_file):
 
         """
         Helper function to call eval() method if and when you want to evaluate after say each epoch,
@@ -1753,11 +1764,9 @@ class Trainer:
             for eval_datasets_in in eval_datasets:
                 eval_result = self.evaluate(eval_dataset=eval_datasets_in, description=description)
 
-                output_eval_file = os.path.join(
-                    self.args.output_dir, f"results_{description}.txt"
-                )
+
                 if self.is_world_master():
-                    with open(output_eval_file, "w") as writer:
+                    with open(output_eval_file, "a+") as writer:
                         logger.info("***** evaluation results on {} *****".format(description))
                         for key, value in eval_result.items():
                             logger.info("  %s = %s", key, value)
