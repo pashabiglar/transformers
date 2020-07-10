@@ -51,6 +51,7 @@ pip install -r requirements.txt
 WANDB_API_KEY=de268c256c2d4acd9085ee4e05d91706c49090d7
 #wandb login
 #export WANDB_NAME="from_hpc"
+export MACHINE_TO_RUN_ON="server" #options include [laptop, server]
 bash git run_all.sh
 
 
