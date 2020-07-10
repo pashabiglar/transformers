@@ -1503,11 +1503,14 @@ class Trainer:
         # empty out the predictions files once before all epochs . writing of predictions to disk will happen at early stopping
         repo = git.Repo(search_parent_directories=True)
         sha = repo.head.object.hexsha
-        description_dev="indomain_dev"
-        description_test = "cross_domain_dev"
+        description_dev="dev_partition"
+        description_test = "test_partition"
         dev_partition_evaluation_results_file = os.path.join(self.args.output_dir, f"results_{description_dev}_{sha}.txt")
         test_partition_evaluation_results_file = os.path.join(self.args.output_dir,
                                                              f"results_{description_test}_{sha}.txt")
+        if self.is_world_master():
+            open(dev_partition_evaluation_results_file, "w")
+            open(test_partition_evaluation_results_file, "w")
 
         for epoch in train_iterator:
             if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
@@ -1767,6 +1770,7 @@ class Trainer:
 
                 if self.is_world_master():
                     with open(output_eval_file, "a+") as writer:
+                        writer.write("*****epoch=%s\n" % (epoch))
                         logger.info("***** evaluation results on {} *****".format(description))
                         for key, value in eval_result.items():
                             logger.info("  %s = %s", key, value)
