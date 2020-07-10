@@ -729,7 +729,7 @@ class StudentTeacherTrainer:
                 tr_loss_lex,outputs_lex = self.get_classification_loss(model_teacher, input_lex, optimizer)
                 tr_loss_delex,outputs_delex = self.get_classification_loss(model_student, input_delex, optimizer)
                 combined_classification_loss=tr_loss_lex+tr_loss_delex
-
+   
 
                 # outputs contains in that order # (loss), logits, (hidden_states), (attentions)-src/transformers/modeling_bert.py
                 logits_lex = outputs_lex[1]
