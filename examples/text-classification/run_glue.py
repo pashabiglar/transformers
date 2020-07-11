@@ -195,7 +195,10 @@ def main():
             return glue_compute_metrics(task_name, preds, p.label_ids)
 
         return compute_metrics_fn
-
+    # note: in the original huggingface's code base the type of metric calculation was declared/decided only after all training was done.
+    # However moving it here so that we will have a metric to use when eval is done after every epoch
+    dev_compute_metrics = build_compute_metrics_fn("feverindomain")
+    test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
     # Initialize our Trainer
     if training_args.do_train_1student_1teacher:
             trainer = StudentTeacherTrainer(
@@ -203,7 +206,9 @@ def main():
         args=training_args,
         train_datasets={"combined":train_dataset},
         eval_dataset=eval_dataset,
-        compute_metrics=build_compute_metrics_fn(data_args.task_name),
+        compute_metrics=None,
+        dev_compute_metrics=dev_compute_metrics,
+        test_compute_metrics=test_compute_metrics,
     )
     else:
         trainer = Trainer(
@@ -211,7 +216,10 @@ def main():
             args=training_args,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
-            compute_metrics=build_compute_metrics_fn(data_args.task_name),
+            test_dataset=test_dataset,
+            compute_metrics=None,
+            dev_compute_metrics=dev_compute_metrics,
+            test_compute_metrics=test_compute_metrics,
         )
 
     if training_args.do_train:
@@ -246,7 +254,7 @@ def main():
 
         for eval_dataset in eval_datasets:
             trainer.compute_metrics = build_compute_metrics_fn(eval_dataset.args.task_name)
-            eval_result = trainer.evaluate(eval_dataset=eval_dataset)
+            eval_result = trainer.evaluate(eval_dataset=eval_dataset, description="dev after all epochs")
 
             output_eval_file = os.path.join(
                 training_args.output_dir, f"eval_results_{eval_dataset.args.task_name}.txt"

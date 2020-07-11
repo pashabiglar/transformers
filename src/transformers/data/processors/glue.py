@@ -182,10 +182,10 @@ def _glue_convert_examples_to_features(
         feature = InputFeatures(**inputs, label=labels[i])
         features.append(feature)
 
-    for i, example in enumerate(examples[:5]):
-        logger.info("*** Example ***")
-        logger.info("guid: %s" % (example.guid))
-        logger.info("features: %s" % features[i])
+    # for i, example in enumerate(examples[:5]):
+    #     logger.info("*** Example ***")
+    #     logger.info("guid: %s" % (example.guid))
+    #     logger.info("features: %s" % features[i])
 
     return features
 
@@ -281,7 +281,8 @@ class MrpcProcessor(DataProcessor):
 
     def get_test_examples(self, data_dir):
         """See base class."""
-        return self._create_examples(self._read_tsv(os.path.join(data_dir, "test.tsv")), "test")
+        #to get labels also since we are loading fnc-dev as test partition
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "test.tsv")), "dev")
 
     def get_labels(self):
         """See base class."""
@@ -427,7 +428,7 @@ class FeverCrossDomainProcessor(DataProcessor):
 
     def get_test_examples(self, data_dir):
         """See base class."""
-        return self._create_examples(self._read_tsv(os.path.join(data_dir, "test.tsv")), "test")
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "test.tsv")), "dev")
 
     def get_labels(self):
         """See base class."""

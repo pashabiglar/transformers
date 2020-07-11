@@ -24,4 +24,4 @@ class TrainOutput(NamedTuple):
     training_loss: float
 
 
-PREFIX_CHECKPOINT_DIR = "checkpoint"
+PREFIX_CHECKPOINT_DIR = "trained_model"
