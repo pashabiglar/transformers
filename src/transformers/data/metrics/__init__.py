@@ -149,7 +149,7 @@ if _has_sklearn:
     def report_score(actual,predicted):
         score,cm = score_submission(actual,predicted)
         best_score, _ = score_submission(actual,actual)
-        return score/best_score,cm
+        return cm,score/best_score
 
     def calculate_fnc_score(actual,predicted):
         print("inside calculate_fnc_score")
