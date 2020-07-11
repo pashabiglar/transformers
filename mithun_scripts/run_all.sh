@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+export MACHINE_TO_RUN_ON="laptop" #options include [laptop, server]
 export DATA_DIR_BASE="../src/transformers/data/datasets"
 export DATASET="fever"
 export basedir="$DATA_DIR_BASE/$DATASET"
@@ -6,7 +7,15 @@ export TASK_TYPE="lex" #options for task type include lex,delex,and combined"". 
 export SUB_TASK_TYPE="figerspecific" #options for TASK_SUB_TYPE (usually used only for delex)  include [oa, figerspecific, figerabstract, oass, simplener]
 export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
 export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE"
-#export PYTHONPATH="/Users/mordor/research/transformers/src"
+export BERT_MODEL_NAME="bert-base-cased" #options include things like [bert-base-uncased,bert-base-cased] etc. refer src/transformers/tokenization_bert.py for more.
+export MAX_SEQ_LENGTH="128"
+export OUTPUT_DIR_BASE="output"
+if [ "$MACHINE_TO_RUN_ON" = "server" ]; then
+    export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/output"
+fi
+
+export OUTPUT_DIR="$OUTPUT_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE/$BERT_MODEL_NAME/$MAX_SEQ_LENGTH/"
+echo $OUTPUT_DIR
 
 #comment this section if you just downloaded and converted the data fresh using these.-useful for repeated runs
 rm -rf $basedir
