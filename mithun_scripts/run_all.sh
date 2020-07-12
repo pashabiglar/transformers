@@ -20,7 +20,7 @@ echo $OUTPUT_DIR
 #comment this section if you just downloaded and converted the data fresh using these.-useful for repeated runs
 rm -rf $basedir
 ./get_fever_fnc_data.sh
-./reduce_size.sh
+#./reduce_size.sh
 ./convert_to_mnli_format.sh
 #############end of commentable data sections
 ./run_glue.sh
