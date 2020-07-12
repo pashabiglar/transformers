@@ -32,6 +32,16 @@ if _has_sklearn:
     def simple_accuracy(preds, labels):
         return (preds == labels).mean()
 
+
+    def acc_and_fnc_score(preds, labels):
+        acc = simple_accuracy(preds, labels)
+        cm, f1 = calculate_fnc_score(labels, preds)
+        return {
+            "acc": acc,
+            "fnc_score": f1,
+            "confusion matrix": cm
+        }
+
     def acc_and_f1(preds, labels):
         acc = simple_accuracy(preds, labels)
         f1 = f1_score(y_true=labels, y_pred=preds)
@@ -77,7 +87,7 @@ if _has_sklearn:
         elif task_name == "feverindomain":
             return {"acc": simple_accuracy(preds, labels)}
         elif task_name == "fevercrossdomain":
-            return {"acc": simple_accuracy(preds, labels)}
+            return {"acc": acc_and_fnc_score(preds, labels)}
         else:
             raise KeyError(task_name)
 
@@ -87,3 +97,64 @@ if _has_sklearn:
             return {"acc": simple_accuracy(preds, labels)}
         else:
             raise KeyError(task_name)
+    #Adapted from https://github.com/FakeNewsChallenge/fnc-1/blob/master/scorer.py
+    #Original credit - @bgalbraith
+    import pandas as pd
+    import numpy as np
+
+    LABELS = ['agree', 'disagree', 'discuss', 'unrelated']
+    LABELS_RELATED = ['unrelated','related']
+    RELATED = LABELS[0:3]
+
+    def score_submission(gold_labels, test_labels):
+        score = 0.0
+        cm = [[0, 0, 0, 0],
+              [0, 0, 0, 0],
+              [0, 0, 0, 0],
+              [0, 0, 0, 0]]
+
+        for i, (g, t) in enumerate(zip(gold_labels, test_labels)):
+            g_stance, t_stance = g, t
+            if g_stance == t_stance:
+                score += 0.25
+                if g_stance != 'unrelated':
+                    score += 0.50
+            if g_stance in RELATED and t_stance in RELATED:
+                score += 0.25
+
+            cm[LABELS.index(g_stance)][LABELS.index(t_stance)] += 1
+
+        return score, cm
+
+
+    def print_confusion_matrix(cm):
+        lines = []
+        header = "|{:^11}|{:^11}|{:^11}|{:^11}|{:^11}|".format('', *LABELS)
+        line_len = len(header)
+        lines.append("-"*line_len)
+        lines.append(header)
+        lines.append("-"*line_len)
+
+        hit = 0
+        total = 0
+        for i, row in enumerate(cm):
+            hit += row[i]
+            total += sum(row)
+            lines.append("|{:^11}|{:^11}|{:^11}|{:^11}|{:^11}|".format(LABELS[i],
+                                                                       *row))
+            lines.append("-"*line_len)
+        print('\n'.join(lines))
+
+    def report_score(actual,predicted):
+        score,cm = score_submission(actual,predicted)
+        best_score, _ = score_submission(actual,actual)
+        return cm,score/best_score
+
+    def calculate_fnc_score(actual,predicted):
+        print("inside calculate_fnc_score")
+        actual=[LABELS[x] for x in actual]
+        predicted = [LABELS[x] for x in predicted]
+        print(f"actual={actual} ")
+        print(f"predicted={predicted}")
+        cm,score=report_score(actual,predicted)
+        return [cm,score]

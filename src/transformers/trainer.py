@@ -1188,7 +1188,9 @@ class Trainer:
     data_collator: DataCollator
     train_dataset: Optional[Dataset]
     eval_dataset: Optional[Dataset]
+    test_dataset: Optional[Dataset]
     compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
+    test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     prediction_loss_only: bool
     tb_writer: Optional["SummaryWriter"] = None
     optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = None
@@ -1201,8 +1203,10 @@ class Trainer:
         args: TrainingArguments,
         data_collator: Optional[DataCollator] = None,
         train_dataset: Optional[Dataset] = None,
+        test_dataset: Optional[Dataset] = None,
         eval_dataset: Optional[Dataset] = None,
         compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
+        test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
         prediction_loss_only=False,
         tb_writer: Optional["SummaryWriter"] = None,
         optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = None,
@@ -1223,7 +1227,9 @@ class Trainer:
             self.data_collator = DefaultDataCollator()
         self.train_dataset = train_dataset
         self.eval_dataset = eval_dataset
+        self.test_dataset = test_dataset
         self.compute_metrics = compute_metrics
+        self.test_compute_metrics = test_compute_metrics
         self.prediction_loss_only = prediction_loss_only
         self.optimizers = optimizers
         if tb_writer is not None:
@@ -1476,6 +1482,15 @@ class Trainer:
         train_iterator = trange(
             epochs_trained, int(num_train_epochs), desc="Epoch", disable=not self.is_local_master()
         )
+        import git
+        repo = git.Repo(search_parent_directories=True)
+        sha = repo.head.object.hexsha
+        description_test = "test_partition"
+        test_partition_evaluation_results_file = os.path.join(self.args.output_dir,
+                                                              f"results_{description_test}_{sha}.txt")
+        if self.is_world_master():
+            open(test_partition_evaluation_results_file, "w")
+
         for epoch in train_iterator:
             if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
                 train_dataloader.sampler.set_epoch(epoch)
@@ -1561,6 +1576,11 @@ class Trainer:
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                     epoch_iterator.close()
                     break
+
+            self.compute_metrics = self.test_compute_metrics
+            self._intermediate_eval(eval_datasets_in=self.test_dataset, description=description_test,
+                                    epoch=epoch, output_eval_file=test_partition_evaluation_results_file)
+
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
                 break
@@ -1702,8 +1722,32 @@ class Trainer:
             logger.info("Deleting older checkpoint [{}] due to args.save_total_limit".format(checkpoint))
             shutil.rmtree(checkpoint)
 
+    def _intermediate_eval(self, eval_datasets_in, description, epoch, output_eval_file):
+
+        """
+        Helper function to call eval() method if and when you want to evaluate after say each epoch,
+        instead having to wait till the end of all epochs
+        Returns:
+        """
+        eval_results = {}
+        if self.args.do_eval:
+            logger.info("*** Evaluating on  ***" + description)
+
+            eval_datasets = [eval_datasets_in]
+            for eval_datasets_in in eval_datasets:
+                eval_result = self.evaluate(eval_dataset=eval_datasets_in, description=description)
+
+                if self.is_world_master():
+                    with open(output_eval_file, "a+") as writer:
+                        writer.write("*****epoch=%s\n" % (epoch))
+                        logger.info("***** evaluation results on {} *****".format(description))
+                        for key, value in eval_result.items():
+                            logger.info("  %s = %s", key, value)
+                            writer.write("%s = %s\n" % (key, value))
+                            wandb.log({key: value}, step=epoch)
+        return eval_result
     def evaluate(
-        self, eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
+        self, description: str,eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
     ) -> Dict[str, float]:
         """
         Run evaluation and return metrics.
@@ -1721,9 +1765,11 @@ class Trainer:
         """
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
 
-        output = self._prediction_loop(eval_dataloader, description="Evaluation")
+        output = self._prediction_loop(eval_dataloader, description=description)
 
-        self._log(output.metrics)
+        #this was assuming the evaluation happens after all epochs. instead mithun is changing evaluate to happen
+        # after every epoch. we will be doing it inside the new function _intermediate_eval
+        #self._log(output.metrics)
 
         if self.args.tpu_metrics_debug:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)

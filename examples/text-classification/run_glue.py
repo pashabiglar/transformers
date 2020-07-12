@@ -196,6 +196,7 @@ def main():
 
         return compute_metrics_fn
 
+    test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
     # Initialize our Trainer
     if training_args.do_train_1student_1teacher:
             trainer = StudentTeacherTrainer(
@@ -211,7 +212,7 @@ def main():
             args=training_args,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
-            compute_metrics=build_compute_metrics_fn(data_args.task_name),
+            test_compute_metrics=test_compute_metrics
         )
 
     if training_args.do_train:
