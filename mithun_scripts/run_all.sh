@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export MACHINE_TO_RUN_ON="laptop" #options include [laptop, server]
+export MACHINE_TO_RUN_ON="server" #options include [laptop, server]
 export DATA_DIR_BASE="../src/transformers/data/datasets"
 export DATASET="fever"
 export basedir="$DATA_DIR_BASE/$DATASET"
