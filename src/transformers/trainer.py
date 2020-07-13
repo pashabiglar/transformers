@@ -1743,7 +1743,7 @@ class Trainer:
                     for key, value in eval_result.items():
                         logger.info("  %s = %s", key, value)
                         writer.write("%s = %s\n" % (key, value))
-                        wandb.log({key: value}, step=epoch)
+                        wandb.log({key: value})
         return eval_result
     def evaluate(
         self, description: str,eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
