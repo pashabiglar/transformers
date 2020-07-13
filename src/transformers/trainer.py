@@ -1545,7 +1545,7 @@ class Trainer:
                         )
                         logging_loss = tr_loss
 
-                        #self._log(logs)
+                        self._log(logs)
 
                         if self.args.evaluate_during_training:
                             self.evaluate()
