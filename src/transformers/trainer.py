@@ -1730,21 +1730,20 @@ class Trainer:
         Returns:
         """
         eval_results = {}
-        if self.args.do_eval:
-            logger.info("*** Evaluating on  ***" + description)
+        logger.info("*** Evaluating on  ***" + description)
 
-            eval_datasets = [eval_datasets_in]
-            for eval_datasets_in in eval_datasets:
-                eval_result = self.evaluate(eval_dataset=eval_datasets_in, description=description)
+        eval_datasets = [eval_datasets_in]
+        for eval_datasets_in in eval_datasets:
+            eval_result = self.evaluate(eval_dataset=eval_datasets_in, description=description)
 
-                if self.is_world_master():
-                    with open(output_eval_file, "a+") as writer:
-                        writer.write("*****epoch=%s\n" % (epoch))
-                        logger.info("***** evaluation results on {} *****".format(description))
-                        for key, value in eval_result.items():
-                            logger.info("  %s = %s", key, value)
-                            writer.write("%s = %s\n" % (key, value))
-                            wandb.log({key: value}, step=epoch)
+            if self.is_world_master():
+                with open(output_eval_file, "a+") as writer:
+                    writer.write("*****epoch=%s\n" % (epoch))
+                    logger.info("***** evaluation results on {} *****".format(description))
+                    for key, value in eval_result.items():
+                        logger.info("  %s = %s", key, value)
+                        writer.write("%s = %s\n" % (key, value))
+                        wandb.log({key: value}, step=epoch)
         return eval_result
     def evaluate(
         self, description: str,eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
@@ -1873,8 +1872,7 @@ class Trainer:
 
         # Prefix all keys with eval_
         for key in list(metrics.keys()):
-            if not key.startswith("eval_"):
-                metrics[f"eval_{key}"] = metrics.pop(key)
+            metrics[f"{description}_{key}"] = metrics.pop(key)
 
         return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics)
 

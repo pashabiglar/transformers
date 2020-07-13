@@ -154,7 +154,5 @@ if _has_sklearn:
         print("inside calculate_fnc_score")
         actual=[LABELS[x] for x in actual]
         predicted = [LABELS[x] for x in predicted]
-        print(f"actual={actual} ")
-        print(f"predicted={predicted}")
         cm,score=report_score(actual,predicted)
         return [cm,score]
