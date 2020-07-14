@@ -1490,7 +1490,7 @@ class Trainer:
                                                               f"results_{description_test}_{sha}.txt")
         if self.is_world_master():
             open(test_partition_evaluation_results_file, "w")
-
+        best_fnc_score=0
         for epoch in train_iterator:
             if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
                 train_dataloader.sampler.set_epoch(epoch)
@@ -1579,7 +1579,7 @@ class Trainer:
 
             self.compute_metrics = self.test_compute_metrics
             self._intermediate_eval(eval_datasets_in=self.test_dataset, description=description_test,
-                                    epoch=epoch, output_eval_file=test_partition_evaluation_results_file)
+                                    epoch=epoch, output_eval_file=test_partition_evaluation_results_file,best_fnc_score=best_fnc_score,current_model=model)
 
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
@@ -1722,7 +1722,7 @@ class Trainer:
             logger.info("Deleting older checkpoint [{}] due to args.save_total_limit".format(checkpoint))
             shutil.rmtree(checkpoint)
 
-    def _intermediate_eval(self, eval_datasets_in, description, epoch, output_eval_file):
+    def _intermediate_eval(self, eval_datasets_in, description, epoch, output_eval_file, best_fnc_score,current_model):
 
         """
         Helper function to call eval() method if and when you want to evaluate after say each epoch,
@@ -1743,8 +1743,14 @@ class Trainer:
                     for key, value in eval_result.items():
                         logger.info("  %s = %s", key, value)
                         writer.write("%s = %s\n" % (key, value))
-                        wandb.log({key: value})
-        return eval_result
+                        if(value['fnc_score'] in key):
+                            if(value['fnc_score']>best_fnc_score):
+                                logger.info(f"found that the current fnc score of {value['fnc_score']}is "
+                                            f"greater than the best fnc score {best_fnc_score}so far. resetting. current epoch=={epoch}")
+                                best_fnc_score=value['fnc_score']
+                            wandb.log({key: value})
+
+        return eval_result,best_fnc_score
     def evaluate(
         self, description: str,eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
     ) -> Dict[str, float]:
