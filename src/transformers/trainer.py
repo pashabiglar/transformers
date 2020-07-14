@@ -1578,7 +1578,7 @@ class Trainer:
                     break
 
             self.compute_metrics = self.test_compute_metrics
-            self._intermediate_eval(eval_datasets_in=self.test_dataset, description=description_test,
+            _,best_fnc_score=self._intermediate_eval(eval_datasets_in=self.test_dataset, description=description_test,
                                     epoch=epoch, output_eval_file=test_partition_evaluation_results_file,best_fnc_score=best_fnc_score,current_model=model)
 
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
@@ -1743,12 +1743,12 @@ class Trainer:
                     for key, value in eval_result.items():
                         logger.info("  %s = %s", key, value)
                         writer.write("%s = %s\n" % (key, value))
-                        if(value['fnc_score'] in key):
+                        if(type(eval_result[key])==dict and "fnc_score" in eval_result[key].keys()):
                             if(value['fnc_score']>best_fnc_score):
                                 logger.info(f"found that the current fnc score of {value['fnc_score']}is "
                                             f"greater than the best fnc score {best_fnc_score}so far. resetting. current epoch=={epoch}")
                                 best_fnc_score=value['fnc_score']
-                            wandb.log({key: value})
+                        wandb.log({key: value})
 
         return eval_result,best_fnc_score
     def evaluate(
