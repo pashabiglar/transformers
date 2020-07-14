@@ -49,8 +49,7 @@ pip install --upgrade pip
 cd /home/u11/mithunpaul/huggingfacev2/mithun_scripts/
 pip install -r requirements.txt
 #export PYTHONPATH="/xdisk/msurdeanu/mithunpaul/huggingface//transformers/src/"
-pip install wandb --upgrade
-wandb on
+
 
 #export GLUE_DIR="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/src/transformers/data/datasets/fever/feverindomain/lex/"
 #export TASK_NAME=fevercrossdomain
