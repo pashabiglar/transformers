@@ -1743,14 +1743,9 @@ class Trainer:
                     for key, value in eval_result.items():
                         logger.info("  %s = %s", key, value)
                         writer.write("%s = %s\n" % (key, value))
-                        if(type(eval_result[key])==dict and "fnc_score" in eval_result[key].keys()):
-                            if(value['fnc_score']>best_fnc_score):
-                                logger.info(f"found that the current fnc score of {value['fnc_score']}is "
-                                            f"greater than the best fnc score {best_fnc_score}so far. resetting. current epoch=={epoch}")
-                                best_fnc_score=value['fnc_score']
-                        wandb.log({key: value})
+                        wandb.log({key: value}, step=epoch)
+        return eval_result
 
-        return eval_result,best_fnc_score
     def evaluate(
         self, description: str,eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
     ) -> Dict[str, float]:
