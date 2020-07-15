@@ -1579,7 +1579,7 @@ class Trainer:
 
             self.compute_metrics = self.test_compute_metrics
             _,best_fnc_score=self._intermediate_eval(eval_datasets_in=self.test_dataset, description=description_test,
-                                    epoch=epoch, output_eval_file=test_partition_evaluation_results_file,best_fnc_score=best_fnc_score,current_model=model)
+                                    epoch=epoch, output_eval_file=test_partition_evaluation_results_file)
 
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
@@ -1722,7 +1722,7 @@ class Trainer:
             logger.info("Deleting older checkpoint [{}] due to args.save_total_limit".format(checkpoint))
             shutil.rmtree(checkpoint)
 
-    def _intermediate_eval(self, eval_datasets_in, description, epoch, output_eval_file, best_fnc_score,current_model):
+    def _intermediate_eval(self, eval_datasets_in, description, epoch, output_eval_file):
 
         """
         Helper function to call eval() method if and when you want to evaluate after say each epoch,
