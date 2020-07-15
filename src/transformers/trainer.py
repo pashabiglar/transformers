@@ -783,7 +783,7 @@ class StudentTeacherTrainer:
                         )
                         logging_loss = tr_loss_lex_float
 
-                        self._log(logs)
+                        #self._log(logs)
 
                         if self.args.evaluate_during_training:
                             self.evaluate()
@@ -1055,7 +1055,7 @@ class StudentTeacherTrainer:
 
         output = self._prediction_loop(eval_dataloader, description="Evaluation")
 
-        self._log(output.metrics)
+       # self._log(output.metrics)
 
         if self.args.tpu_metrics_debug:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
@@ -1545,7 +1545,7 @@ class Trainer:
                         )
                         logging_loss = tr_loss
 
-                        self._log(logs)
+                      #  self._log(logs)
 
                         if self.args.evaluate_during_training:
                             self.evaluate()
