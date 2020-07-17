@@ -1055,7 +1055,7 @@ class StudentTeacherTrainer:
 
         output = self._prediction_loop(eval_dataloader, description="Evaluation")
 
-       # self._log(output.metrics)
+        self._log(output.metrics)
 
         if self.args.tpu_metrics_debug:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
@@ -1736,14 +1736,14 @@ class Trainer:
         for eval_datasets_in in eval_datasets:
             eval_result = self.evaluate(eval_dataset=eval_datasets_in, description=description)
 
-            #if self.is_world_master():
-            with open(output_eval_file, "a+") as writer:
-                writer.write("*****epoch=%s\n" % (epoch))
-                logger.info("***** evaluation results on {} *****".format(description))
-                for key, value in eval_result.items():
-                    logger.info("  %s = %s", key, value)
-                    writer.write("%s = %s\n" % (key, value))
-                    wandb.log({key: value}, step=epoch)
+            if self.is_world_master():
+                with open(output_eval_file, "a+") as writer:
+                    writer.write("*****epoch=%s\n" % (epoch))
+                    logger.info("***** evaluation results on {} *****".format(description))
+                    for key, value in eval_result.items():
+                        logger.info("  %s = %s", key, value)
+                        writer.write("%s = %s\n" % (key, value))
+                        #wandb.log({key: value}, step=epoch)
         return eval_result
 
     def evaluate(
@@ -1769,7 +1769,7 @@ class Trainer:
 
         #this was assuming the evaluation happens after all epochs. instead mithun is changing evaluate to happen
         # after every epoch. we will be doing it inside the new function _intermediate_eval
-        #self._log(output.metrics)
+        self._log(output.metrics)
 
         if self.args.tpu_metrics_debug:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
