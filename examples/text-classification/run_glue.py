@@ -249,7 +249,8 @@ def main():
             )
 
         for eval_dataset in eval_datasets:
-            trainer.compute_metrics = build_compute_metrics_fn(eval_dataset.args.task_name)
+            #using the name feverindomain instead of args.task_name becasue args.task_name is fever cross domain and that has accuracy and fnc score..while in domain, fever , has only accuracy
+            trainer.compute_metrics = build_compute_metrics_fn("feverindomain")
             eval_result = trainer.evaluate(eval_dataset=eval_dataset,description="dev evaluation at the end of all epochs")
 
             output_eval_file = os.path.join(

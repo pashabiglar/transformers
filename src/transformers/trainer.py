@@ -1578,7 +1578,7 @@ class Trainer:
                     break
 
             self.compute_metrics = self.test_compute_metrics
-            _,best_fnc_score=self._intermediate_eval(eval_datasets_in=self.test_dataset, description=description_test,
+            self._intermediate_eval(eval_datasets_in=self.test_dataset, description=description_test,
                                     epoch=epoch, output_eval_file=test_partition_evaluation_results_file)
 
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
@@ -1593,6 +1593,27 @@ class Trainer:
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
         return TrainOutput(self.global_step, tr_loss / self.global_step)
+
+
+    def _log_with_fnc(self, logs: Dict[str, float], iterator: Optional[tqdm] = None) -> None:
+        if self.epoch is not None:
+            logs["epoch"] = self.epoch
+        if self.tb_writer:
+            for k, v in logs.items():
+                if "test_partition_acc" in k:
+                    for x,y in v.items():
+                        if not x=="confusion matrix":
+                            self.tb_writer.add_scalar(x, y, self.global_step)
+                else:
+                    self.tb_writer.add_scalar(k, v, self.global_step)
+            self.tb_writer.flush()
+        if is_wandb_available():
+            wandb.log(logs["test_partition_acc"], step=self.epoch)
+        output = json.dumps({**logs, **{"step": self.global_step}})
+        if iterator is not None:
+            iterator.write(output)
+        else:
+            print(output)
 
     def _log(self, logs: Dict[str, float], iterator: Optional[tqdm] = None) -> None:
         if self.epoch is not None:
@@ -1767,9 +1788,12 @@ class Trainer:
 
         output = self._prediction_loop(eval_dataloader, description=description)
 
-        #this was assuming the evaluation happens after all epochs. instead mithun is changing evaluate to happen
-        # after every epoch. we will be doing it inside the new function _intermediate_eval
-        self._log(output.metrics)
+       #the original log function was producing error when we had a dict inside dict- which was created to return both accuracy and fnc_score
+        #self._log(output.metrics)
+        if "test" in description:
+            self._log_with_fnc(output.metrics)
+        else:
+            self._log(output.metrics)
 
         if self.args.tpu_metrics_debug:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
