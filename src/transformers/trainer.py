@@ -1490,7 +1490,7 @@ class Trainer:
                                                               f"results_{description_test}_{sha}.txt")
         if self.is_world_master():
             open(test_partition_evaluation_results_file, "w")
-        best_fnc_score=0
+
         for epoch in train_iterator:
             if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
                 train_dataloader.sampler.set_epoch(epoch)
