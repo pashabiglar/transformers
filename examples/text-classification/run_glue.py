@@ -205,6 +205,7 @@ def main():
 
         return compute_metrics_fn
 
+
     # note: in the original huggingface's code base the type of metric calculation was declared/decided only after all training was done.
     # However moving it here so that we will have a metric to use when eval is done after every epoch
     dev_compute_metrics = build_compute_metrics_fn("feverindomain")
@@ -228,11 +229,13 @@ def main():
             model=model,
             args=training_args,
             train_dataset=train_dataset,
+
             eval_dataset=eval_dataset,
             test_dataset=test_dataset,
             compute_metrics=None,
             dev_compute_metrics=dev_compute_metrics,
             test_compute_metrics=test_compute_metrics,
+
         )
 
 
@@ -256,7 +259,7 @@ def main():
     # Evaluation
     eval_results = {}
     if training_args.do_eval:
-        logger.info("*** Evaluate ***")
+        logger.info("*** Evaluate at the end of all epochs ***")
 
         # Loop to handle MNLI double evaluation (matched, mis-matched)
         eval_datasets = [eval_dataset]
@@ -267,8 +270,10 @@ def main():
             )
 
         for eval_dataset in eval_datasets:
-            trainer.compute_metrics = build_compute_metrics_fn(eval_dataset.args.task_name)
-            eval_result = trainer.evaluate(eval_dataset=eval_dataset,description="dev after all epochs")
+            #using the name feverindomain instead of args.task_name becasue args.task_name is fever cross domain and that has accuracy and fnc score..while in domain, fever , has only accuracy
+            trainer.compute_metrics = build_compute_metrics_fn("feverindomain")
+            eval_result = trainer.evaluate(eval_dataset=eval_dataset,description="dev evaluation at the end of all epochs")
+
 
             output_eval_file = os.path.join(
                 training_args.output_dir, f"eval_results_{eval_dataset.args.task_name}.txt"
@@ -297,7 +302,7 @@ def main():
                 predictions = np.argmax(predictions, axis=1)
 
             output_test_file = os.path.join(
-                training_args.output_dir, f"test_results_{test_dataset.args.task_name}.txt"
+                training_args.output_dir, f"predictions_labels_on_test_partition_{test_dataset.args.task_name}.txt"
             )
             if trainer.is_world_master():
                 with open(output_test_file, "w") as writer:

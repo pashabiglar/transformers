@@ -428,9 +428,14 @@ class FeverCrossDomainProcessor(DataProcessor):
         """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
 
+
+
     def get_test_examples(self, data_dir):
         """See base class."""
-        return self._create_examples(self._read_tsv(os.path.join(data_dir, "test.tsv")), "devß")
+
+        #passing dev instead of test to make it read labels also.
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "test.tsv")), "dev")
+
 
     def get_labels(self):
         """See base class."""

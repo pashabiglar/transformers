@@ -111,12 +111,15 @@ def train(args, train_dataset, model, tokenizer):
             raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level)
 
+    logger.info(f"value of args.n_gpu ={args.n_gpu}")
     # multi-gpu training (should be after apex fp16 initialization)
     if args.n_gpu > 1:
+        logger.info("args.n_gpu > 1:. value of args.n_gpu=")
         model = torch.nn.DataParallel(model)
 
     # Distributed training (should be after apex fp16 initialization)
     if args.local_rank != -1:
+        logger.info("***** found that args.local_rank != -1:*****")
         model = torch.nn.parallel.DistributedDataParallel(
             model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True
         )

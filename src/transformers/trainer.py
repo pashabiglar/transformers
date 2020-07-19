@@ -795,7 +795,7 @@ class StudentTeacherTrainer:
                         )
                         logging_loss = tr_loss_lex_float
 
-                        self._log(logs)
+                        #self._log(logs)
 
                         if self.args.evaluate_during_training:
                             self.evaluate()
@@ -1216,6 +1216,7 @@ class Trainer:
         args: TrainingArguments,
         data_collator: Optional[DataCollator] = None,
         train_dataset: Optional[Dataset] = None,
+        test_dataset: Optional[Dataset] = None,
         eval_dataset: Optional[Dataset] = None,
         test_dataset: Optional[Dataset] = None,
         compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
@@ -1244,6 +1245,7 @@ class Trainer:
         self.test_dataset = test_dataset
         self.compute_metrics = compute_metrics
         self.dev_compute_metrics = dev_compute_metrics
+
         self.test_compute_metrics = test_compute_metrics
         self.prediction_loss_only = prediction_loss_only
         self.optimizers = optimizers
@@ -1499,6 +1501,7 @@ class Trainer:
             epochs_trained, int(num_train_epochs), desc="Epoch", disable=not self.is_local_master()
         )
 
+
         #create the files which will store the evaluation results (accuracy etc) on dev and test partitions
         # empty out the predictions files once before all epochs . writing of predictions to disk will happen at early stopping
         repo = git.Repo(search_parent_directories=True)
@@ -1572,6 +1575,8 @@ class Trainer:
                         logging_loss = tr_loss
 
 
+                        self._log(logs)
+
                         if self.args.evaluate_during_training:
                             self.evaluate()
 
@@ -1605,11 +1610,13 @@ class Trainer:
                     epoch_iterator.close()
                     break
 
+
             # mithuns feature. do evaluation on dev (or test) n after every epoch of training
             self.compute_metrics=self.dev_compute_metrics
             self._intermediate_eval(eval_datasets_in=self.eval_dataset, description=description_dev, epoch=epoch,output_eval_file= dev_partition_evaluation_results_file)
             self.compute_metrics = self.test_compute_metrics
             self._intermediate_eval(eval_datasets_in=self.test_dataset, description=description_test, epoch=epoch,output_eval_file=test_partition_evaluation_results_file)
+
 
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
@@ -1623,6 +1630,27 @@ class Trainer:
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
         return TrainOutput(self.global_step, tr_loss / self.global_step)
+
+
+    def _log_with_fnc(self, logs: Dict[str, float], iterator: Optional[tqdm] = None) -> None:
+        if self.epoch is not None:
+            logs["epoch"] = self.epoch
+        if self.tb_writer:
+            for k, v in logs.items():
+                if "test_partition_acc" in k:
+                    for x,y in v.items():
+                        if not x=="confusion matrix":
+                            self.tb_writer.add_scalar(x, y, self.global_step)
+                else:
+                    self.tb_writer.add_scalar(k, v, self.global_step)
+            self.tb_writer.flush()
+        if is_wandb_available():
+            wandb.log(logs["test_partition_acc"], step=self.epoch)
+        output = json.dumps({**logs, **{"step": self.global_step}})
+        if iterator is not None:
+            iterator.write(output)
+        else:
+            print(output)
 
     def _log(self, logs: Dict[str, float], iterator: Optional[tqdm] = None) -> None:
         if self.epoch is not None:
@@ -1757,6 +1785,7 @@ class Trainer:
 
     def _intermediate_eval(self, eval_datasets_in, description, epoch,output_eval_file):
 
+
         """
         Helper function to call eval() method if and when you want to evaluate after say each epoch,
         instead having to wait till the end of all epochs
@@ -1804,7 +1833,7 @@ class Trainer:
 
         output = self._prediction_loop(eval_dataloader, description=description)
 
-        #self._log(output.metrics)
+
 
         if self.args.tpu_metrics_debug:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
@@ -1812,38 +1841,7 @@ class Trainer:
 
         return output.metrics
 
-    def predict_evaluate(
-        self, test_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
-    ) -> Dict[str, float]:
-        """
-        overload of evaluate function
-        Run evaluation on test partition and return metrics.
-
-        Note: this is note a traditional test set where we dont have labels, this is infact the dev partition of a cross domain dataset.
-
-        The calling script will be responsible for providing a method to compute metrics, as they are
-        task-dependent.
-
-        Args:
-            test_dataset: (Optional) Pass a dataset if you wish to override
-            the one on the instance.
-        Returns:
-            A dict containing:
-                - the eval loss
-                - the potential metrics computed from the predictions
-        """
-        test_dataloader = self.get_test_dataloader(test_dataset)
-
-        output = self._prediction_loop(test_dataloader, description="Evaluation")
-
-        self._log(output.metrics)
-
-        if self.args.tpu_metrics_debug:
-            # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
-            xm.master_print(met.metrics_report())
-
-        return output.metrics
-
+  
     def predict(self, test_dataset: Dataset) -> PredictionOutput:
         """
         Run prediction and return predictions and potential metrics.
@@ -1940,7 +1938,6 @@ class Trainer:
 
         # Prefix all keys with description
         for key in list(metrics.keys()):
-            #if not key.startswith("eval_"):
             metrics[f"{description}_{key}"] = metrics.pop(key)
 
         return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics)
