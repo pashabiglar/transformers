@@ -4,11 +4,13 @@
 
 
 
+#add --save_model to args if you want to save a trained model after every epoxh
+
+
 mkdir -p $OUTPUT_DIR
 args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME      --do_train   --do_eval   --do_predict    --data_dir $DATA_DIR    --max_seq_length $MAX_SEQ_LENGTH      --per_device_eval_batch_size=16        --per_device_train_batch_size=16       --learning_rate 1e-5      --num_train_epochs 25.0      --output_dir $OUTPUT_DIR --overwrite_output_dir   --weight_decay 0.01 --adam_epsilon 1e-6 --overwrite_cache "
 #--save_steps 7449
 echo $args
-
 
 echo "TASK_TYPE is $TASK_TYPE"
 if [ "$TASK_TYPE" = "delex" ] ; then

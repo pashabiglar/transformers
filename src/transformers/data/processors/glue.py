@@ -284,6 +284,8 @@ class MrpcProcessor(DataProcessor):
 
     def get_test_examples(self, data_dir):
         """See base class."""
+
+        #to get labels also since we are loading fnc-dev as test partition
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "test.tsv")), "dev")
 
     def get_labels(self):
@@ -432,6 +434,7 @@ class FeverCrossDomainProcessor(DataProcessor):
 
     def get_test_examples(self, data_dir):
         """See base class."""
+
 
         #passing dev instead of test to make it read labels also.
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "test.tsv")), "dev")

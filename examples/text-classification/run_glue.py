@@ -189,11 +189,6 @@ def main():
         else None
     )
 
-    # test_dataset = (
-    #     GlueDataset(data_args, tokenizer=tokenizer, task_type="delex", mode="test", cache_dir=model_args.cache_dir)
-    #     if training_args.do_predict
-    #     else None
-    # )
 
     def build_compute_metrics_fn(task_name: str) -> Callable[[EvalPrediction], Dict]:
         def compute_metrics_fn(p: EvalPrediction):
@@ -205,12 +200,10 @@ def main():
 
         return compute_metrics_fn
 
-
     # note: in the original huggingface's code base the type of metric calculation was declared/decided only after all training was done.
     # However moving it here so that we will have a metric to use when eval is done after every epoch
     dev_compute_metrics = build_compute_metrics_fn("feverindomain")
     test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
-
 
     # Initialize our Trainer
     if training_args.do_train_1student_1teacher:
@@ -270,6 +263,7 @@ def main():
             )
 
         for eval_dataset in eval_datasets:
+
             #using the name feverindomain instead of args.task_name becasue args.task_name is fever cross domain and that has accuracy and fnc score..while in domain, fever , has only accuracy
             trainer.compute_metrics = build_compute_metrics_fn("feverindomain")
             eval_result = trainer.evaluate(eval_dataset=eval_dataset,description="dev evaluation at the end of all epochs")

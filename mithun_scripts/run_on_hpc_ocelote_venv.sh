@@ -46,13 +46,15 @@ pip install --upgrade pip
 cd /home/u11/mithunpaul/huggingfacev2/mithun_scripts/
 pip install wandb
 pip install -r requirements.txt
+pip install wandb --upgrade
+wandb on
+
+
 
 #pip install wandb
 WANDB_API_KEY=de268c256c2d4acd9085ee4e05d91706c49090d7
-#wandb login
-#export WANDB_NAME="from_hpc"
-export MACHINE_TO_RUN_ON="server" #options include [laptop, server]
-bash git run_all.sh
+
+bash run_all.sh
 
 
 

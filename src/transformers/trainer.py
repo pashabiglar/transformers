@@ -741,7 +741,7 @@ class StudentTeacherTrainer:
                 tr_loss_lex,outputs_lex = self.get_classification_loss(model_teacher, input_lex, optimizer)
                 tr_loss_delex,outputs_delex = self.get_classification_loss(model_student, input_delex, optimizer)
                 combined_classification_loss=tr_loss_lex+tr_loss_delex
-
+   
 
                 # outputs contains in that order # (loss), logits, (hidden_states), (attentions)-src/transformers/modeling_bert.py
                 logits_lex = outputs_lex[1]
@@ -1526,6 +1526,10 @@ class Trainer:
                 epoch_iterator = tqdm(parallel_loader, desc="Iteration", disable=not self.is_local_master())
             else:
                 epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=not self.is_local_master())
+                
+            # log training loss etc at the end of every epoch.len(epoch_iterator)==no of batches
+            self.args.logging_steps = len(epoch_iterator)
+            self.args.save_steps = len(epoch_iterator)
 
             #log training loss etc at the end of every epoch.len(epoch_iterator)==no of batches
             self.args.logging_steps=len(epoch_iterator)
@@ -1573,14 +1577,12 @@ class Trainer:
                             else scheduler.get_lr()[0]
                         )
                         logging_loss = tr_loss
-
-
                         self._log(logs)
-
                         if self.args.evaluate_during_training:
                             self.evaluate()
 
-                    if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0:
+
+                    if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0 and self.args.save_model==True:
                         # In all cases (even distributed/parallel), self.model is always a reference
                         # to the model we want to save.
 
@@ -1591,6 +1593,7 @@ class Trainer:
                             assert model is self.model
                         # Save model checkpoint
                         output_dir = os.path.join(self.args.output_dir, f"{PREFIX_CHECKPOINT_DIR}_epoch{epoch}")
+
 
                         self.save_model(output_dir)
 
@@ -1611,11 +1614,13 @@ class Trainer:
                     break
 
 
+
             # mithuns feature. do evaluation on dev (or test) n after every epoch of training
             self.compute_metrics=self.dev_compute_metrics
             self._intermediate_eval(eval_datasets_in=self.eval_dataset, description=description_dev, epoch=epoch,output_eval_file= dev_partition_evaluation_results_file)
             self.compute_metrics = self.test_compute_metrics
             self._intermediate_eval(eval_datasets_in=self.test_dataset, description=description_test, epoch=epoch,output_eval_file=test_partition_evaluation_results_file)
+
 
 
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
@@ -1782,7 +1787,6 @@ class Trainer:
 
 
 
-
     def _intermediate_eval(self, eval_datasets_in, description, epoch,output_eval_file):
 
 
@@ -1791,15 +1795,16 @@ class Trainer:
         instead having to wait till the end of all epochs
         Returns:
 
+
         """
         eval_results = {}
         if self.args.do_eval:
             logger.info("*** Evaluating on  ***"+description)
 
+
             eval_datasets = [eval_datasets_in]
             for eval_datasets_in in eval_datasets:
                 eval_result = self.evaluate(eval_dataset=eval_datasets_in, description=description)
-
 
                 if self.is_world_master():
                     with open(output_eval_file, "a+") as writer:
@@ -1808,10 +1813,10 @@ class Trainer:
                         for key, value in eval_result.items():
                             logger.info("  %s = %s", key, value)
                             writer.write("%s = %s\n" % (key, value))
-                            wandb.log({key:value}, step = epoch)
+                            wandb.log({key: value}, step=epoch)
         return eval_result
 
-
+    
     def evaluate(
         self, description:str,eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
     ) -> Dict[str, float]:
@@ -1832,6 +1837,9 @@ class Trainer:
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
 
         output = self._prediction_loop(eval_dataloader, description=description)
+        self._log(output.metrics)
+
+
 
 
 
@@ -1841,16 +1849,14 @@ class Trainer:
 
         return output.metrics
 
-  
+
     def predict(self, test_dataset: Dataset) -> PredictionOutput:
         """
         Run prediction and return predictions and potential metrics.
-
         Depending on the dataset and your use case, your test dataset may contain labels.
         In that case, this method will also return metrics, like in evaluate().
         """
         test_dataloader = self.get_test_dataloader(test_dataset)
-
         return self._prediction_loop(test_dataloader, description="Prediction")
 
     def _prediction_loop(
@@ -1953,3 +1959,5 @@ class Trainer:
         # truncate the dummy elements added by SequentialDistributedSampler
         output = concat[:num_total_examples]
         return output
+
+
