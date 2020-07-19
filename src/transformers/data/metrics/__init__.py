@@ -32,13 +32,15 @@ if _has_sklearn:
     def simple_accuracy(preds, labels):
         return (preds == labels).mean()
 
+
+
     def acc_and_fnc_score(preds, labels):
         acc = simple_accuracy(preds, labels)
-        cm,f1 = calculate_fnc_score(labels, preds)
+        cm, f1 = calculate_fnc_score(labels, preds)
         return {
             "acc": acc,
             "fnc_score": f1,
-            "confusion matrix":cm
+            "confusion matrix": cm
         }
 
     def acc_and_f1(preds, labels):
@@ -96,7 +98,6 @@ if _has_sklearn:
             return {"acc": simple_accuracy(preds, labels)}
         else:
             raise KeyError(task_name)
-
 
     #Adapted from https://github.com/FakeNewsChallenge/fnc-1/blob/master/scorer.py
     #Original credit - @bgalbraith

@@ -25,3 +25,4 @@ class TrainOutput(NamedTuple):
 
 
 PREFIX_CHECKPOINT_DIR = "trained_model"
+

@@ -16,6 +16,7 @@
 """ Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
 
 
+
 import dataclasses
 import logging
 import os
@@ -37,6 +38,8 @@ from transformers import (
     glue_tasks_num_labels,
     set_seed,
 )
+
+
 
 
 logger = logging.getLogger(__name__)
@@ -179,12 +182,13 @@ def main():
         else None
     )
 
-    # in the student teacher mode the evaluation always happens in the delex cross domain dev data. so it will
+
     test_dataset = (
         GlueDataset(data_args, tokenizer=tokenizer,task_type="delex", mode="test", cache_dir=model_args.cache_dir)
         if training_args.do_predict
         else None
     )
+
 
     def build_compute_metrics_fn(task_name: str) -> Callable[[EvalPrediction], Dict]:
         def compute_metrics_fn(p: EvalPrediction):
@@ -195,10 +199,12 @@ def main():
             return glue_compute_metrics(task_name, preds, p.label_ids)
 
         return compute_metrics_fn
+
     # note: in the original huggingface's code base the type of metric calculation was declared/decided only after all training was done.
     # However moving it here so that we will have a metric to use when eval is done after every epoch
     dev_compute_metrics = build_compute_metrics_fn("feverindomain")
     test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
+
     # Initialize our Trainer
     if training_args.do_train_1student_1teacher:
             trainer = StudentTeacherTrainer(
@@ -209,18 +215,22 @@ def main():
         compute_metrics=None,
         dev_compute_metrics=dev_compute_metrics,
         test_compute_metrics=test_compute_metrics,
+
     )
     else:
         trainer = Trainer(
             model=model,
             args=training_args,
             train_dataset=train_dataset,
+
             eval_dataset=eval_dataset,
             test_dataset=test_dataset,
             compute_metrics=None,
             dev_compute_metrics=dev_compute_metrics,
             test_compute_metrics=test_compute_metrics,
+
         )
+
 
     if training_args.do_train:
 
@@ -242,7 +252,7 @@ def main():
     # Evaluation
     eval_results = {}
     if training_args.do_eval:
-        logger.info("*** Evaluate ***")
+        logger.info("*** Evaluate at the end of all epochs ***")
 
         # Loop to handle MNLI double evaluation (matched, mis-matched)
         eval_datasets = [eval_dataset]
@@ -253,8 +263,11 @@ def main():
             )
 
         for eval_dataset in eval_datasets:
-            trainer.compute_metrics = build_compute_metrics_fn(eval_dataset.args.task_name)
-            eval_result = trainer.evaluate(eval_dataset=eval_dataset, description="dev after all epochs")
+
+            #using the name feverindomain instead of args.task_name becasue args.task_name is fever cross domain and that has accuracy and fnc score..while in domain, fever , has only accuracy
+            trainer.compute_metrics = build_compute_metrics_fn("feverindomain")
+            eval_result = trainer.evaluate(eval_dataset=eval_dataset,description="dev evaluation at the end of all epochs")
+
 
             output_eval_file = os.path.join(
                 training_args.output_dir, f"eval_results_{eval_dataset.args.task_name}.txt"
@@ -283,7 +296,7 @@ def main():
                 predictions = np.argmax(predictions, axis=1)
 
             output_test_file = os.path.join(
-                training_args.output_dir, f"test_results_{test_dataset.args.task_name}.txt"
+                training_args.output_dir, f"predictions_labels_on_test_partition_{test_dataset.args.task_name}.txt"
             )
             if trainer.is_world_master():
                 with open(output_test_file, "w") as writer:
