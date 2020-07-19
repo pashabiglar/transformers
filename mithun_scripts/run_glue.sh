@@ -12,6 +12,7 @@ args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME      --do_t
 #--save_steps 7449
 echo $args
 
+
 echo "TASK_TYPE is $TASK_TYPE"
 if [ "$TASK_TYPE" = "delex" ] ; then
  echo $DATA_DIR
@@ -37,7 +38,7 @@ echo "data_dir is $DATA_DIR"
 
 
 mkdir -p output
-python3.6 ../examples/text-classification/run_glue.py $args
+python ../examples/text-classification/run_glue.py $args
 #for laptop run from terminal
 echo $args
 
