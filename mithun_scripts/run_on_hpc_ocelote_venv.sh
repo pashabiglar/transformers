@@ -16,6 +16,11 @@
 ### Joins standard error and standard out
 #PBS -j oe
 
+if [ "$1" != "" ]; then
+    echo "Positional parameter 1 contains something"
+else
+    echo "Positional parameter 1 is empty"
+fi
 
 cd /home/u11/mithunpaul/
 
