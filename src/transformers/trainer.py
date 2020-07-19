@@ -4,11 +4,12 @@ import math
 import os
 import random
 import re
+import sys
 import shutil
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
-
+import git
 import numpy as np
 import torch
 from packaging import version
@@ -60,17 +61,23 @@ def is_tensorboard_available():
     return _has_tensorboard
 
 
-try:
-    import wandb
+# try:
+os.environ["WANDB_API_KEY"] = "de268c256c2d4acd9085ee4e05d91706c49090d7"
+print("just going to import wandb")
+import wandb
 
-    wandb.ensure_configured()
-    if wandb.api.api_key is None:
-        _has_wandb = False
-        wandb.termwarn("W&B installed but not logged in.  Run `wandb login` or set the WANDB_API_KEY env variable.")
-    else:
-        _has_wandb = False if os.getenv("WANDB_DISABLED") else True
-except ImportError:
+wandb.ensure_configured()
+if wandb.api.api_key is None:
     _has_wandb = False
+    wandb.termwarn("W&B installed but not logged in.  Run `wandb login` or set the WANDB_API_KEY env variable.")
+else:
+    if os.getenv("WANDB_DISABLED"):
+        print("found that WANDB_DISABLED is True ")
+        _has_wandb = False
+    else :
+        _has_wandb  =   True
+# except ImportError:
+#     _has_wandb = False
 
 
 def is_wandb_available():
@@ -214,11 +221,13 @@ class StudentTeacherTrainer:
             )
         if is_wandb_available():
             self._setup_wandb()
+            sys.exit()
         else:
             logger.info(
                 "You are instantiating a Trainer but W&B is not installed. To use wandb logging, "
                 "run `pip install wandb; wandb login` see https://docs.wandb.com/huggingface."
             )
+            sys.exit(1)
         set_seed(self.args.seed)
         # Create output directory if needed
         if self.is_world_master():
@@ -366,6 +375,7 @@ class StudentTeacherTrainer:
             WANDB_DISABLED:
                 (Optional): boolean - defaults to false, set to "true" to disable wandb entirely
         """
+        os.environ["WANDB_API_KEY"] = "de268c256c2d4acd9085ee4e05d91706c49090d7"
         logger.info('Automatic Weights & Biases logging enabled, to disable set os.environ["WANDB_DISABLED"] = "true"')
         wandb.init(project=os.getenv("WANDB_PROJECT", "huggingface"), config=vars(self.args))
         # keep track of model topology and gradients
@@ -382,6 +392,8 @@ class StudentTeacherTrainer:
         Helper to get num of examples from a DataLoader, by accessing its Dataset.
         """
         return len(dataloader.dataset)
+
+
 
     def train(self, model_path: Optional[str] = None):
         """
@@ -729,7 +741,7 @@ class StudentTeacherTrainer:
                 tr_loss_lex,outputs_lex = self.get_classification_loss(model_teacher, input_lex, optimizer)
                 tr_loss_delex,outputs_delex = self.get_classification_loss(model_student, input_delex, optimizer)
                 combined_classification_loss=tr_loss_lex+tr_loss_delex
-
+   
 
                 # outputs contains in that order # (loss), logits, (hidden_states), (attentions)-src/transformers/modeling_bert.py
                 logits_lex = outputs_lex[1]
@@ -783,7 +795,7 @@ class StudentTeacherTrainer:
                         )
                         logging_loss = tr_loss_lex_float
 
-                        self._log(logs)
+                        #self._log(logs)
 
                         if self.args.evaluate_during_training:
                             self.evaluate()
@@ -1190,6 +1202,7 @@ class Trainer:
     eval_dataset: Optional[Dataset]
     test_dataset: Optional[Dataset]
     compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
+    dev_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     prediction_loss_only: bool
     tb_writer: Optional["SummaryWriter"] = None
@@ -1205,7 +1218,9 @@ class Trainer:
         train_dataset: Optional[Dataset] = None,
         test_dataset: Optional[Dataset] = None,
         eval_dataset: Optional[Dataset] = None,
+        test_dataset: Optional[Dataset] = None,
         compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
+        dev_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
         test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
         prediction_loss_only=False,
         tb_writer: Optional["SummaryWriter"] = None,
@@ -1229,6 +1244,8 @@ class Trainer:
         self.eval_dataset = eval_dataset
         self.test_dataset = test_dataset
         self.compute_metrics = compute_metrics
+        self.dev_compute_metrics = dev_compute_metrics
+
         self.test_compute_metrics = test_compute_metrics
         self.prediction_loss_only = prediction_loss_only
         self.optimizers = optimizers
@@ -1244,9 +1261,10 @@ class Trainer:
             self._setup_wandb()
         else:
             logger.info(
-                "You are instantiating a Trainer but W&B is not installed. To use wandb logging, "
+                "You are instantiatinggggg a Trainer but W&B is not installed. To use wandb logging, "
                 "run `pip install wandb; wandb login` see https://docs.wandb.com/huggingface."
             )
+            sys.exit()
         set_seed(self.args.seed)
         # Create output directory if needed
         if self.is_world_master():
@@ -1482,13 +1500,19 @@ class Trainer:
         train_iterator = trange(
             epochs_trained, int(num_train_epochs), desc="Epoch", disable=not self.is_local_master()
         )
-        import git
+
+
+        #create the files which will store the evaluation results (accuracy etc) on dev and test partitions
+        # empty out the predictions files once before all epochs . writing of predictions to disk will happen at early stopping
         repo = git.Repo(search_parent_directories=True)
         sha = repo.head.object.hexsha
+        description_dev="dev_partition"
         description_test = "test_partition"
+        dev_partition_evaluation_results_file = os.path.join(self.args.output_dir, f"results_{description_dev}_{sha}.txt")
         test_partition_evaluation_results_file = os.path.join(self.args.output_dir,
-                                                              f"results_{description_test}_{sha}.txt")
+                                                             f"results_{description_test}_{sha}.txt")
         if self.is_world_master():
+            open(dev_partition_evaluation_results_file, "w")
             open(test_partition_evaluation_results_file, "w")
 
         for epoch in train_iterator:
@@ -1502,6 +1526,14 @@ class Trainer:
                 epoch_iterator = tqdm(parallel_loader, desc="Iteration", disable=not self.is_local_master())
             else:
                 epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=not self.is_local_master())
+                
+            # log training loss etc at the end of every epoch.len(epoch_iterator)==no of batches
+            self.args.logging_steps = len(epoch_iterator)
+            self.args.save_steps = len(epoch_iterator)
+
+            #log training loss etc at the end of every epoch.len(epoch_iterator)==no of batches
+            self.args.logging_steps=len(epoch_iterator)
+            self.args.save_steps=len(epoch_iterator)
 
             for step, inputs in enumerate(epoch_iterator):
 
@@ -1535,6 +1567,7 @@ class Trainer:
                     if (self.args.logging_steps > 0 and self.global_step % self.args.logging_steps == 0) or (
                         self.global_step == 1 and self.args.logging_first_step
                     ):
+
                         logs: Dict[str, float] = {}
                         logs["loss"] = (tr_loss - logging_loss) / self.args.logging_steps
                         # backward compatibility for pytorch schedulers
@@ -1544,21 +1577,23 @@ class Trainer:
                             else scheduler.get_lr()[0]
                         )
                         logging_loss = tr_loss
-
                         self._log(logs)
-
                         if self.args.evaluate_during_training:
                             self.evaluate()
 
-                    if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0:
+
+                    if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0 and self.args.save_model==True:
                         # In all cases (even distributed/parallel), self.model is always a reference
                         # to the model we want to save.
+
+
                         if hasattr(model, "module"):
                             assert model.module is self.model
                         else:
                             assert model is self.model
                         # Save model checkpoint
-                        output_dir = os.path.join(self.args.output_dir, f"{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
+                        output_dir = os.path.join(self.args.output_dir, f"{PREFIX_CHECKPOINT_DIR}_epoch{epoch}")
+
 
                         self.save_model(output_dir)
 
@@ -1573,13 +1608,20 @@ class Trainer:
                             torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                             torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
 
+
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                     epoch_iterator.close()
                     break
 
+
+
+            # mithuns feature. do evaluation on dev (or test) n after every epoch of training
+            self.compute_metrics=self.dev_compute_metrics
+            self._intermediate_eval(eval_datasets_in=self.eval_dataset, description=description_dev, epoch=epoch,output_eval_file= dev_partition_evaluation_results_file)
             self.compute_metrics = self.test_compute_metrics
-            self._intermediate_eval(eval_datasets_in=self.test_dataset, description=description_test,
-                                    epoch=epoch, output_eval_file=test_partition_evaluation_results_file)
+            self._intermediate_eval(eval_datasets_in=self.test_dataset, description=description_test, epoch=epoch,output_eval_file=test_partition_evaluation_results_file)
+
+
 
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
@@ -1593,6 +1635,27 @@ class Trainer:
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
         return TrainOutput(self.global_step, tr_loss / self.global_step)
+
+
+    def _log_with_fnc(self, logs: Dict[str, float], iterator: Optional[tqdm] = None) -> None:
+        if self.epoch is not None:
+            logs["epoch"] = self.epoch
+        if self.tb_writer:
+            for k, v in logs.items():
+                if "test_partition_acc" in k:
+                    for x,y in v.items():
+                        if not x=="confusion matrix":
+                            self.tb_writer.add_scalar(x, y, self.global_step)
+                else:
+                    self.tb_writer.add_scalar(k, v, self.global_step)
+            self.tb_writer.flush()
+        if is_wandb_available():
+            wandb.log(logs["test_partition_acc"], step=self.epoch)
+        output = json.dumps({**logs, **{"step": self.global_step}})
+        if iterator is not None:
+            iterator.write(output)
+        else:
+            print(output)
 
     def _log(self, logs: Dict[str, float], iterator: Optional[tqdm] = None) -> None:
         if self.epoch is not None:
@@ -1722,31 +1785,40 @@ class Trainer:
             logger.info("Deleting older checkpoint [{}] due to args.save_total_limit".format(checkpoint))
             shutil.rmtree(checkpoint)
 
-    def _intermediate_eval(self, eval_datasets_in, description, epoch, output_eval_file):
+
+
+    def _intermediate_eval(self, eval_datasets_in, description, epoch,output_eval_file):
+
 
         """
         Helper function to call eval() method if and when you want to evaluate after say each epoch,
         instead having to wait till the end of all epochs
         Returns:
+
+
         """
         eval_results = {}
-        logger.info("*** Evaluating on  ***" + description)
+        if self.args.do_eval:
+            logger.info("*** Evaluating on  ***"+description)
 
-        eval_datasets = [eval_datasets_in]
-        for eval_datasets_in in eval_datasets:
-            eval_result = self.evaluate(eval_dataset=eval_datasets_in, description=description)
 
-            if self.is_world_master():
-                with open(output_eval_file, "a+") as writer:
-                    writer.write("*****epoch=%s\n" % (epoch))
-                    logger.info("***** evaluation results on {} *****".format(description))
-                    for key, value in eval_result.items():
-                        logger.info("  %s = %s", key, value)
-                        writer.write("%s = %s\n" % (key, value))
-                        wandb.log({key: value}, step=epoch)
+            eval_datasets = [eval_datasets_in]
+            for eval_datasets_in in eval_datasets:
+                eval_result = self.evaluate(eval_dataset=eval_datasets_in, description=description)
+
+                if self.is_world_master():
+                    with open(output_eval_file, "a+") as writer:
+                        writer.write("*****epoch=%s\n" % (epoch))
+                        logger.info("***** evaluation results on {} *****".format(description))
+                        for key, value in eval_result.items():
+                            logger.info("  %s = %s", key, value)
+                            writer.write("%s = %s\n" % (key, value))
+                            wandb.log({key: value}, step=epoch)
         return eval_result
+
+    
     def evaluate(
-        self, description: str,eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
+        self, description:str,eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
     ) -> Dict[str, float]:
         """
         Run evaluation and return metrics.
@@ -1765,10 +1837,11 @@ class Trainer:
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
 
         output = self._prediction_loop(eval_dataloader, description=description)
+        self._log(output.metrics)
 
-        #this was assuming the evaluation happens after all epochs. instead mithun is changing evaluate to happen
-        # after every epoch. we will be doing it inside the new function _intermediate_eval
-        #self._log(output.metrics)
+
+
+
 
         if self.args.tpu_metrics_debug:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
@@ -1776,19 +1849,18 @@ class Trainer:
 
         return output.metrics
 
+
     def predict(self, test_dataset: Dataset) -> PredictionOutput:
         """
         Run prediction and return predictions and potential metrics.
-
         Depending on the dataset and your use case, your test dataset may contain labels.
         In that case, this method will also return metrics, like in evaluate().
         """
         test_dataloader = self.get_test_dataloader(test_dataset)
-
         return self._prediction_loop(test_dataloader, description="Prediction")
 
     def _prediction_loop(
-        self, dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None
+        self,dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None
     ) -> PredictionOutput:
         """
         Prediction/evaluation loop, shared by `evaluate()` and `predict()`.
@@ -1870,7 +1942,7 @@ class Trainer:
         if len(eval_losses) > 0:
             metrics["eval_loss"] = np.mean(eval_losses)
 
-        # Prefix all keys with eval_
+        # Prefix all keys with description
         for key in list(metrics.keys()):
             metrics[f"{description}_{key}"] = metrics.pop(key)
 
@@ -1887,3 +1959,5 @@ class Trainer:
         # truncate the dummy elements added by SequentialDistributedSampler
         output = concat[:num_total_examples]
         return output
+
+

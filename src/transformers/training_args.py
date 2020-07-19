@@ -41,6 +41,7 @@ class TrainingArguments:
     output_dir: str = field(
         metadata={"help": "The output directory where the model predictions and checkpoints will be written."}
     )
+    save_model: bool = field(default=False, metadata={"help": "dont save model at each epoch. saves space"})
     overwrite_output_dir: bool = field(
         default=False,
         metadata={
@@ -114,6 +115,7 @@ class TrainingArguments:
         },
     )
     no_cuda: bool = field(default=False, metadata={"help": "Do not use CUDA even when it is available"})
+
     seed: int = field(default=42, metadata={"help": "random seed for initialization"})
 
     fp16: bool = field(

@@ -146,11 +146,13 @@ fi
 ####################################for cross domain student teacher, there will be two training files.-one for lex and another for delex
 
 
-if [ "$TASK_TYPE" = "combined" ] && [ "$TASK_NAME" = "fevercrossdomain" ] ; then
-    echo "found task type to be combined"
+if [ "$TASK_TYPE" = "combined" ] && [ "$TASK_NAME" = "fevercrossdomain" ]&& [ "$SUB_TASK_TYPE" = "oa" ]; then
+    echo "found task type to be combined and subtask to be oa"
+
 
 echo $DATA_DIR
 mkdir -p $DATA_DIR
+
 
 FILE="$DATA_DIR/train1.tsv"
 if test -f "$FILE";then
@@ -185,3 +187,51 @@ else
 fi
 
 fi
+
+####################################for cross domain student teacher, there will be two training files.-one for lex and another for delex
+
+
+if [ "$TASK_TYPE" = "combined" ] && [ "$TASK_NAME" = "fevercrossdomain" ]&& [ "$SUB_TASK_TYPE" = "figerspecific" ]; then
+    echo "found task type to be combined and subtask to be figerspecific"
+
+
+echo $DATA_DIR
+mkdir -p $DATA_DIR
+
+
+FILE="$DATA_DIR/train1.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/train.tsv     -O $FILE
+fi
+
+
+FILE="$DATA_DIR/train2.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/figer_specific/train.tsv  -O $FILE
+fi
+
+FILE="$DATA_DIR/dev.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+     wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/figer_specific/dev.tsv -O $FILE
+fi
+
+#note that we are already replacing the file to be tested as test file. this way during run time you have to just
+# load all files as is e.g #if do_predict is true load from folder fevercrossdomain/delex/test.tsv- which the code already does.
+
+FILE="$DATA_DIR/test.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+
+      wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/cross-domain/figer_specific/dev.tsv -O $FILE
+
+fi
+
+fi
+exit
