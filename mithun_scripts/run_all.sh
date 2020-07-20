@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#EPOCHS=""
+export EPOCHS=1
 if [ $# -gt 1 ]; then
 if [ $1 == "--epochs_to_run" ]; then
      export EPOCHS="$2"
