@@ -45,7 +45,7 @@ cd /home/u11/mithunpaul/xdisk/huggingface_bert/code/mithun_scripts/
 pip install -r requirements.txt
 
 
-bash run_all.sh --epochs_to_run 4.0 --machine_to_run_on server
+bash run_all.sh --epochs_to_run 1.0 --machine_to_run_on server
 
 
 
