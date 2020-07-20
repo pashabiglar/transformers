@@ -1,4 +1,14 @@
 #!/usr/bin/env bash
+#EPOCHS=""
+if [ $# -gt 1 ]; then
+if [ $1 == "--epochs_to_run" ]; then
+     export EPOCHS="$2"
+fi
+fi
+
+
+
+
 export DATA_DIR_BASE="../src/transformers/data/datasets"
 export DATASET="fever"
 export basedir="$DATA_DIR_BASE/$DATASET"
@@ -11,7 +21,7 @@ export PYTHONPATH="../src"
 #comment this section if you just downloaded and converted the data fresh using these.-useful for repeated runs
 rm -rf $basedir
 ./get_fever_fnc_data.sh
-#./reduce_size.sh
+./reduce_size.sh
 ./convert_to_mnli_format.sh
 #############end of commentable data sections
 ./run_glue.sh
