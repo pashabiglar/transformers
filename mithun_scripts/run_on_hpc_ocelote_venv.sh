@@ -34,32 +34,19 @@ python3 -m venv my_virtual_env
 
 #this is the only line you need if you already have a virtual_env set up
 source my_virtual_env/bin/activate
-
-export PYTHONPATH="/home/u11/mithunpaul/huggingfacev2/src"
+export PYTHONPATH="/home/u11/mithunpaul/xdisk/huggingface_bert/code/src"
 pip install --upgrade pip
-#pip install torch==1.5.0+cu92 torchvision==0.6.0+cu92-f https://download.pytorch.org/whl/torch_stable.html
 
 
 
-#####my code part
-
-#pip install -r /xdisk/msurdeanu/mithunpaul/huggingface/transformers/examples/requirements.txt
-#
-#cd /xdisk/msurdeanu/mithunpaul/huggingface/transformers/mithun_scripts/
-#bash /xdisk/msurdeanu/mithunpaul/huggingface/transformers/mithun_scripts/run_all.sh
 
 
-
-#one which worked at noon june 6th 2020
-cd /home/u11/mithunpaul/huggingfacev2/mithun_scripts/
+cd /home/u11/mithunpaul/xdisk/huggingface_bert/code/mithun_scripts/
 pip install -r requirements.txt
-#export PYTHONPATH="/xdisk/msurdeanu/mithunpaul/huggingface//transformers/src/"
-
-
-#export GLUE_DIR="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/src/transformers/data/datasets/fever/feverindomain/lex/"
-#export TASK_NAME=fevercrossdomain
-
-bash run_all.sh --epochs_to_run 1.0 --machine_to_run_on server
+echo "value of pbs array index is"
+echo $PBS_ARRAY_INDEX
+exit
+bash run_all.sh --epochs_to_run $PBS_ARRAY_INDEX --machine_to_run_on server
 
 
 
