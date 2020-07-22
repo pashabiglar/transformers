@@ -13,7 +13,7 @@
 #PBS -l walltime=00:00:10
 ### Joins standard error and standard out
 #PBS -j oe
-#PBS -J 1-2
+#PBS -J 11-25
 
 if [ "$1" != "" ]; then
     echo "Positional parameter 1 contains something"
@@ -44,7 +44,7 @@ cd /home/u11/mithunpaul/xdisk/huggingface_bert/code/mithun_scripts/
 pip install -r requirements.txt
 echo "value of pbs array index is"
 echo $PBS_ARRAY_INDEX
-exit
+
 bash run_all.sh --epochs_to_run $PBS_ARRAY_INDEX --machine_to_run_on server
 
 
