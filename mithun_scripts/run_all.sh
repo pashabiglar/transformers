@@ -57,12 +57,14 @@ echo $OUTPUT_DIR
 rm -rf $basedir
 
 #get data only if its 1st epoch
-if [ EPOCHS == "1" ]; then
-        ./get_fever_fnc_data.sh
-        ./convert_to_mnli_format.sh
-fi
+#if [ #EPOCHS gt "1" ]; then
+#
+#fi
 
+./get_fever_fnc_data.sh
+./convert_to_mnli_format.sh
 
+exit
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
       ./reduce_size.sh
