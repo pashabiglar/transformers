@@ -53,12 +53,11 @@ export MAX_SEQ_LENGTH="128"
 export OUTPUT_DIR="$OUTPUT_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE/$BERT_MODEL_NAME/$MAX_SEQ_LENGTH/$EPOCHS/"
 echo $OUTPUT_DIR
 
-#comment this section if you just downloaded and converted the data fresh using these.-useful for repeated runs
-rm -rf $basedir
 
 #get data only if its 1st epoch
 if [ $EPOCHS = "1" ]; then
         echo "found epopch is equal to 1. going to download data"
+        rm -rf $basedir
         ./get_fever_fnc_data.sh
         ./convert_to_mnli_format.sh
 
