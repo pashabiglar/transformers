@@ -57,12 +57,12 @@ echo $OUTPUT_DIR
 rm -rf $basedir
 
 #get data only if its 1st epoch
-#if [ #EPOCHS gt "1" ]; then
-#
-#fi
+if [ $EPOCHS = "1" ]; then
+        echo "found epopch is equal to 1. going to download data"
+        ./get_fever_fnc_data.sh
+        ./convert_to_mnli_format.sh
 
-./get_fever_fnc_data.sh
-./convert_to_mnli_format.sh
+fi
 
 exit
 
