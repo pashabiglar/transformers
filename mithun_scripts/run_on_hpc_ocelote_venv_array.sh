@@ -3,7 +3,7 @@
 #PBS -q standard
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
-#PBS -N delex_bert_cased_figer13_14
+#PBS -N delex_bert_cased_figer_19epochs
 ### Specify the group name
 #PBS -W group_list=msurdeanu
 ### Used if job requires partial node only
@@ -38,7 +38,7 @@ pip install --upgrade pip
 cd /home/u11/mithunpaul/xdisk/huggingface_bert/code/mithun_scripts/
 pip install -r requirements.txt
 
-bash run_all.sh --epochs_to_run 18 --machine_to_run_on server
+bash run_all.sh --epochs_to_run 19 --machine_to_run_on server
 
 
 

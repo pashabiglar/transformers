@@ -55,13 +55,20 @@ echo $OUTPUT_DIR
 
 #comment this section if you just downloaded and converted the data fresh using these.-useful for repeated runs
 rm -rf $basedir
-./get_fever_fnc_data.sh
+
+#get data only if its 1st epoch
+if [ EPOCHS == "1" ]; then
+        ./get_fever_fnc_data.sh
+        ./convert_to_mnli_format.sh
+fi
+
+
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
       ./reduce_size.sh
 fi
 
 
-./convert_to_mnli_format.sh
+
 ./run_glue.sh
 
