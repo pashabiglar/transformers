@@ -3,16 +3,16 @@
 #PBS -q standard
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
-#PBS -N delex_bert_cased_figer9_25
+#PBS -N delex_bert_cased_figer13_14
 ### Specify the group name
 #PBS -W group_list=msurdeanu
 ### Used if job requires partial node only
 #PBS -l place=pack:shared
 ### Walltime is how long your job will run
-#PBS -l walltime=15:50:00
+#PBS -l walltime=15:00:00
 ### Joins standard error and standard out
 #PBS -j oe
-#PBS -J 9-15
+#PBS -J 13-14
 
 
 
