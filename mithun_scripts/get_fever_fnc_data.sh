@@ -55,6 +55,8 @@ echo "found task type is lex and task name as fever cross domain"
 echo $DATA_DIR
 mkdir -p $DATA_DIR
 
+
+
 FILE=$DATA_DIR/train.tsv
 if test -f "$FILE";then
     echo "$FILE exists"
