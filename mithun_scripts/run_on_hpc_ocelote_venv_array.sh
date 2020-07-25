@@ -9,7 +9,7 @@
 ### Used if job requires partial node only
 #PBS -l place=pack:shared
 ### Walltime is how long your job will run
-#PBS -l walltime=21:00:00
+#PBS -l walltime=22:00:00
 ### Joins standard error and standard out
 #PBS -j oe
 
@@ -38,7 +38,7 @@ pip install --upgrade pip
 cd /home/u11/mithunpaul/xdisk/huggingface_bert/code/mithun_scripts/
 pip install -r requirements.txt
 
-bash run_all.sh --epochs_to_run 21 --machine_to_run_on server
+bash run_all.sh --epochs_to_run 22 --machine_to_run_on server
 
 
 
