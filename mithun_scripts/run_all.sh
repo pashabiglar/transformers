@@ -63,6 +63,8 @@ if [ $EPOCHS = "1" ]; then
 
 fi
 
+#temporary debug purposes at 216pm saturday july 25th
+ ./reduce_size.sh
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
       ./reduce_size.sh
