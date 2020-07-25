@@ -3,13 +3,13 @@
 #PBS -q windfall
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
-#PBS -N delex_bert_cased_figer_23epochs
+#PBS -N delex_bert_cased_figer_24epochs_windfall
 ### Specify the group name
 #PBS -W group_list=msurdeanu
 ### Used if job requires partial node only
 #PBS -l place=pack:shared
 ### Walltime is how long your job will run
-#PBS -l walltime=20:00:00
+#PBS -l walltime=25:00:00
 ### Joins standard error and standard out
 #PBS -j oe
 
@@ -38,7 +38,7 @@ pip install --upgrade pip
 cd /home/u11/mithunpaul/xdisk/huggingface_bert/code/mithun_scripts/
 pip install -r requirements.txt
 
-bash run_all.sh --epochs_to_run 23 --machine_to_run_on server
+bash run_all.sh --epochs_to_run 24 --machine_to_run_on server
 
 
 
