@@ -38,7 +38,7 @@ echo "data_dir is $DATA_DIR"
 mkdir -p OUTPUT_DIR
 
 
-if [ $MACHINE_TO_RUN_ON == "server" ]; then
+if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
        python3.6 ../examples/text-classification/run_glue.py $args
 else
        python3 ../examples/text-classification/run_glue.py $args

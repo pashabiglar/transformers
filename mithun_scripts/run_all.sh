@@ -19,7 +19,7 @@ fi
 
 if [ $# -gt 2 ]; then
 if [ $3 == "--machine_to_run_on" ]; then
-        export MACHINE_TO_RUN_ON=$4                
+        export MACHINE_TO_RUN_ON=$4
 fi
 fi
 
@@ -60,9 +60,9 @@ if [ $EPOCHS = "1" ]; then
         ./convert_to_mnli_format.sh
 
 fi
-
-
-
+#temporarily moving this here for debug on 25th july night
+./reduce_size.sh
+exit
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
       ./reduce_size.sh
 fi

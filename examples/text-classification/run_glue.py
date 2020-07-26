@@ -102,7 +102,6 @@ def main():
     )
     logger.info("Training/evaluation parameters %s", training_args)
 
-    sys.exit(1)
 
     # Set seed
     set_seed(training_args.seed)
