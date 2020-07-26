@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export MACHINE_TO_RUN_ON="laptop" #options include [laptop, server]
+export MACHINE_TO_RUN_ON="laptop" #options include [laptop, hpc,clara]
 export EPOCHS=1
 if [ $# -gt 1 ]
 then
@@ -19,7 +19,7 @@ fi
 
 if [ $# -gt 2 ]; then
 if [ $3 == "--machine_to_run_on" ]; then
-    if [ $4 == "server" ]; then
+    if [ $4 == "hpc" ]; then
         export MACHINE_TO_RUN_ON=$4
 fi
 fi
@@ -27,7 +27,7 @@ fi
 
 
 
-if [ $MACHINE_TO_RUN_ON == "server" ]; then
+if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         export OUTPUT_DIR_BASE="/xdisk/msurdeanu/mithunpaul/huggingface_bert/output"
         export DATA_DIR_BASE="/xdisk/msurdeanu/mithunpaul/huggingface_bert/data"
 else
