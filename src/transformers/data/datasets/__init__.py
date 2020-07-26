@@ -4,3 +4,4 @@
 
 from .glue import GlueDataset, GlueDataTrainingArguments,ParallelDataDataset
 from .language_modeling import LineByLineTextDataset, TextDataset
+from .squad import SquadDataset, SquadDataTrainingArguments
