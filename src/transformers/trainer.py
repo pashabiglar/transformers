@@ -1577,8 +1577,9 @@ class Trainer:
                     epoch_iterator.close()
                     break
 
-            self.compute_metrics = self.test_compute_metrics
-            self._intermediate_eval(eval_datasets_in=self.test_dataset, description=description_test,
+            if self.is_world_master():
+                self.compute_metrics = self.test_compute_metrics
+                self._intermediate_eval(eval_datasets_in=self.test_dataset, description=description_test,
                                     epoch=epoch, output_eval_file=test_partition_evaluation_results_file)
 
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
@@ -1736,14 +1737,14 @@ class Trainer:
         for eval_datasets_in in eval_datasets:
             eval_result = self.evaluate(eval_dataset=eval_datasets_in, description=description)
 
-            if self.is_world_master():
-                with open(output_eval_file, "a+") as writer:
-                    writer.write("*****epoch=%s\n" % (epoch))
-                    logger.info("***** evaluation results on {} *****".format(description))
-                    for key, value in eval_result.items():
-                        logger.info("  %s = %s", key, value)
-                        writer.write("%s = %s\n" % (key, value))
-                        wandb.log({key: value}, step=epoch)
+
+            with open(output_eval_file, "a+") as writer:
+                writer.write("*****epoch=%s\n" % (epoch))
+                logger.info("***** evaluation results on {} *****".format(description))
+                for key, value in eval_result.items():
+                    logger.info("  %s = %s", key, value)
+                    writer.write("%s = %s\n" % (key, value))
+                    wandb.log({key: value}, step=epoch)
         return eval_result
     def evaluate(
         self, description: str,eval_dataset: Optional[Dataset] = None, prediction_loss_only: Optional[bool] = None,
