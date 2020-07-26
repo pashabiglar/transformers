@@ -19,9 +19,7 @@ fi
 
 if [ $# -gt 2 ]; then
 if [ $3 == "--machine_to_run_on" ]; then
-    if [ $4 == "hpc" ]; then
-        export MACHINE_TO_RUN_ON=$4
-fi
+        export MACHINE_TO_RUN_ON=$4                
 fi
 fi
 
