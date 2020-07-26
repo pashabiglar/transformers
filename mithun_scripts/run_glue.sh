@@ -46,11 +46,6 @@ fi
 
 
 
-#for laptop run from terminal
-echo $args
-
-#python3 ../examples/text-classification/run_glue.py $args
-
 # for pycharm
 #feverindomain
 # --model_name_or_path bert-base-uncased     --task_name feverindomain      --do_train     --do_eval --do_predict      --data_dir /Users/mordor/research/huggingface/src/transformers/data/datasets/fever/feverindomain/lex/      --max_seq_length 128      --per_device_eval_batch_size=8       --per_device_train_batch_size=8        --learning_rate 2e-5      --num_train_epochs 1.0      --output_dir "./output" --overwrite_output_dir --save_steps 14000 --weight_decay 0.01 --adam_epsilon 1e-6
