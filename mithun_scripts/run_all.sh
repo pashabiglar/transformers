@@ -60,6 +60,10 @@ if [ $EPOCHS = "1" ]; then
         ./convert_to_mnli_format.sh
 fi
 
+
+#moiving reduce size here for debugging with toy data on clara
+./reduce_size.sh
+
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
       ./reduce_size.sh
 fi
