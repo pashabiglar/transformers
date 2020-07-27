@@ -44,7 +44,7 @@ else
        python3 ../examples/text-classification/run_glue.py $args
 fi
 
-
+echo $args
 
 # for pycharm
 #feverindomain

@@ -166,6 +166,8 @@ class Trainer:
     data_collator: DataCollator
     train_dataset: Optional[Dataset]
     eval_dataset: Optional[Dataset]
+    test_dataset =Optional[Dataset]
+    test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     prediction_loss_only: bool
     tb_writer: Optional["SummaryWriter"] = None
@@ -180,6 +182,8 @@ class Trainer:
         data_collator: Optional[DataCollator] = None,
         train_dataset: Optional[Dataset] = None,
         eval_dataset: Optional[Dataset] = None,
+        test_dataset: Optional[Dataset] = None,
+        test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
         compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
         prediction_loss_only=False,
         tb_writer: Optional["SummaryWriter"] = None,
@@ -190,6 +194,9 @@ class Trainer:
         self.data_collator = data_collator if data_collator is not None else default_data_collator
         self.train_dataset = train_dataset
         self.eval_dataset = eval_dataset
+        ###for fnc score evaluation
+        self.test_dataset = test_dataset
+        self.test_compute_metrics = test_compute_metrics
         self.compute_metrics = compute_metrics
         self.prediction_loss_only = prediction_loss_only
         self.optimizers = optimizers
@@ -579,6 +586,10 @@ class Trainer:
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                     epoch_iterator.close()
                     break
+
+            self._intermediate_eval(eval_datasets_in=self.test_dataset,
+                                    epoch=epoch)
+
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
                 break
@@ -802,6 +813,31 @@ class Trainer:
         for checkpoint in checkpoints_to_be_deleted:
             logger.info("Deleting older checkpoint [{}] due to args.save_total_limit".format(checkpoint))
             shutil.rmtree(checkpoint)
+
+    def _intermediate_eval(self, eval_datasets_in, epoch, output_eval_file="output/results_on_fnc_dev.txt"):
+
+        """
+        Helper function to call eval() method if and when you want to evaluate after say each epoch,
+        instead having to wait till the end of all epochs
+        Returns:
+        """
+
+        # Evaluation
+        eval_results = {}
+        epoch=epoch+1
+        eval_datasets = [eval_datasets_in]
+        for eval_dataset in eval_datasets:
+            self.compute_metrics = self.test_compute_metrics
+            eval_result = self.evaluate(eval_dataset=eval_dataset)
+            if self.is_world_master():
+                with open(output_eval_file, "w") as writer:
+                    logger.info("***** intermediate results at the end of epoch {} *****".format(epoch))
+                    for key, value in eval_result.items():
+                        logger.info("  %s = %s", key, value)
+                        writer.write("%s = %s\n" % (key, value))
+            eval_results.update(eval_result)
+        print("done with _intermediate_eval.")
+        return eval_result
 
     def evaluate(self, eval_dataset: Optional[Dataset] = None) -> Dict[str, float]:
         """
