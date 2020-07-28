@@ -36,8 +36,12 @@ pip install --upgrade pip
 
 
 
-cd /home/u11/mithunpaul/xdisk/huggingface_bert_fix_parallelism_per_epoch_issue/examples
-pip install -r requirements.txt
+cd /home/u11/mithunpaul/xdisk/huggingface_bert_fix_parallelism_per_epoch_issue/
+
+
+pip install -r examples/requirements.txt
+
+cd ../mithun_scripts/
 
 bash run_all.sh --epochs_to_run 1 --machine_to_run_on hpc #options include [laptop, hpc,clara]
 # for server clara
