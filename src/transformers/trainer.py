@@ -588,7 +588,7 @@ class Trainer:
                     break
 
             self._intermediate_eval(eval_datasets_in=self.test_dataset,
-                                    epoch=epoch)
+                                    epoch=epoch, output_eval_file=self.args.output_dir)
 
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
@@ -814,7 +814,7 @@ class Trainer:
             logger.info("Deleting older checkpoint [{}] due to args.save_total_limit".format(checkpoint))
             shutil.rmtree(checkpoint)
 
-    def _intermediate_eval(self, eval_datasets_in, epoch, output_eval_file="output/results_on_fnc_dev.txt"):
+    def _intermediate_eval(self, eval_datasets_in, epoch, output_eval_file):
 
         """
         Helper function to call eval() method if and when you want to evaluate after say each epoch,
@@ -942,8 +942,9 @@ class Trainer:
         if self.args.past_index and hasattr(self, "_past"):
             # Clean the state at the end of the evaluation loop
             delattr(self, "_past")
-
+        logger.info(f" value of local rank is {self.args.local_rank}")
         if self.args.local_rank != -1:
+            logger.info(f"found that local_rank is not minus one. value of local rank is {self.args.local_rank}")
             # In distributed mode, concatenate all results from all nodes:
             if preds is not None:
                 preds = self.distributed_concat(preds, num_total_examples=self.num_examples(dataloader))
@@ -955,7 +956,8 @@ class Trainer:
                 preds = xm.mesh_reduce("eval_preds", preds, torch.cat)
             if label_ids is not None:
                 label_ids = xm.mesh_reduce("eval_label_ids", label_ids, torch.cat)
-
+        import sys
+        sys.exit(1)
         # Finally, turn the aggregated tensors into numpy arrays.
         if preds is not None:
             preds = preds.cpu().numpy()
