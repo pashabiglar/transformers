@@ -115,15 +115,19 @@ class GlueDataset(Dataset):
                     f"Loading features from cached file {cached_features_file} [took %.3f s]", time.time() - start
                 )
             else:
-                logger.info(f"Creating features from dataset file at {args.data_dir}")
+                logger.info(f"Creating features from dataset file at {args.data_dir}. value of mode is {mode}")
                 if mode == Split.dev:
                     examples = self.processor.get_dev_examples(args.data_dir)
+                    logger.info(f"Done readign dev data")
                 elif mode == Split.test:
                     examples = self.processor.get_test_examples(args.data_dir)
+                    logger.info(f"Done readign test data")
                 else:
                     examples = self.processor.get_train_examples(args.data_dir)
+                    logger.info(f"Done readign training data")
                 if limit_length is not None:
                     examples = examples[:limit_length]
+                logger.info(f"going to get into function glue_convert_examples_to_features")
                 self.features = glue_convert_examples_to_features(
                     examples,
                     tokenizer,
@@ -132,6 +136,7 @@ class GlueDataset(Dataset):
                     output_mode=self.output_mode,
                 )
                 start = time.time()
+                logger.info(f"going to save features to cached features file whose value is {cached_features_file}")
                 torch.save(self.features, cached_features_file)
                 # ^ This seems to take a lot of time so I want to investigate why and how we can improve.
                 logger.info(

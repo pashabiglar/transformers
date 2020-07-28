@@ -20,7 +20,7 @@ import os
 from dataclasses import asdict
 from enum import Enum
 from typing import List, Optional, Union
-
+from tqdm import tqdm
 from ...file_utils import is_tf_available
 from ...tokenization_utils import PreTrainedTokenizer
 from .utils import DataProcessor, InputExample, InputFeatures
@@ -284,7 +284,7 @@ class MrpcProcessor(DataProcessor):
     def _create_examples(self, lines, set_type):
         """Creates examples for the training, dev and test sets."""
         examples = []
-        for (i, line) in enumerate(lines):
+        for (i, line) in tqdm(enumerate(lines),desc="creating examples",total=len(lines)):
             if i == 0:
                 continue
             guid = "%s-%s" % (set_type, i)
@@ -433,7 +433,7 @@ class FeverCrossDomainProcessor(DataProcessor):
     def _create_examples(self, lines, set_type):
         """Creates examples for the training, dev and test sets."""
         examples = []
-        for (i, line) in enumerate(lines):
+        for (i, line) in tqdm(enumerate(lines),desc="creating examples",total=len(lines)):
             if i == 0:
                 continue
             guid = "%s-%s" % (set_type, line[0])
