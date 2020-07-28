@@ -141,9 +141,9 @@ def _glue_convert_examples_to_features(
     logger.info("inside function _glue_convert_examples_to_features")
     if max_length is None:
         max_length = tokenizer.max_len
-    logger.info("value of task is {task}")
+    logger.info(f"fvalue of task is {task}")
     if task is not None:
-        logger.info("ifound task value is not none. task is {task}")
+        logger.info(f"ffound task value is not none. task is {task}")
         processor = glue_processors[task]()
         logger.info("got the processor value")
         if label_list is None:
@@ -153,7 +153,10 @@ def _glue_convert_examples_to_features(
         if output_mode is None:
             output_mode = glue_output_modes[task]
             logger.info("Using output mode %s for task %s" % (output_mode, task))
+    else:
+        logger.info(f"found task value is None. Error.. task is {task}")
 
+    logger.info("going to map labels")
     label_map = {label: i for i, label in enumerate(label_list)}
 
     def label_from_example(example: InputExample) -> Union[int, float, None]:
