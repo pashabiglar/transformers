@@ -161,7 +161,6 @@ def _glue_convert_examples_to_features(
 
     logger.info(f"done with label mapping. labels are {label_map}")
     def label_from_example(example: InputExample) -> Union[int, float, None]:
-        logger.info(f"inside with definition of label_from_example value of example.label {example.label}")
         if example.label is None:
             return None
         if output_mode == "classification":
@@ -173,7 +172,7 @@ def _glue_convert_examples_to_features(
 
     labels = [label_from_example(example) for example in examples]
 
-    logger.info(f"done with getting labels from example . value of  labels are {labels}. going to do batch _encoding")
+    logger.info(f"done with getting labels from example .  going to do batch _encoding")
     logger.info(f"value of tokenixer is {tokenizer}")
 
     batch_encoding = tokenizer(

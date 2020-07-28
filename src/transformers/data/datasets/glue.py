@@ -4,7 +4,7 @@ import time
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional, Union
-
+import sys
 import torch
 from filelock import FileLock
 from torch.utils.data.dataset import Dataset
@@ -92,6 +92,7 @@ class GlueDataset(Dataset):
                 mode.value, tokenizer.__class__.__name__, str(args.max_seq_length), args.task_name,
             ),
         )
+        logger.info(f"value of cahced features file is {cached_features_file}")
         label_list = self.processor.get_labels()
         if args.task_name in ["mnli", "mnli-mm"] and tokenizer.__class__ in (
             RobertaTokenizer,
@@ -107,6 +108,12 @@ class GlueDataset(Dataset):
         # Make sure only the first process in distributed training processes the dataset,
         # and the others will use the cache.
         lock_path = cached_features_file + ".lock"
+        logger.info(
+            f"args.overwrite_cache {args.overwrite_cache}")
+
+        logger.info(
+            f"os.path.exists(cached_features_file) {os.path.exists(cached_features_file)}")
+
         with FileLock(lock_path):
             if os.path.exists(cached_features_file) and not args.overwrite_cache:
                 start = time.time()
@@ -114,8 +121,11 @@ class GlueDataset(Dataset):
                 logger.info(
                     f"Loading features from cached file {cached_features_file} [took %.3f s]", time.time() - start
                 )
+                sys.exit(1)
             else:
-                logger.info(f"Creating features from dataset file at {args.data_dir}. value of mode is {mode}")
+                logger.info(f"found that no cache file exists. Creating features from dataset file at {args.data_dir}. value of mode is {mode}")
+                sys.exit(1)
+
                 if mode == Split.dev:
                     examples = self.processor.get_dev_examples(args.data_dir)
                     logger.info(f"Done readign dev data")
