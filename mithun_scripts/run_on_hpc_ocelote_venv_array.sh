@@ -28,7 +28,7 @@ python3 -m venv my_virtual_env
 
 #this is the only line you need if you already have a virtual_env set up
 source my_virtual_env/bin/activate
-export PYTHONPATH="/home/u11/mithunpaul/xdisk/huggingface_bert/code/src"
+export PYTHONPATH="/home/u11/mithunpaul/xdisk/huggingface_bert_fix_parallelism_per_epoch_issue/src"
 
 #for clara
 #export PYTHONPATH="/work/mithunpaul/huggingface_fix_paralellism_per_epoch_issue/src"
@@ -36,9 +36,7 @@ pip install --upgrade pip
 
 
 
-
-
-cd /home/u11/mithunpaul/xdisk/huggingface_bert/code/mithun_scripts/
+cd /home/u11/mithunpaul/xdisk/huggingface_bert_fix_parallelism_per_epoch_issue/examples
 pip install -r requirements.txt
 
 bash run_all.sh --epochs_to_run 1 --machine_to_run_on hpc #options include [laptop, hpc,clara]
