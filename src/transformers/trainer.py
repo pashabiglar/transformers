@@ -586,9 +586,9 @@ class Trainer:
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                     epoch_iterator.close()
                     break
-
+            output_eval_file_path = self.args.output_dir+"intermediate_eval_results.txt"
             self._intermediate_eval(eval_datasets_in=self.test_dataset,
-                                    epoch=epoch, output_eval_file=self.args.output_dir)
+                                    epoch=epoch, output_eval_file=output_eval_file_path)
 
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
