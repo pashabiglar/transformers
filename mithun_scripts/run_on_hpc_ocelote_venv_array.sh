@@ -12,7 +12,7 @@
 #PBS -l walltime=1:00:00
 ### Joins standard error and standard out
 #PBS -j oe
-#PBS -J [1]
+
 
 
 
@@ -41,7 +41,7 @@ pip install --upgrade pip
 cd /home/u11/mithunpaul/xdisk/huggingface_bert/code/mithun_scripts/
 pip install -r requirements.txt
 
-bash run_all.sh --epochs_to_run $PBS_ARRAY_INDEX --machine_to_run_on hpc #options include [laptop, hpc,clara]
+bash run_all.sh --epochs_to_run 1 --machine_to_run_on hpc #options include [laptop, hpc,clara]
 # for server clara
 #bash run_all.sh --epochs_to_run 1 --machine_to_run_on clara
 
