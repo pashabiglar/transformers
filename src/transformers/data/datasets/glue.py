@@ -121,10 +121,10 @@ class GlueDataset(Dataset):
                 logger.info(
                     f"Loading features from cached file {cached_features_file} [took %.3f s]", time.time() - start
                 )
-                sys.exit(1)
+
             else:
                 logger.info(f"found that no cache file exists. Creating features from dataset file at {args.data_dir}. value of mode is {mode}")
-                sys.exit(1)
+            
 
                 if mode == Split.dev:
                     examples = self.processor.get_dev_examples(args.data_dir)
