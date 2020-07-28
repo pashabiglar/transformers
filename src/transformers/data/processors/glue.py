@@ -58,6 +58,7 @@ def glue_convert_examples_to_features(
 
     """
     if is_tf_available() and isinstance(examples, tf.data.Dataset):
+        logger.info(f"found that is_tf_available is true")
         if task is None:
             raise ValueError("When calling glue_convert_examples_to_features from TF, the task parameter is required.")
         return _tf_glue_convert_examples_to_features(examples, tokenizer, max_length=max_length, task=task)
@@ -137,12 +138,16 @@ def _glue_convert_examples_to_features(
     label_list=None,
     output_mode=None,
 ):
+    logger.info("inside function _glue_convert_examples_to_features")
     if max_length is None:
         max_length = tokenizer.max_len
 
     if task is not None:
+        logger.info("ifound task value is not none. task is {task}")
         processor = glue_processors[task]()
+        logger.info("got the processor value")
         if label_list is None:
+            logger.info("found that label list is none. going to do processor.get_labels()")
             label_list = processor.get_labels()
             logger.info("Using label list %s for task %s" % (label_list, task))
         if output_mode is None:
