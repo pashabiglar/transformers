@@ -60,6 +60,7 @@ if [ $EPOCHS = "1" ]; then
         ./convert_to_mnli_format.sh
 fi
 
+echo "done with data download part if epoch==1. datapath now is $DATA_DIR"
 
 ./reduce_size.sh --data_path $DATA_DIR
 
