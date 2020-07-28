@@ -3,7 +3,7 @@
 #PBS -q standard
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
-#PBS -N lex_bert_cased_1epochs
+#PBS -N bug_fix_parallelization_issues
 ### Specify the group name
 #PBS -W group_list=msurdeanu
 ### Used if job requires partial node only
@@ -36,12 +36,12 @@ pip install --upgrade pip
 
 
 
-cd /home/u11/mithunpaul/xdisk/huggingface_bert_fix_parallelism_per_epoch_issue/
+cd /home/u11/mithunpaul/xdisk/huggingface_bert_fix_parallelism_per_epoch_issue/examples
 
 
 pip install -r examples/requirements.txt
 
-cd ../mithun_scripts/
+cd /home/u11/mithunpaul/xdisk/huggingface_bert_fix_parallelism_per_epoch_issue/mithun_scripts/
 
 bash run_all.sh --epochs_to_run 1 --machine_to_run_on hpc #options include [laptop, hpc,clara]
 # for server clara
