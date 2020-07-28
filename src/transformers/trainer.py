@@ -497,6 +497,13 @@ class Trainer:
         train_iterator = trange(
             epochs_trained, int(num_train_epochs), desc="Epoch", disable=not self.is_local_master()
         )
+
+        #empty out the file which stores intermediate evaluations
+        output_eval_file_path = self.args.output_dir + "intermediate_eval_results.txt"
+        # empty out the
+        with open(output_eval_file_path, "w") as writer:
+            writer.write("")
+
         for epoch in train_iterator:
             if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
                 train_dataloader.sampler.set_epoch(epoch)
@@ -586,7 +593,7 @@ class Trainer:
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                     epoch_iterator.close()
                     break
-            output_eval_file_path = self.args.output_dir+"intermediate_eval_results.txt"
+
             self._intermediate_eval(eval_datasets_in=self.test_dataset,
                                     epoch=epoch, output_eval_file=output_eval_file_path)
 
@@ -822,6 +829,7 @@ class Trainer:
         Returns:
         """
 
+
         # Evaluation
         eval_results = {}
         epoch=epoch+1
@@ -830,7 +838,7 @@ class Trainer:
             self.compute_metrics = self.test_compute_metrics
             eval_result = self.evaluate(eval_dataset=eval_dataset)
             if self.is_world_master():
-                with open(output_eval_file, "w") as writer:
+                with open(output_eval_file, "a") as writer:
                     logger.info("***** intermediate results at the end of epoch {} *****".format(epoch))
                     for key, value in eval_result.items():
                         logger.info("  %s = %s", key, value)
