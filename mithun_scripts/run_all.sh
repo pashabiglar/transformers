@@ -61,7 +61,7 @@ if [ $EPOCHS = "1" ]; then
 fi
 
 
- ./reduce_size.sh
+./reduce_size.sh
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
       ./reduce_size.sh
