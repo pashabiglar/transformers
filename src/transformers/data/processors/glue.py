@@ -141,7 +141,7 @@ def _glue_convert_examples_to_features(
     logger.info("inside function _glue_convert_examples_to_features")
     if max_length is None:
         max_length = tokenizer.max_len
-
+    logger.info("value of task is {task}")
     if task is not None:
         logger.info("ifound task value is not none. task is {task}")
         processor = glue_processors[task]()
