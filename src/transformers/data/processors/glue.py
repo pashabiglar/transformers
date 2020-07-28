@@ -159,7 +159,9 @@ def _glue_convert_examples_to_features(
     logger.info("going to map labels")
     label_map = {label: i for i, label in enumerate(label_list)}
 
+    logger.info(f"done with label mapping. labels are {label_map}")
     def label_from_example(example: InputExample) -> Union[int, float, None]:
+        logger.info(f"inside with definition of label_from_example value of example.label {example.label}")
         if example.label is None:
             return None
         if output_mode == "classification":
@@ -168,7 +170,10 @@ def _glue_convert_examples_to_features(
             return float(example.label)
         raise KeyError(output_mode)
 
+
     labels = [label_from_example(example) for example in examples]
+
+    logger.info(f"done with getting labels from example . value of  labels are {labels}. going to do batch _encoding")
 
     batch_encoding = tokenizer(
         [(example.text_a, example.text_b) for example in examples],
@@ -178,16 +183,19 @@ def _glue_convert_examples_to_features(
     )
 
     features = []
-    for i in range(len(examples)):
+
+    logger.info(f"done with batch_encoding. value of  batch_encoding are {batch_encoding}.. going to get inside enumerate features")
+
+    for i in tqdm(range(len(examples)),desc="creating features", total=len(examples)):
         inputs = {k: batch_encoding[k][i] for k in batch_encoding}
 
         feature = InputFeatures(**inputs, label=labels[i])
         features.append(feature)
 
-    # for i, example in enumerate(examples[:5]):
-    #     logger.info("*** Example ***")
-    #     logger.info("guid: %s" % (example.guid))
-    #     logger.info("features: %s" % features[i])
+    for i, example in enumerate(examples[:5]):
+        logger.info("*** Example ***")
+        logger.info("guid: %s" % (example.guid))
+        logger.info("features: %s" % features[i])
 
     return features
 
