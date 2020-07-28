@@ -60,13 +60,16 @@ if [ $EPOCHS = "1" ]; then
         ./convert_to_mnli_format.sh
 fi
 
-echo "done with data download part in run_all.sh if epoch==1. datapath now is $DATA_DIR"
+echo "done with data download part if epoch==1. datapath now is $DATA_DIR"
 
 
+#temporarily here for debugging on hpc
+./reduce_size.sh --data_path $DATA_DIR
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
       ./reduce_size.sh  --data_path $DATA_DIR
 fi
+
 
 
 ./run_glue.sh
