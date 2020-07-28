@@ -12,7 +12,7 @@
 #PBS -l walltime=1:00:00
 ### Joins standard error and standard out
 #PBS -j oe
-#PBS -J 1
+#PBS -J [1]
 
 
 
