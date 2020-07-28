@@ -61,13 +61,13 @@ if [ $EPOCHS = "1" ]; then
 fi
 
 
-./reduce_size.sh
+./reduce_size.sh --data_path $DATA_DIR
 
-if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
-      ./reduce_size.sh
-fi
+#if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
+#      ./reduce_size.sh
+#fi
 
-
+exit
 
 ./run_glue.sh
 
