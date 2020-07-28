@@ -39,7 +39,7 @@ pip install --upgrade pip
 cd /home/u11/mithunpaul/xdisk/huggingface_bert_fix_parallelism_per_epoch_issue/examples
 
 
-pip install -r examples/requirements.txt
+pip install -r requirements.txt
 
 cd /home/u11/mithunpaul/xdisk/huggingface_bert_fix_parallelism_per_epoch_issue/mithun_scripts/
 
