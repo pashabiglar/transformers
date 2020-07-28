@@ -956,8 +956,7 @@ class Trainer:
                 preds = xm.mesh_reduce("eval_preds", preds, torch.cat)
             if label_ids is not None:
                 label_ids = xm.mesh_reduce("eval_label_ids", label_ids, torch.cat)
-        import sys
-        sys.exit(1)
+      
         # Finally, turn the aggregated tensors into numpy arrays.
         if preds is not None:
             preds = preds.cpu().numpy()
