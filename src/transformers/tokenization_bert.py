@@ -25,7 +25,7 @@ from tokenizers import BertWordPieceTokenizer
 
 from .tokenization_utils import PreTrainedTokenizer, _is_control, _is_punctuation, _is_whitespace
 from .tokenization_utils_fast import PreTrainedTokenizerFast
-
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -210,10 +210,12 @@ class BertTokenizer(PreTrainedTokenizer):
     def get_vocab(self):
         return dict(self.vocab, **self.added_tokens_encoder)
 
+
     def _tokenize(self, text):
         split_tokens = []
+        logging.info(text)
         if self.do_basic_tokenize:
-            for token in self.basic_tokenizer.tokenize(text, never_split=self.all_special_tokens):
+            for token in tqdm(self.basic_tokenizer.tokenize(text, never_split=self.all_special_tokens),desc="tokenizing"):
 
                 # If the token is part of the never_split set
                 if token in self.basic_tokenizer.never_split:

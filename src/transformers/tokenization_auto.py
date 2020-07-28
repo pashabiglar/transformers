@@ -212,8 +212,10 @@ class AutoTokenizer:
         for config_class, (tokenizer_class_py, tokenizer_class_fast) in TOKENIZER_MAPPING.items():
             if isinstance(config, config_class):
                 if tokenizer_class_fast and use_fast:
+                    logger.info("tokenizer is of class tokenizer_class_fast")
                     return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
                 else:
+                    logger.info(f"tokenizer is of class tokenizer_class_fast. going to return tokenizer whose name is {pretrained_model_name_or_path}")
                     return tokenizer_class_py.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
 
         raise ValueError(

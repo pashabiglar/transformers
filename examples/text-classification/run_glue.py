@@ -132,6 +132,7 @@ def main():
         cache_dir=model_args.cache_dir,
         force_download=True
     )
+
     if (training_args.do_train_1student_1teacher == True):
         model_teacher = AutoModelForSequenceClassification.from_pretrained(
         model_args.model_name_or_path,
