@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Your job will use 1 node, 28 cores, and 168gb of memory total.
-#PBS -q standard
+#PBS -q windfall
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
 #PBS -N bug_fix_parallelization_issues
@@ -9,7 +9,7 @@
 ### Used if job requires partial node only
 #PBS -l place=pack:shared
 ### Walltime is how long your job will run
-#PBS -l walltime=1:00:00
+#PBS -l walltime=15:00:00
 ### Joins standard error and standard out
 #PBS -j oe
 
