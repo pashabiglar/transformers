@@ -55,7 +55,6 @@ echo $OUTPUT_DIR
 #get data only if its 1st epoch
 if [ $EPOCHS = "1" ]; then
         echo "found epopch is equal to 1. going to download data"
-        rm -rf $DATA_DIR
         ./get_fever_fnc_data.sh
         ./convert_to_mnli_format.sh
 fi

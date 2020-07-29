@@ -45,7 +45,7 @@ cd /home/u11/mithunpaul/xdisk/huggingface_bert_fix_parallelism_per_epoch_issue/m
 
 bash run_all.sh --epochs_to_run 2 --machine_to_run_on hpc #options include [laptop, hpc,clara]
 # for server clara
-#bash run_all.sh --epochs_to_run 1 --machine_to_run_on clara
+#bash run_all.sh --epochs_to_run 2 --machine_to_run_on clara
 
 
 

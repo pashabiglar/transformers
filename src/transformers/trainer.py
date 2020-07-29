@@ -520,6 +520,13 @@ class Trainer:
             if self.args.past_index >= 0:
                 self._past = None
 
+            #dynamically calculate the steps per epoch
+            steps_per_epoch=len(epoch_iterator)
+            #do self evaluation only at the end of epoch, not every steps
+            self.args.eval_steps=steps_per_epoch
+
+            logger.info(f"value of eval_steps is {self.args.eval_steps}")
+
             for step, inputs in enumerate(epoch_iterator):
 
                 # Skip past any already trained steps if resuming training
@@ -565,6 +572,10 @@ class Trainer:
                         self.log(logs)
 
                     if self.args.evaluate_during_training and self.global_step % self.args.eval_steps == 0:
+                        logger.info(f"going to do self evaluation in epoch number {epoch} ")
+                        logger.info(f"value of self.global_step  {self.global_step } ")
+                        logger.info(f"value of self.args.eval_steps  {self.args.eval_steps } ")
+
                         self.evaluate()
 
                     if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0:
@@ -593,9 +604,10 @@ class Trainer:
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                     epoch_iterator.close()
                     break
-
-            self._intermediate_eval(eval_datasets_in=self.test_dataset,
-                                    epoch=epoch, output_eval_file=output_eval_file_path)
+            self._intermediate_eval(datasets=self.eval_dataset,
+                                    epoch=epoch, output_eval_file=output_eval_file_path, description="dev_partition")
+            self._intermediate_eval(datasets=self.test_dataset,
+                                    epoch=epoch, output_eval_file=output_eval_file_path, description="test_partition")
 
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
@@ -821,7 +833,7 @@ class Trainer:
             logger.info("Deleting older checkpoint [{}] due to args.save_total_limit".format(checkpoint))
             shutil.rmtree(checkpoint)
 
-    def _intermediate_eval(self, eval_datasets_in, epoch, output_eval_file):
+    def _intermediate_eval(self, datasets, epoch, output_eval_file, description):
 
         """
         Helper function to call eval() method if and when you want to evaluate after say each epoch,
@@ -829,13 +841,18 @@ class Trainer:
         Returns:
         """
 
+        logger.info (f"inside _intermediate_eval. going to run evaluation on {description} ")
+
+        if "dev" in description:
+            self.compute_metrics = self.compute_metrics
+        if "test" in description:
+            self.compute_metrics = self.test_compute_metrics
 
         # Evaluation
         eval_results = {}
         epoch=epoch+1
-        eval_datasets = [eval_datasets_in]
-        for eval_dataset in eval_datasets:
-            self.compute_metrics = self.test_compute_metrics
+        dataset = [datasets]
+        for eval_dataset in dataset:
             eval_result = self.evaluate(eval_dataset=eval_dataset)
             if self.is_world_master():
                 with open(output_eval_file, "a") as writer:
@@ -924,7 +941,7 @@ class Trainer:
         # inside a DistributedDataParallel as we'll be under `no_grad` anyways.
 
         batch_size = dataloader.batch_size
-        logger.info("***** Running %s *****", description)
+        logger.info("***** Running %s at epoch number:%s *****", description,self.epoch)
         logger.info("  Num examples = %d", self.num_examples(dataloader))
         logger.info("  Batch size = %d", batch_size)
         eval_losses: List[float] = []

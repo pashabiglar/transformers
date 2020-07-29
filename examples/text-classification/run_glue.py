@@ -199,6 +199,7 @@ def main():
 
         return compute_metrics_fn
 
+    dev_compute_metrics = build_compute_metrics_fn("feverindomain")
     test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
     # Initialize our Trainer
     # if training_args.do_train_1student_1teacher:
@@ -214,9 +215,9 @@ def main():
             model=model,
             args=training_args,
             train_dataset=train_dataset,
-            eval_dataset=None,
+            eval_dataset=eval_dataset,
             test_dataset=test_dataset,
-            compute_metrics=None,
+            compute_metrics=dev_compute_metrics,
             test_compute_metrics=test_compute_metrics
 
         )
@@ -270,7 +271,7 @@ def main():
     # RUN Evaluation Again on test partition which is actually crossdomains dev partition
     eval_results = {}
     if training_args.do_eval:
-        logger.info("*** Evaluate2 at the end of all epochs ***")
+        logger.info("*** Evaluate2 at the end of all epochs= evaluating on the test partition ***")
 
         # Loop to handle MNLI double evaluation (matched, mis-matched)
         eval_datasets = [test_dataset]
