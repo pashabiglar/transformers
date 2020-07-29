@@ -525,8 +525,6 @@ class Trainer:
             #do self evaluation only at the end of epoch, not every steps
             self.args.eval_steps=steps_per_epoch
 
-            logger.info(f"value of eval_steps is {self.args.eval_steps}")
-
             for step, inputs in enumerate(epoch_iterator):
 
                 # Skip past any already trained steps if resuming training
@@ -572,7 +570,7 @@ class Trainer:
                         self.log(logs)
 
                     if self.args.evaluate_during_training and self.global_step % self.args.eval_steps == 0:
-                        logger.info(f"going to do self evaluation in epoch number {epoch} ")
+                        logger.info(f"going to do self evaluation in epoch number {epoch+1} ")
                         logger.info(f"value of self.global_step  {self.global_step } ")
                         logger.info(f"value of self.args.eval_steps  {self.args.eval_steps } ")
 
