@@ -59,7 +59,7 @@ echo $OUTPUT_DIR
 #        ./convert_to_mnli_format.sh
 #fi
 #
-#echo "done with data download part if epoch==1. datapath now is $DATA_DIR"
+echo "done with data download part if epoch==1. datapath now is $DATA_DIR"
 
 
 
