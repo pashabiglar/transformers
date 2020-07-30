@@ -53,13 +53,13 @@ echo $OUTPUT_DIR
 
 
 #get data only if its 1st epoch
-if [ $EPOCHS = "1" ]; then
-        echo "found epopch is equal to 1. going to download data"
-        ./get_fever_fnc_data.sh
-        ./convert_to_mnli_format.sh
-fi
-
-echo "done with data download part if epoch==1. datapath now is $DATA_DIR"
+#if [ $EPOCHS = "1" ]; then
+#        echo "found epopch is equal to 1. going to download data"
+#        ./get_fever_fnc_data.sh
+#        ./convert_to_mnli_format.sh
+#fi
+#
+#echo "done with data download part if epoch==1. datapath now is $DATA_DIR"
 
 
 
