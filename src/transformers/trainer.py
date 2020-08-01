@@ -195,7 +195,7 @@ class Trainer:
         self.train_dataset = train_dataset
 
         #pointing eval dataset to test dataset is a temporary hack on july 28th to fix reproducability issues.
-        self.eval_dataset = test_dataset
+        self.eval_dataset = eval_dataset
         ###for fnc score evaluation
         self.test_dataset = test_dataset
         self.test_compute_metrics = test_compute_metrics
