@@ -52,6 +52,10 @@ export OUTPUT_DIR="$OUTPUT_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYP
 echo $OUTPUT_DIR
 
 
+#commenting this on august 1st since downloading data was becoming a pain. due to tokenization issues. i.e after merging with
+#latest code of HF, for some reason tokenization was taking 24+ hours. I decided to reuse the old cahced tokenizations instead of
+#trying to figure out what happened due to merge. PIcking my battles.
+
 #get data only if its 1st epoch
 #if [ $EPOCHS = "1" ]; then
 #        echo "found epopch is equal to 1. going to download data"
