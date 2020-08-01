@@ -274,6 +274,9 @@ class Trainer:
         elif is_torch_tpu_available():
             return SequentialDistributedSampler(eval_dataset, num_replicas=xm.xrt_world_size(), rank=xm.get_ordinal())
         elif self.args.local_rank != -1:
+            logger.info(f"found that local_rank is not minus one. value of local rank is {self.args.local_rank}")
+            import sys
+            sys.exit()
             return SequentialDistributedSampler(eval_dataset)
         else:
             return SequentialSampler(eval_dataset)
@@ -439,10 +442,22 @@ class Trainer:
 
         # multi-gpu training (should be after apex fp16 initialization)
         if self.args.n_gpu > 1:
+
+            #mithun-august1st2020: if its doing any parallellization anywhere at any point, i need to know. because am assuming there is no parallelization
+            print("fouund that n_gpu>1. going to quit")
+            logger.info(f"fouund that n_gpu>1. going to quit")
+
+            import sys
+            sys.exit(1)
             model = torch.nn.DataParallel(model)
 
         # Distributed training (should be after apex fp16 initialization)
         if self.args.local_rank != -1:
+            # mithun-august1st2020: if its doing any parallellization anywhere at any point, i need to know. because am assuming there is no parallelization
+            print("fouund that self.args.local_rank != -1:. going to quit")
+            logger.info(f"fouund that n_gpu>1. going to quit")
+            import sys
+            sys.exit(1)
             model = torch.nn.parallel.DistributedDataParallel(
                 model,
                 device_ids=[self.args.local_rank],
@@ -458,11 +473,14 @@ class Trainer:
         if is_torch_tpu_available():
             total_train_batch_size = self.args.train_batch_size * xm.xrt_world_size()
         else:
-            total_train_batch_size = (
-                self.args.train_batch_size
-                * self.args.gradient_accumulation_steps
-                * (torch.distributed.get_world_size() if self.args.local_rank != -1 else 1)
-            )
+            bs=1
+            if self.args.local_rank != -1:
+                logger.info(f"found that local_rank is not minus one. value of local rank is {self.args.local_rank}")
+                import sys
+                sys.exit()
+                bs=torch.distributed.get_world_size()
+            total_train_batch_size = self.args.train_batch_size* self.args.gradient_accumulation_steps* (bs)
+
         logger.info("***** Running training *****")
         logger.info("  Num examples = %d", self.num_examples(train_dataloader))
         logger.info("  Num Epochs = %d", num_train_epochs)
@@ -970,6 +988,8 @@ class Trainer:
         logger.info(f" value of local rank is {self.args.local_rank}")
         if self.args.local_rank != -1:
             logger.info(f"found that local_rank is not minus one. value of local rank is {self.args.local_rank}")
+            import sys
+            sys.exit()
             # In distributed mode, concatenate all results from all nodes:
             if preds is not None:
                 preds = self.distributed_concat(preds, num_total_examples=self.num_examples(dataloader))
@@ -1004,6 +1024,9 @@ class Trainer:
 
     def distributed_concat(self, tensor: torch.Tensor, num_total_examples: int) -> torch.Tensor:
         assert self.args.local_rank != -1
+        logger.info(f"found that local_rank is not minus one. value of local rank is {self.args.local_rank}")
+        import sys
+        sys.exit()
 
         output_tensors = [tensor.clone() for _ in range(torch.distributed.get_world_size())]
         torch.distributed.all_gather(output_tensors, tensor)
