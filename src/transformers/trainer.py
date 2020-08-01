@@ -242,7 +242,7 @@ class Trainer:
             return get_tpu_sampler(self.train_dataset)
         else:
             return (
-                SequentialSampler(self.train_dataset)
+                RandomSampler(self.train_dataset)
                 if self.args.local_rank == -1
                 else DistributedSampler(self.train_dataset)
             )
