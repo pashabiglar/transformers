@@ -1,7 +1,7 @@
 import os
 import random
 from typing import Dict, NamedTuple, Optional
-
+import torch
 import numpy as np
 
 from .file_utils import is_tf_available, is_torch_available
@@ -35,14 +35,17 @@ def set_seed(seed: int):
     random.seed(seed)
     np.random.seed(seed)
     if is_torch_available():
-        import torch
-
+        print("found that torch is available")
+        print(torch.cuda.device_count())
+        print(torch.cuda.is_available())
+        print(torch.cuda.current_device())
+        import sys
+        sys.exit(1)
         torch.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
         # ^^ safe to call this function even if cuda is not available
     if is_tf_available():
         import tensorflow as tf
-
         tf.random.set_seed(seed)
 
 
