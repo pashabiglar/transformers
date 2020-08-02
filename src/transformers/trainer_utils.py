@@ -34,13 +34,18 @@ def set_seed(seed: int):
     """
     random.seed(seed)
     np.random.seed(seed)
-    if is_torch_available():
+    if torch.cuda.is_available():
+        torch.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
         print("found that torch is available")
         print(torch.cuda.device_count())
         print(torch.cuda.is_available())
         print(torch.cuda.current_device())
+        print(torch.cuda.get_device_name(torch.cuda.current_device()))
+        print(seed)
         import sys
         sys.exit(1)
+    if is_torch_available():
         torch.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
         # ^^ safe to call this function even if cuda is not available
