@@ -142,6 +142,7 @@ class GlueDataset(Dataset):
                     examples,
                     tokenizer,
                     max_length=args.max_seq_length,
+                    task=args.task_name,
                     label_list=label_list,
                     output_mode=self.output_mode,
                 )
