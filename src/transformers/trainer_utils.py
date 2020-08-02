@@ -36,15 +36,19 @@ def set_seed(seed: int):
     np.random.seed(seed)
     if torch.cuda.is_available():
         torch.manual_seed(seed)
+        torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
+        # for CuDnn- a nvidia library
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        os.environ['PYTHONHASHSEED'] = str(seed)
         print("found that torch is available")
         print(torch.cuda.device_count())
         print(torch.cuda.is_available())
         print(torch.cuda.current_device())
         print(torch.cuda.get_device_name(torch.cuda.current_device()))
         print(seed)
-        import sys
-        sys.exit(1)
+
     if is_torch_available():
         torch.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)
