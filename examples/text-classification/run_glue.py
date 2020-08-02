@@ -199,7 +199,7 @@ def main():
 
         return compute_metrics_fn
 
-    dev_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
+    dev_compute_metrics = build_compute_metrics_fn("feverindomain")
     test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
     # Initialize our Trainer
     # if training_args.do_train_1student_1teacher:
@@ -208,7 +208,7 @@ def main():
     #     args=training_args,
     #     train_datasets={"combined":train_dataset},
     #     eval_dataset=eval_dataset,
-    #     compute_metrics=build_compute_metrics_fn(data_args.task_name),
+    #     eval_compute_metrics=build_compute_metrics_fn(data_args.task_name),
     # )
     # else:
     trainer = Trainer(
@@ -217,7 +217,7 @@ def main():
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             test_dataset=test_dataset,
-            compute_metrics=dev_compute_metrics,
+            eval_compute_metrics=dev_compute_metrics,
             test_compute_metrics=test_compute_metrics
 
         )
@@ -254,7 +254,7 @@ def main():
 
         for eval_dataset in eval_datasets:
             #feverindomain compute metric has only accuracy while fever cross domain has both accuracy and fnc score
-            trainer.compute_metrics = build_compute_metrics_fn("feverindomain")
+            trainer.eval_compute_metrics = build_compute_metrics_fn("feverindomain")
             eval_result = trainer.evaluate(eval_dataset=eval_dataset)
 
             output_eval_file = os.path.join(
@@ -283,7 +283,7 @@ def main():
             )
 
         for eval_dataset in eval_datasets:
-            trainer.compute_metrics = build_compute_metrics_fn("fevercrossdomain")
+            trainer.eval_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
             eval_result = trainer.evaluate(eval_dataset=eval_dataset)
 
             output_eval_file = os.path.join(

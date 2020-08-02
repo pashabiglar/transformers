@@ -312,7 +312,7 @@ class TFTrainer:
         Run evaluation and returns metrics.
 
         The calling script will be responsible for providing a method to compute metrics, as they are
-        task-dependent (pass it to the init :obj:`compute_metrics` argument).
+        task-dependent (pass it to the init :obj:`eval_compute_metrics` argument).
 
         Args:
             eval_dataset (:class:`~tf.data.Dataset`, `optional`):

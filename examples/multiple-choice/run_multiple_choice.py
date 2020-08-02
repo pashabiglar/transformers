@@ -186,7 +186,7 @@ def main():
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        compute_metrics=compute_metrics,
+        eval_compute_metrics=compute_metrics,
     )
 
     # Training

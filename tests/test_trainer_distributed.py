@@ -86,7 +86,7 @@ if __name__ == "__main__":
             args=training_args,
             data_collator=DummyDataCollator(),
             eval_dataset=dataset,
-            compute_metrics=compute_metrics,
+            eval_compute_metrics=compute_metrics,
         )
         metrics = trainer.evaluate()
         logger.info(metrics)

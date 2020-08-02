@@ -168,7 +168,7 @@ class Trainer:
     eval_dataset: Optional[Dataset]
     test_dataset =Optional[Dataset]
     test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
-    compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
+    eval_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     prediction_loss_only: bool
     tb_writer: Optional["SummaryWriter"] = None
     optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = None
@@ -184,7 +184,7 @@ class Trainer:
         eval_dataset: Optional[Dataset] = None,
         test_dataset: Optional[Dataset] = None,
         test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
-        compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
+        eval_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
         prediction_loss_only=False,
         tb_writer: Optional["SummaryWriter"] = None,
         optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = None,
@@ -199,7 +199,8 @@ class Trainer:
         ###for fnc score evaluation
         self.test_dataset = test_dataset
         self.test_compute_metrics = test_compute_metrics
-        self.compute_metrics = compute_metrics
+        self.eval_compute_metrics = eval_compute_metrics
+        self.compute_metrics = None
         self.prediction_loss_only = prediction_loss_only
         self.optimizers = optimizers
         if tb_writer is not None:
@@ -590,10 +591,10 @@ class Trainer:
                         self.log(logs)
 
                     if self.args.evaluate_during_training and self.global_step % self.args.eval_steps == 0:
-                        logger.info(f"going to do self evaluation in epoch number {epoch+1} ")
+                        logger.info(f"going to do self evaluation on dev dataset within epoch number {epoch+1} ")
                         logger.info(f"value of self.global_step  {self.global_step } ")
                         logger.info(f"value of self.args.eval_steps  {self.args.eval_steps } ")
-
+                        self.compute_metrics=self.eval_compute_metrics
                         self.evaluate()
 
                     if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0:
@@ -862,16 +863,25 @@ class Trainer:
         logger.info (f"inside _intermediate_eval. going to run evaluation on {description} ")
 
         if "dev" in description:
-            self.compute_metrics = self.compute_metrics
-        if "test" in description:
-            self.compute_metrics = self.test_compute_metrics
+            self.compute_metrics = self.eval_compute_metrics
+        else:
+            if "test" in description:
+                self.compute_metrics = self.test_compute_metrics
 
+        assert self.compute_metrics is not None
         # Evaluation
         eval_results = {}
         epoch=epoch+1
         dataset = [datasets]
         for eval_dataset in dataset:
-            eval_result = self.evaluate(eval_dataset=eval_dataset)
+            eval_result=None
+            if "dev" in description:
+                eval_result = self.evaluate(eval_dataset=eval_dataset)
+            else:
+                if "test" in description:
+                    eval_result = self.evaluate_on_test_partition(test_dataset=eval_dataset)
+            assert eval_result is not None
+
             if self.is_world_master():
                 with open(output_eval_file, "a") as writer:
                     logger.info("***** intermediate results at the end of epoch {} *****".format(epoch))
@@ -887,7 +897,7 @@ class Trainer:
         Run evaluation and returns metrics.
 
         The calling script will be responsible for providing a method to compute metrics, as they are
-        task-dependent (pass it to the init :obj:`compute_metrics` argument).
+        task-dependent (pass it to the init :obj:`eval_compute_metrics` argument).
 
         You can also subclass and override this method to inject custom behavior.
 
@@ -898,6 +908,34 @@ class Trainer:
             A dictionary containing the evaluation loss and the potential metrics computed from the predictions.
         """
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
+
+        output = self.prediction_loop(eval_dataloader, description="Evaluation")
+
+        self.log(output.metrics)
+
+        if self.args.tpu_metrics_debug or self.args.debug:
+            # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
+            xm.master_print(met.metrics_report())
+
+        return output.metrics
+
+
+    def evaluate_on_test_partition(self, test_dataset: Optional[Dataset] = None) -> Dict[str, float]:
+        """
+        Run evaluation and returns metrics.
+
+        The calling script will be responsible for providing a method to compute metrics, as they are
+        task-dependent (pass it to the init :obj:`eval_compute_metrics` argument).
+
+        You can also subclass and override this method to inject custom behavior.
+
+        Args:
+            test_dataset (:obj:`Dataset`, `optional`):
+                Pass a dataset if you wish to override :obj:`self.eval_dataset`.
+        Returns:
+            A dictionary containing the evaluation loss and the potential metrics computed from the predictions.
+        """
+        eval_dataloader = self.get_test_dataloader(test_dataset)
 
         output = self.prediction_loop(eval_dataloader, description="Evaluation")
 
@@ -1011,6 +1049,9 @@ class Trainer:
         if self.compute_metrics is not None and preds is not None and label_ids is not None:
             metrics = self.compute_metrics(EvalPrediction(predictions=preds, label_ids=label_ids))
         else:
+            logger.error("eval metrics is none. going to exit")
+            import sys
+            sys.exit(1)
             metrics = {}
         if len(eval_losses) > 0:
             metrics["eval_loss"] = np.mean(eval_losses)

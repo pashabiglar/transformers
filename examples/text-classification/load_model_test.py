@@ -166,7 +166,7 @@ def main():
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
-        compute_metrics=build_compute_metrics_fn(data_args.task_name),
+        eval_compute_metrics=build_compute_metrics_fn(data_args.task_name),
     )
 
     # Training
@@ -194,7 +194,7 @@ def main():
             )
 
         for eval_dataset in eval_datasets:
-            trainer.compute_metrics = build_compute_metrics_fn(eval_dataset.args.task_name)
+            trainer.eval_compute_metrics = build_compute_metrics_fn(eval_dataset.args.task_name)
             eval_result = trainer.evaluate(eval_dataset=eval_dataset)
 
             output_eval_file = os.path.join(
