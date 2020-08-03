@@ -102,7 +102,7 @@ if _has_sklearn:
     import pandas as pd
     import numpy as np
 
-    LABELS = ['agree', 'disagree', 'discuss', 'unrelated']
+    LABELS = ['disagree', 'agree', 'discuss', 'unrelated']
     LABELS_RELATED = ['unrelated','related']
     RELATED = LABELS[0:3]
 

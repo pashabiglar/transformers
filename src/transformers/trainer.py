@@ -991,6 +991,9 @@ class Trainer:
         # multi-gpu eval
         if self.args.n_gpu > 1:
             model = torch.nn.DataParallel(model)
+            logger.info(f"found that self.args.Nn_gpu >1. its value now is  {self.args.n_gpu}. inside prediction loop. going to exit.")
+            import sys
+            sys.exit()
         else:
             model = self.model
         # Note: in torch.distributed mode, there's no point in wrapping the model
