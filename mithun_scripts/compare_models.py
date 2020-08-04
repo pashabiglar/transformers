@@ -17,10 +17,10 @@ def compare_models(model_1, model_2):
     else:
         print("Esta madre. Models are different")
 
-basedir="/Users/mordor/research/huggingface_bert/mithun_scripts/output/fever/fevercrossdomain/lex/figerspecific/bert-base-cased/128/2"
+basedir="/Users/mordor/research/huggingface_bert/mithun_scripts/output/fever/fevercrossdomain/lex/figerspecific/bert-base-cased/128/"
 
-path1=os.path.join(basedir,"trained_model_at_end_of_epoch0_of_total_1.0epochs.pth")
-path2=os.path.join(basedir,"trained_model_at_end_of_epoch0_of_total_2.0epochs.pth")
+path1=os.path.join(basedir,"1/trained_model_at_end_of_epoch0_of_total_1.0epochs.pth")
+path2=os.path.join(basedir,"2/trained_model_at_end_of_epoch0_of_total_2.0epochs.pth")
 
 model1 = torch.load(path1)
 model2 = torch.load(path2)
