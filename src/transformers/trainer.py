@@ -3,6 +3,7 @@ import math
 import os
 import re
 import shutil
+import sys
 import warnings
 from contextlib import contextmanager
 from pathlib import Path
@@ -623,6 +624,24 @@ class Trainer:
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                     epoch_iterator.close()
                     break
+
+            assert model is self.model
+
+            #saving model at the end of every epoch. this is done on august 4th 2020 for debug purposes.
+            #This is to check if the model we save is the same at the end of each epoch, irrespective of the type of run:ran for 1 epoch or 25 epochs
+            if hasattr(model, "module"):
+                assert model.module is self.model
+            else:
+                assert model is self.model
+            output_dir = os.path.join(self.args.output_dir, f"trained_model_at_end_of_epoch{epoch}_of_total_{self.args.num_train_epochs}epochs.pth")
+            logging.info(f"done with epoch {epoch}. going to save model and exit")
+            #self.save_model(output_dir)
+            torch.save(model, output_dir)
+            import sys
+            sys.exit(1)
+
+
+
             self._intermediate_eval(datasets=self.eval_dataset,
                                     epoch=epoch, output_eval_file=output_eval_file_path, description="dev_partition")
             self._intermediate_eval(datasets=self.test_dataset,
@@ -871,7 +890,6 @@ class Trainer:
         assert self.compute_metrics is not None
         # Evaluation
         eval_results = {}
-        epoch=epoch+1
         dataset = [datasets]
         for eval_dataset in dataset:
             eval_result=None
@@ -1029,8 +1047,7 @@ class Trainer:
         logger.info(f" value of local rank is {self.args.local_rank}")
         if self.args.local_rank != -1:
             logger.info(f"found that local_rank is not minus one. value of local rank is {self.args.local_rank}")
-            import sys
-            sys.exit()
+            sys.exit(1)
             # In distributed mode, concatenate all results from all nodes:
             if preds is not None:
                 preds = self.distributed_concat(preds, num_total_examples=self.num_examples(dataloader))
