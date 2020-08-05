@@ -216,7 +216,7 @@ class TrainingArguments:
     dataloader_drop_last: bool = field(
         default=False, metadata={"help": "Drop the last incomplete batch if it is not divisible by the batch size."}
     )
-    eval_steps: int = field(default=1000, metadata={"help": "Run an evaluation every X steps."})
+    eval_steps: int = field(default=74000, metadata={"help": "Run an evaluation every X steps."})
 
     past_index: int = field(
         default=-1,
