@@ -528,6 +528,9 @@ class Trainer:
 
         for epoch in train_iterator:
             if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
+                logger.info("found that train dataloader is using distributed sampler. This will affect per epoch data going to exit")
+                import sys
+                sys.exit(1)
                 train_dataloader.sampler.set_epoch(epoch)
 
             if is_torch_tpu_available():
@@ -550,17 +553,18 @@ class Trainer:
             for step, inputs in enumerate(epoch_iterator):
 
                 #temporary hack on aug4th 2020 to make sure same data is seen across multiple epochs
-                import json
-                inputs_json={}
-                for k,v in inputs.items():
-                    if isinstance(v, torch.Tensor):
-                        inputs_json[k]= v.tolist()
-                json = json.dumps(inputs_json)
-                inputs_file=f"training_data_at_step{step}_of_total_{int(self.args.num_train_epochs)}epochs.json"
-                training_data_full_path=os.path.join(self.args.output_dir,inputs_file)
-                f = open(training_data_full_path, "w")
-                f.write(json)
-                f.close()
+                # import json
+                # inputs_json={}
+                # for k,v in inputs.items():
+                #     if isinstance(v, torch.Tensor):
+                #         inputs_json[k]= v.tolist()
+                # json = json.dumps(inputs_json)
+                # inputs_file=f"training_data_at_step{step}_of_total_{int(self.args.num_train_epochs)}epochs.json"
+                # training_data_full_path=os.path.join(self.args.output_dir,inputs_file)
+                # f = open(training_data_full_path, "w")
+                # f.write(json)
+                # f.close()
+
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:
                     steps_trained_in_current_epoch -= 1
