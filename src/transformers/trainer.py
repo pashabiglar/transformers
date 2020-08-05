@@ -541,6 +541,37 @@ class Trainer:
             else:
                 epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=not self.is_local_master())
 
+            # temporary hack on aug4th 2020 -save the entire data to disk before its fed to model.
+            # This is to make sure same data is seen across multiple epochs
+
+            training_data_serializable = []
+            for x in train_dataloader.dataset.features:
+                feature = {}
+                feature['attention_mask'] = x.attention_mask
+                feature['input_ids'] = x.input_ids
+                feature['label'] = x.label
+                feature['token_type_ids'] = x.token_type_ids
+                training_data_serializable.append(feature)
+
+            import json
+            json = json.dumps(training_data_serializable)
+            inputs_file = f"training_data_at_epoch{int(epoch)}_of_total_{int(self.args.num_train_epochs)}epochs.json"
+            training_data_full_path=os.path.join(self.args.output_dir,inputs_file)
+            f = open(training_data_full_path, "w")
+            f.write(json)
+            f.close()
+            logging.info(f"done saving data at {training_data_full_path}. going to exit")
+
+
+
+
+            # training_data_full_path = os.path.join(self.args.output_dir, inputs_file)
+            # torch.save(training_data_serializable,training_data_full_path)
+            # logging.info(f"done saving data at {training_data_full_path}. going to exit")
+            #
+            import sys
+            sys.exit(1)
+
             # Reset the past mems state at the beginning of each epoch if necessary.
             if self.args.past_index >= 0:
                 self._past = None
@@ -552,18 +583,7 @@ class Trainer:
 
             for step, inputs in enumerate(epoch_iterator):
 
-                #temporary hack on aug4th 2020 to make sure same data is seen across multiple epochs
-                # import json
-                # inputs_json={}
-                # for k,v in inputs.items():
-                #     if isinstance(v, torch.Tensor):
-                #         inputs_json[k]= v.tolist()
-                # json = json.dumps(inputs_json)
-                # inputs_file=f"training_data_at_step{step}_of_total_{int(self.args.num_train_epochs)}epochs.json"
-                # training_data_full_path=os.path.join(self.args.output_dir,inputs_file)
-                # f = open(training_data_full_path, "w")
-                # f.write(json)
-                # f.close()
+
 
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:
