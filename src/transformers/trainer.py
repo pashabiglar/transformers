@@ -634,7 +634,7 @@ class Trainer:
             else:
                 assert model is self.model
             output_dir = os.path.join(self.args.output_dir, f"trained_model_at_end_of_epoch{epoch}_of_total_{self.args.num_train_epochs}epochs.pth")
-            logging.info(f"done with epoch {epoch}. going to save model and exit")
+            logging.info(f"done with epoch {epoch}. going to save model and exit. model will be saved as {output_dir}")
             #self.save_model(output_dir)
             torch.save(model, output_dir)
             import sys
