@@ -22,7 +22,7 @@ from tqdm.auto import tqdm, trange
 from .data.data_collator import DataCollator, default_data_collator
 from .file_utils import is_apex_available, is_torch_tpu_available
 from .modeling_utils import PreTrainedModel
-from .optimization import AdamW, get_linear_schedule_with_warmup,get_constant_schedule_with_warmup
+from .optimization import AdamW, get_linear_schedule_with_warmup,get_constant_schedule_with_warmup,get_constant_schedule
 from .trainer_utils import (
     PREFIX_CHECKPOINT_DIR,
     EvalPrediction,
@@ -358,9 +358,9 @@ class Trainer:
             },
         ]
         optimizer = AdamW(optimizer_grouped_parameters, lr=self.args.learning_rate, eps=self.args.adam_epsilon)
-        scheduler = get_constant_schedule_with_warmup(
-            optimizer, num_warmup_steps=self.args.warmup_steps, num_training_steps=num_training_steps
-        )
+        #def get_constant_schedule_with_warmup(optimizer: Optimizer, num_warmup_steps: int, last_epoch: int = -1):
+        scheduler = get_constant_schedule(
+            optimizer)
         return optimizer, scheduler
 
     def setup_wandb(self):
@@ -607,19 +607,19 @@ class Trainer:
                     else:
                         optimizer.step()
 
-                    if (step == 1):
-                        # saving model at the end of every step. this is done on august 5th 2020 for debug purposes.
-                        # This is to check if the model we save is the same at the end of each step, irrespective of the type of run:ran for 1 epoch or 25 epochs
-                        if hasattr(model, "module"):
-                            assert model.module is self.model
-                        else:
-                            assert model is self.model
-                            logger.info(
-                                f"done with step {step}. going to save model and exit. model will be saved at {self.args.output_dir}")
-
-                        self.save_model(self.args.output_dir)
-                        import sys
-                        sys.exit(1)
+                    # if (step == 1):
+                    #     # saving model at the end of every step. this is done on august 5th 2020 for debug purposes.
+                    #     # This is to check if the model we save is the same at the end of each step, irrespective of the type of run:ran for 1 epoch or 25 epochs
+                    #     if hasattr(model, "module"):
+                    #         assert model.module is self.model
+                    #     else:
+                    #         assert model is self.model
+                    #         logger.info(
+                    #             f"done with step {step}. going to save model and exit. model will be saved at {self.args.output_dir}")
+                    #
+                    #     self.save_model(self.args.output_dir)
+                    #     import sys
+                    #     sys.exit(1)
 
                     scheduler.step()
                     model.zero_grad()
