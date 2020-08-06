@@ -93,6 +93,7 @@ def main():
         filename='crossdomain.log',
         filemode='w'
     )
+    logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
     logger.warning(
         "Process rank: %s, device: %s, n_gpu: %s, distributed training: %s, 16-bits training: %s",
         training_args.local_rank,

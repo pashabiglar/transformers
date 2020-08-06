@@ -22,7 +22,7 @@ from tqdm.auto import tqdm, trange
 from .data.data_collator import DataCollator, default_data_collator
 from .file_utils import is_apex_available, is_torch_tpu_available
 from .modeling_utils import PreTrainedModel
-from .optimization import AdamW, get_linear_schedule_with_warmup
+from .optimization import AdamW, get_linear_schedule_with_warmup,get_constant_schedule_with_warmup
 from .trainer_utils import (
     PREFIX_CHECKPOINT_DIR,
     EvalPrediction,
@@ -358,7 +358,7 @@ class Trainer:
             },
         ]
         optimizer = AdamW(optimizer_grouped_parameters, lr=self.args.learning_rate, eps=self.args.adam_epsilon)
-        scheduler = get_linear_schedule_with_warmup(
+        scheduler = get_constant_schedule_with_warmup(
             optimizer, num_warmup_steps=self.args.warmup_steps, num_training_steps=num_training_steps
         )
         return optimizer, scheduler
@@ -575,18 +575,10 @@ class Trainer:
             #do self evaluation only at the end of epoch, not every steps
             #self.args.eval_steps=steps_per_epoch
 
-            # saving model at the end of every epoch. this is done on august 4th 2020 for debug purposes.
-            # This is to check if the model we save is the same at the end of each epoch, irrespective of the type of run:ran for 1 epoch or 25 epochs
-            if hasattr(model, "module"):
-                assert model.module is self.model
-            else:
-                assert model is self.model
-            # logging.info(f"done with epoch {epoch}. going to save model and exit. model will be saved as {output_dir}")
-            self.save_model(self.args.output_dir)
-            import sys
-            sys.exit(1)
+
 
             for step, inputs in enumerate(epoch_iterator):
+
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:
                     steps_trained_in_current_epoch -= 1
@@ -594,11 +586,17 @@ class Trainer:
 
                 tr_loss += self.training_step(model, inputs, optimizer)
 
+
+
+
                 if (step + 1) % self.args.gradient_accumulation_steps == 0 or (
                     # last step in epoch but step is always smaller than gradient_accumulation_steps
                     len(epoch_iterator) <= self.args.gradient_accumulation_steps
                     and (step + 1) == len(epoch_iterator)
                 ):
+
+
+
                     if self.args.fp16:
                         torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), self.args.max_grad_norm)
                     else:
@@ -609,10 +607,29 @@ class Trainer:
                     else:
                         optimizer.step()
 
+                    if (step == 1):
+                        # saving model at the end of every step. this is done on august 5th 2020 for debug purposes.
+                        # This is to check if the model we save is the same at the end of each step, irrespective of the type of run:ran for 1 epoch or 25 epochs
+                        if hasattr(model, "module"):
+                            assert model.module is self.model
+                        else:
+                            assert model is self.model
+                            logger.info(
+                                f"done with step {step}. going to save model and exit. model will be saved at {self.args.output_dir}")
+
+                        self.save_model(self.args.output_dir)
+                        import sys
+                        sys.exit(1)
+
                     scheduler.step()
                     model.zero_grad()
+
+
+
                     self.global_step += 1
                     self.epoch = epoch + (step + 1) / len(epoch_iterator)
+
+
 
                     if (self.args.logging_steps > 0 and self.global_step % self.args.logging_steps == 0) or (
                         self.global_step == 1 and self.args.logging_first_step
@@ -639,6 +656,7 @@ class Trainer:
                     if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0:
                         # In all cases (even distributed/parallel), self.model is always a reference
                         # to the model we want to save.
+
                         if hasattr(model, "module"):
                             assert model.module is self.model
                         else:
@@ -658,6 +676,8 @@ class Trainer:
                         elif self.is_world_master():
                             torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                             torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
+
+
 
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                     epoch_iterator.close()
