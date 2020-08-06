@@ -45,6 +45,42 @@ from transformers import TrainingArguments
 #         )
 #         scheduler.load_state_dict(torch.load(os.path.join(model_path, "scheduler.pt")))
 
+
+
+import os
+from dataclasses import dataclass, field
+from typing import  Optional
+
+from transformers import (
+    HfArgumentParser,
+    Trainer,
+    TrainingArguments,
+    glue_compute_metrics,
+    glue_output_modes,
+    glue_tasks_num_labels,
+    set_seed,
+)
+
+
+@dataclass
+class ModelArguments:
+    """
+    Arguments pertaining to which model/config/tokenizer we are going to fine-tune from.
+    """
+
+    model_name_or_path: str = field(
+        metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
+    )
+    config_name: Optional[str] = field(
+        default=None, metadata={"help": "Pretrained config name or path if not the same as model_name"}
+    )
+    tokenizer_name: Optional[str] = field(
+        default=None, metadata={"help": "Pretrained tokenizer name or path if not the same as model_name"}
+    )
+    cache_dir: Optional[str] = field(
+        default=None, metadata={"help": "Where do you want to store the pretrained models downloaded from s3"}
+    )
+
 def compare_models_bin(model_1, model_2):
     models_differ = 0
     for key_item_1, key_item_2 in zip(model_1.items(), model_2.items()):
@@ -137,11 +173,11 @@ basedir="/Users/mordor/research/huggingface_bert/mithun_scripts/output/fever/fev
 # trained_model_at_end_of_epoch0_of_total_2.0epochs.pth
 
 #compare models that were saved using save_state_dictionary
-#model_name_or_path1=os.path.join(basedir, "trained_model_at_end_of_epoch0_of_total_1.0epochs.pth")
-#model_name_or_path2=os.path.join(basedir,"trained_model_at_end_of_epoch0_of_total_2.0epochs.pth")
-#model1 = torch.load(model_name_or_path1, map_location=torch.device('cpu'))
-#model2 = torch.load(model_name_or_path2,map_location=torch.device('cpu'))
-#compare_models_saved_as_state_dicts(model_name_or_path1,model_name_or_path2)
+# model_name_or_path1=os.path.join(basedir, "trained_model_at_end_of_epoch0_of_total_1.0epochs.pth")
+# model_name_or_path2=os.path.join(basedir,"trained_model_at_end_of_epoch0_of_total_2.0epochs.pth")
+# model1 = torch.load(model_name_or_path1, map_location=torch.device('cpu'))
+# model2 = torch.load(model_name_or_path2,map_location=torch.device('cpu'))
+# compare_models_saved_as_state_dicts(model_name_or_path1,model_name_or_path2)
 
 
 
@@ -153,7 +189,7 @@ model2 = torch.load(model_name_or_path2,map_location=torch.device('cpu'))
 compare_models_bin(model1,model2)
 
 
-#to compare config files
+# #to compare config files
 model_name_or_path1=os.path.join(basedir, "1/config.json")
 model_name_or_path2=os.path.join(basedir,"2/config.json")
 compare_config_files(model_name_or_path1,model_name_or_path2)
@@ -162,7 +198,10 @@ compare_config_files(model_name_or_path1,model_name_or_path2)
 #to compare training arg files
 model_name_or_path1=os.path.join(basedir, "1/training_args.bin")
 model_name_or_path2=os.path.join(basedir,"2/training_args.bin")
-model1 = TrainingArguments(torch.load(model_name_or_path1, map_location=torch.device('cpu')))
-model2 = TrainingArguments(torch.load(model_name_or_path2,map_location=torch.device('cpu')))
+model1 = (torch.load(model_name_or_path1, map_location=torch.device('cpu')))
+model2 = (torch.load(model_name_or_path2,map_location=torch.device('cpu')))
+
+
+
 compare_training_args(model1,model2)
 

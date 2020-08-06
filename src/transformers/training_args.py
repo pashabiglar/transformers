@@ -29,6 +29,25 @@ def default_logdir() -> str:
     return os.path.join("runs", current_time + "_" + socket.gethostname())
 
 
+class TrainingArgumentsIterator:
+   ''' Iterator class '''
+   def __init__(self, team):
+       # Team object reference
+       self._team = team
+       # member variable to keep track of current index
+       self._index = 0
+   def __next__(self):
+       ''''Returns the next value from team object's lists '''
+       if self._index < (len(self._team._juniorMembers) + len(self._team._seniorMembers)) :
+           if self._index < len(self._team._juniorMembers): # Check if junior members are fully iterated or not
+               result = (self._team._juniorMembers[self._index] , 'junior')
+           else:
+               result = (self._team._seniorMembers[self._index - len(self._team._juniorMembers)]   , 'senior')
+           self._index +=1
+           return result
+       # End of Iteration
+       raise StopIteration
+
 @dataclass
 class TrainingArguments:
     """
@@ -222,6 +241,12 @@ class TrainingArguments:
         default=-1,
         metadata={"help": "If >=0, uses the corresponding part of the output as the past state for next step."},
     )
+
+    def __iter__(self):
+        ''' Returns the Iterator object '''
+        return TrainingArgumentsIterator(self)
+
+
 
     @property
     def train_batch_size(self) -> int:

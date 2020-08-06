@@ -575,6 +575,17 @@ class Trainer:
             #do self evaluation only at the end of epoch, not every steps
             #self.args.eval_steps=steps_per_epoch
 
+            # saving model at the end of every epoch. this is done on august 4th 2020 for debug purposes.
+            # This is to check if the model we save is the same at the end of each epoch, irrespective of the type of run:ran for 1 epoch or 25 epochs
+            if hasattr(model, "module"):
+                assert model.module is self.model
+            else:
+                assert model is self.model
+            # logging.info(f"done with epoch {epoch}. going to save model and exit. model will be saved as {output_dir}")
+            self.save_model(self.args.output_dir)
+            import sys
+            sys.exit(1)
+
             for step, inputs in enumerate(epoch_iterator):
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:
@@ -654,15 +665,6 @@ class Trainer:
 
             assert model is self.model
 
-            #saving model at the end of every epoch. this is done on august 4th 2020 for debug purposes.
-            #This is to check if the model we save is the same at the end of each epoch, irrespective of the type of run:ran for 1 epoch or 25 epochs
-            if hasattr(model, "module"):
-                assert model.module is self.model
-            else:
-                assert model is self.model
-            self.save_model(self.args.output_dir)
-            import sys
-            sys.exit(1)
 
 
             # to save using torch.save method
