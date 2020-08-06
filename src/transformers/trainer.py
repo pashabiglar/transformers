@@ -576,9 +576,6 @@ class Trainer:
             #self.args.eval_steps=steps_per_epoch
 
             for step, inputs in enumerate(epoch_iterator):
-
-
-
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:
                     steps_trained_in_current_epoch -= 1
@@ -663,12 +660,21 @@ class Trainer:
                 assert model.module is self.model
             else:
                 assert model is self.model
-            output_dir = os.path.join(self.args.output_dir, f"trained_model_at_end_of_epoch{epoch}_of_total_{self.args.num_train_epochs}epochs.pth")
-            logging.info(f"done with epoch {epoch}. going to save model and exit. model will be saved as {output_dir}")
-            #self.save_model(output_dir)
-            torch.save(model, output_dir)
+            self.save_model(self.args.output_dir)
             import sys
             sys.exit(1)
+
+
+            # to save using torch.save method
+            # if hasattr(model, "module"):
+            #     assert model.module is self.model
+            # else:
+            #     assert model is self.model
+            # output_dir = os.path.join(self.args.output_dir, f"trained_model_at_end_of_epoch{epoch}_of_total_{self.args.num_train_epochs}epochs.pth")
+            # logging.info(f"done with epoch {epoch}. going to save model and exit. model will be saved as {output_dir}")
+            #torch.save(model, output_dir)
+            # import sys
+            # sys.exit(1)
 
 
 
