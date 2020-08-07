@@ -70,7 +70,7 @@ def get_constant_schedule_with_warmup(optimizer: Optimizer, num_warmup_steps: in
 def get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, last_epoch=-1):
     """
     Create a schedule with a learning rate that decreases linearly from the initial lr set in the optimizer to 0,
-    after a warmup period during which it increases linearly from 0 to the initial lr set in the optimizer.
+    afer a warmup period during which it increases linearly from 0 to the initial lr set in the optimizer.
 
     Args:
         optimizer (:class:`~torch.optim.Optimizer`):
