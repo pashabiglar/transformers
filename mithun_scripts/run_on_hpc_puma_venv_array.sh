@@ -6,7 +6,7 @@
 #SBATCH --oversubscribe
 #SBATCH --time=00:10:00
 #SBATCH --job-name=slurm-standard-test
-#SBATCH --account=hpcteam
+#SBATCH --account=msurdeanu
 #SBATCH --partition=standard
 #SBATCH --output=slurm-standard-test.out
 
