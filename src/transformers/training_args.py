@@ -185,6 +185,15 @@ class TrainingArguments:
     adam_epsilon: float = field(default=1e-8, metadata={"help": "Epsilon for Adam optimizer."})
     max_grad_norm: float = field(default=1.0, metadata={"help": "Max gradient norm."})
 
+
+
+
+    lr_max_value: int = field(default=200000.0, metadata={"help": "This is a value used in the function "
+                                                                    "get_linear_schedule_with_warmup inside optimization"
+                                                                    ".py. This replaces the maximum number of steps "
+                                                                    "taken in fever dataset, when batch size=16 and total epochs=25."
+                                                                    "which is 186246. we are trying to create a static value instead of "
+                                                                    "the original dynamic value which was dependent on the total number of steps"})
     num_train_epochs: float = field(default=3.0, metadata={"help": "Total number of training epochs to perform."})
     max_steps: int = field(
         default=-1,

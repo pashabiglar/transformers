@@ -335,7 +335,7 @@ class Trainer:
         )
 
     def get_optimizers(
-        self, num_training_steps: int
+        self, num_training_steps: int,lr_max_value:int
     ) -> Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]:
         """
         Setup the optimizer and the learning rate scheduler.
@@ -361,7 +361,7 @@ class Trainer:
         #def get_constant_schedule_with_warmup(optimizer: Optimizer, num_warmup_steps: int, last_epoch: int = -1):
         #def get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, last_epoch=-1):
         scheduler = get_linear_schedule_with_warmup(
-            optimizer,num_warmup_steps=self.args.warmup_steps, num_training_steps=num_training_steps)
+            optimizer,num_warmup_steps=self.args.warmup_steps, num_training_steps=lr_max_value)
         return optimizer, scheduler
 
     def setup_wandb(self):
@@ -423,7 +423,7 @@ class Trainer:
             t_total = int(len(train_dataloader) // self.args.gradient_accumulation_steps * self.args.num_train_epochs)
             num_train_epochs = self.args.num_train_epochs
 
-        optimizer, scheduler = self.get_optimizers(num_training_steps=t_total)
+        optimizer, scheduler = self.get_optimizers(num_training_steps=t_total,lr_max_value=self.args.lr_max_value)
 
         # Check if saved optimizer or scheduler states exist
         if (

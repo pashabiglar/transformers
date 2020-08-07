@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Your job will use 1 node, 28 cores, and 168gb of memory total.
-#PBS -q windfall
+#PBS -q standard
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
 #PBS -N bug_fix_parallelization_issues
@@ -43,7 +43,7 @@ pip install -r requirements.txt
 
 cd /home/u11/mithunpaul/xdisk/huggingface_bert_fix_parallelism_per_epoch_issue/mithun_scripts/
 
-bash run_all.sh --epochs_to_run 1 --machine_to_run_on hpc #options include [laptop, hpc,clara]
+bash run_all.sh --epochs_to_run 25 --machine_to_run_on hpc #options include [laptop, hpc,clara]
 # for server clara
 #bash run_all.sh --epochs_to_run 2 --machine_to_run_on clara
 

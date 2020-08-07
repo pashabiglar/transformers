@@ -91,10 +91,10 @@ def get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_st
             return float(current_step) / float(max(1, num_warmup_steps))
 
         #this is wrong . Depending this value on total number of training steps means that every epoch has a different accuracy in different runs
-        # m=max(
-        #     0.0, float(num_training_steps - current_step) / float(max(1, num_training_steps - num_warmup_steps))
-        # )
-        m =  float(1) / float(current_step+1)
+        #update we are passing a static value lr_max_value as num_training_steps
+        m=max(
+            0.0, float(num_training_steps - current_step) / float(max(1, num_training_steps - num_warmup_steps))
+        )
         return m
 
 
