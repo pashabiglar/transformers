@@ -26,8 +26,8 @@ fi
 
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fix_parallelism_per_epoch_issue/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fix_parallelism_per_epoch_issue/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_run_expts_on_puma/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_run_expts_on_puma/data"
 else
         export DATA_DIR_BASE="../src/transformers/data/datasets"
         export OUTPUT_DIR_BASE="output"
