@@ -359,7 +359,7 @@ class Trainer:
         ]
         optimizer = AdamW(optimizer_grouped_parameters, lr=self.args.learning_rate, eps=self.args.adam_epsilon)
         #def get_constant_schedule_with_warmup(optimizer: Optimizer, num_warmup_steps: int, last_epoch: int = -1):
-        scheduler = get_constant_schedule(
+        scheduler = get_linear_schedule_with_warmup(
             optimizer)
         return optimizer, scheduler
 
