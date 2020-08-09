@@ -22,8 +22,9 @@ import os
 import sys
 from dataclasses import dataclass, field
 from typing import Callable, Dict, Optional
-
+import git
 import numpy as np
+
 
 from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer, EvalPrediction, GlueDataset
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
@@ -37,6 +38,17 @@ from transformers import (
     set_seed,
 )
 
+
+
+
+def get_git_info():
+    repo = git.Repo(search_parent_directories=True)
+    repo_infos = {
+        "repo_id": str(repo),
+        "repo_sha": str(repo.head.object.hexsha),
+        "repo_branch": str(repo.active_branch),
+    }
+    return repo_infos
 
 logger = logging.getLogger(__name__)
 
@@ -86,11 +98,13 @@ def main():
         )
 
     # Setup logging
+    git_details=get_git_info()
+    log_file_name="log_"+"_"+git_details['repo_sha']+"_"+training_args.task_type+"_"+training_args.model_name_or_path+"_"+training_args.TASK_NAME+".log"
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
         level=logging.INFO if training_args.local_rank in [-1, 0] else logging.WARN,
-        filename='crossdomain.log',
+        filename=log_file_name.log,
         filemode='w'
     )
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))

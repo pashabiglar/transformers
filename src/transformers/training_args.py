@@ -248,8 +248,12 @@ class TrainingArguments:
 
     past_index: int = field(
         default=-1,
-        metadata={"help": "If >=0, uses the corresponding part of the output as the past state for next step."},
-    )
+        metadata={"help": "If >=0, uses the corresponding part of the output as the past state for next step."},)
+
+
+    task_type: Optional[str] = field(default="lex", metadata={"help": "Types of task for fact verification. Options include lex, delex etc."})
+
+
 
     def __iter__(self):
         ''' Returns the Iterator object '''
