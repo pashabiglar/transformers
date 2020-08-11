@@ -670,6 +670,8 @@ class Trainer:
             self._intermediate_eval(datasets=self.test_dataset,
                                     epoch=epoch, output_eval_file=output_eval_file_path, description="test_partition")
 
+
+            logger.info(f"********************************end of epoch {epoch}************************************************************************")
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
                 break
@@ -723,15 +725,11 @@ class Trainer:
                                 log_for_wandb[k2]=v2
                             else:
                                 logger.warning(
-                                    "Trainer is attempting to log a value of "
-                                    '"%s" of type %s for key "%s" as a scalar. '
-                                    "This invocation of Tensorboard's writer.add_scalar() "
-                                    "is incorrect so we dropped this attribute.",
-                                    v2,
-                                    type(v2),
-                                    k2,
+                                    f"Trainer is attempting to log a valuefor key {k2}as a scalar."
+                                    f"This invocation of Tensorboard's writer.add_scalar()"
+                                    f" is incorrect so we dropped this attribute.",
                                 )
-                                logger.info(v2)
+                                logger.debug(v2)
             self.tb_writer.flush()
         if is_wandb_available():
             if self.is_world_master():
@@ -741,7 +739,7 @@ class Trainer:
         if iterator is not None:
             iterator.write(output)
         else:
-            logger.info(output)
+            logger.debug(output)
 
     def _prepare_inputs(
         self, inputs: Dict[str, Union[torch.Tensor, Any]], model: nn.Module
@@ -911,7 +909,7 @@ class Trainer:
         Returns:
         """
 
-        logger.info(f"*******inside _intermediate_eval. going to run evaluation on {description} ")
+        logger.info(f"*******End of training.Going to run evaluation on {description} ")
 
         if "dev" in description:
             self.compute_metrics = self.eval_compute_metrics
