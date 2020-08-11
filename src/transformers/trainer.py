@@ -735,8 +735,8 @@ class Trainer:
             self.tb_writer.flush()
         if is_wandb_available():
             if self.is_world_master():
-                assert len(log_for_wandb.items()) > 0
-                wandb.log(log_for_wandb, step=int(self.epoch))
+                if len(log_for_wandb.items()) > 0 :
+                    wandb.log(log_for_wandb, step=int(self.epoch))
         output = {**logs, **{"step": self.global_step}}
         if iterator is not None:
             iterator.write(output)
