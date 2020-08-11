@@ -43,10 +43,15 @@ from transformers import (
 
 def get_git_info():
     repo = git.Repo(search_parent_directories=True)
+
+    repo_sha=str(repo.head.object.hexsha),
+    repo_short_sha= str(repo.git.rev_parse(repo_sha, short=4))
+
     repo_infos = {
         "repo_id": str(repo),
         "repo_sha": str(repo.head.object.hexsha),
         "repo_branch": str(repo.active_branch),
+        "repo_short_sha" :repo_short_sha
     }
     return repo_infos
 
@@ -99,7 +104,8 @@ def main():
 
     # Setup logging
     git_details=get_git_info()
-    log_file_name="log_"+"_"+git_details['repo_sha']+"_"+training_args.task_type+"_"+model_args.model_name_or_path+"_"+data_args.task_name+".log"
+
+    log_file_name=git_details['repo_short_sha']+"_"+(training_args.task_type)+"_"+str(model_args.model_name_or_path).replace("-","_")+"_"+data_args.task_name+".log"
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
@@ -118,6 +124,8 @@ def main():
     )
     logger.info("Training/evaluation parameters %s", training_args)
 
+
+    sys.exit()
 
     # Set seed
     set_seed(training_args.seed)
