@@ -3,7 +3,7 @@
 #PBS -q standard
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
-#PBS -N dev_branch_lex_cased_to_check_wandb
+#PBS -N dev_branch_delex_cased_figerspec_customvocab
 ### Specify the group name
 #PBS -W group_list=msurdeanu
 ### Used if job requires partial node only
@@ -46,9 +46,8 @@ pip install -r requirements.txt
 
 cd /home/u11/mithunpaul/xdisk/huggingface_bert_dev/code/mithun_scripts/
 
-bash run_all.sh --epochs_to_run 2 --machine_to_run_on hpc #options include [laptop, hpc,clara]
-# for server clara
-#bash run_all.sh --epochs_to_run 2 --machine_to_run_on clara
+bash run_all.sh --epochs_to_run 25 --machine_to_run_on hpc #options include [laptop, hpc,clara]
+
 
 
 
