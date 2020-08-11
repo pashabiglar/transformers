@@ -28,7 +28,7 @@ python3 -m venv my_virtual_env
 
 #this is the only line you need if you already have a virtual_env set up
 source my_virtual_env/bin/activate
-export PYTHONPATH="/home/u11/mithunpaul/xdisk/huggingface_bert_dev/src"
+export PYTHONPATH="/home/u11/mithunpaul/xdisk/huggingface_bert_dev/code/src"
 
 #for clara
 #export PYTHONPATH="/work/mithunpaul/huggingface_bert_dev/src"
@@ -39,12 +39,12 @@ pip install --upgrade pip
 
 
 
-cd /home/u11/mithunpaul/xdisk/huggingface_bert_dev/examples
+cd /home/u11/mithunpaul/xdisk/huggingface_bert_dev/code/examples
 
 
 pip install -r requirements.txt
 
-cd /home/u11/mithunpaul/xdisk/huggingface_bert_dev/mithun_scripts/
+cd /home/u11/mithunpaul/xdisk/huggingface_bert_dev/code/mithun_scripts/
 
 bash run_all.sh --epochs_to_run 2 --machine_to_run_on hpc #options include [laptop, hpc,clara]
 # for server clara
