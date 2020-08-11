@@ -45,7 +45,7 @@ def get_git_info():
     repo = git.Repo(search_parent_directories=True)
 
     repo_sha=str(repo.head.object.hexsha),
-    repo_short_sha= str(repo.git.rev_parse(repo_sha, short=4))
+    repo_short_sha= str(repo.git.rev_parse(repo_sha, short=6))
 
     repo_infos = {
         "repo_id": str(repo),
@@ -125,7 +125,7 @@ def main():
     logger.info("Training/evaluation parameters %s", training_args)
 
 
-    sys.exit()
+
 
     # Set seed
     set_seed(training_args.seed)

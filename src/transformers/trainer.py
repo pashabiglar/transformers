@@ -571,12 +571,6 @@ class Trainer:
             if self.args.past_index >= 0:
                 self._past = None
 
-            #dynamically calculate the steps per epoch
-            steps_per_epoch=len(epoch_iterator)
-            #do self evaluation only at the end of epoch, not every steps
-            #self.args.eval_steps=steps_per_epoch
-
-
 
             for step, inputs in enumerate(epoch_iterator):
 
@@ -608,19 +602,6 @@ class Trainer:
                     else:
                         optimizer.step()
 
-                    # if (step == 1):
-                    #     # saving model at the end of every step. this is done on august 5th 2020 for debug purposes.
-                    #     # This is to check if the model we save is the same at the end of each step, irrespective of the type of run:ran for 1 epoch or 25 epochs
-                    #     if hasattr(model, "module"):
-                    #         assert model.module is self.model
-                    #     else:
-                    #         assert model is self.model
-                    #         logger.info(
-                    #             f"done with step {step}. going to save model and exit. model will be saved at {self.args.output_dir}")
-                    #
-                    #     self.save_model(self.args.output_dir)
-                    #     import sys
-                    #     sys.exit(1)
 
                     scheduler.step()
                     model.zero_grad()
@@ -686,23 +667,6 @@ class Trainer:
 
             assert model is self.model
 
-
-
-            # to save using torch.save method
-            # if hasattr(model, "module"):
-            #     assert model.module is self.model
-            # else:
-            #     assert model is self.model
-            # output_dir = os.path.join(self.args.output_dir, f"trained_model_at_end_of_epoch{epoch}_of_total_{self.args.num_train_epochs}epochs.pth")
-            # logging.info(f"done with epoch {epoch}. going to save model and exit. model will be saved as {output_dir}")
-            #torch.save(model, output_dir)
-            # import sys
-            # sys.exit(1)
-
-
-
-            self._intermediate_eval(datasets=self.eval_dataset,
-                                    epoch=epoch, output_eval_file=output_eval_file_path, description="dev_partition")
             self._intermediate_eval(datasets=self.test_dataset,
                                     epoch=epoch, output_eval_file=output_eval_file_path, description="test_partition")
 
@@ -938,7 +902,7 @@ class Trainer:
         Returns:
         """
 
-        logger.info (f"inside _intermediate_eval. going to run evaluation on {description} ")
+        logger.info(f"*******inside _intermediate_eval. going to run evaluation on {description} ")
 
         if "dev" in description:
             self.compute_metrics = self.eval_compute_metrics
@@ -961,12 +925,10 @@ class Trainer:
 
             if self.is_world_master():
                 with open(output_eval_file, "a") as writer:
-                    logger.info("***** intermediate results at the end of epoch {} *****".format(epoch))
                     for key, value in eval_result.items():
                         logger.info("  %s = %s", key, value)
                         writer.write("%s = %s\n" % (key, value))
             eval_results.update(eval_result)
-        print("done with _intermediate_eval.")
         return eval_result
 
     def evaluate(self, eval_dataset: Optional[Dataset] = None) -> Dict[str, float]:
@@ -1077,9 +1039,9 @@ class Trainer:
         # inside a DistributedDataParallel as we'll be under `no_grad` anyways.
 
         batch_size = dataloader.batch_size
-        logger.info("***** Running %s at epoch number:%s *****", description,self.epoch)
-        logger.info("  Num examples = %d", self.num_examples(dataloader))
-        logger.info("  Batch size = %d", batch_size)
+        logger.debug("***** Running %s at epoch number:%s *****", description,self.epoch)
+        logger.debug("  Num examples = %d", self.num_examples(dataloader))
+        logger.debug("  Batch size = %d", batch_size)
         eval_losses: List[float] = []
         preds: torch.Tensor = None
         label_ids: torch.Tensor = None
@@ -1103,9 +1065,10 @@ class Trainer:
         if self.args.past_index and hasattr(self, "_past"):
             # Clean the state at the end of the evaluation loop
             delattr(self, "_past")
-        logger.info(f" value of local rank is {self.args.local_rank}")
+        logger.debug(f" value of local rank is {self.args.local_rank}")
         if self.args.local_rank != -1:
             logger.info(f"found that local_rank is not minus one. value of local rank is {self.args.local_rank}")
+            import sys
             sys.exit(1)
             # In distributed mode, concatenate all results from all nodes:
             if preds is not None:
