@@ -715,15 +715,21 @@ class Trainer:
                 if isinstance(v, (int, float)):
                     self.tb_writer.add_scalar(k, v, self.global_step)
                 else:
-                    logger.warning(
-                        "Trainer is attempting to log a value of "
-                        '"%s" of type %s for key "%s" as a scalar. '
-                        "This invocation of Tensorboard's writer.add_scalar() "
-                        "is incorrect so we dropped this attribute.",
-                        v,
-                        type(v),
-                        k,
-                    )
+                    if isinstance(v, (dict)):
+                        for k2,v2 in v.items():
+                            if isinstance(v2, (int, float)):
+                                self.tb_writer.add_scalar(k2, v2, self.global_step)
+                            else:
+                                logger.warning(
+                                    "Trainer is attempting to log a value of "
+                                    '"%s" of type %s for key "%s" as a scalar. '
+                                    "This invocation of Tensorboard's writer.add_scalar() "
+                                    "is incorrect so we dropped this attribute.",
+                                    v2,
+                                    type(v2),
+                                    k2,
+                                )
+                                logger.info(v2)
             self.tb_writer.flush()
         if is_wandb_available():
             if self.is_world_master():

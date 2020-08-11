@@ -33,6 +33,7 @@ fi
 echo "data_dir is $DATA_DIR"
 
 
+echo $args
 
 
 mkdir -p OUTPUT_DIR
@@ -44,7 +45,7 @@ else
        python3 ../examples/text-classification/run_glue.py $args
 fi
 
-echo $args
+
 
 # for pycharm
 #feverindomain
