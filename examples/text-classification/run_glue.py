@@ -105,7 +105,7 @@ def main():
     # Setup logging
     git_details=get_git_info()
 
-    log_file_name=git_details['repo_short_sha']+"_"+(training_args.task_type)+"_"+str(model_args.model_name_or_path).replace("-","_")+"_"+data_args.task_name+".log"
+    log_file_name=git_details['repo_short_sha']+"_"+(training_args.task_type)+"_"+(training_args.subtask_type)+"_"+str(model_args.model_name_or_path).replace("-","_")+"_"+data_args.task_name+".log"
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",

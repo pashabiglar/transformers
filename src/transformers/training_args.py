@@ -252,6 +252,8 @@ class TrainingArguments:
 
 
     task_type: Optional[str] = field(default="lex", metadata={"help": "Types of task for fact verification. Options include lex, delex etc."})
+    subtask_type: Optional[str] = field(default="figerspecific", metadata={
+        "help": "Types of subtasks used in the delexicalization of data. Options include figerspecific,figerabstract, oaneretc."})
 
 
 

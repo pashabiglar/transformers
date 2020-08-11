@@ -9,7 +9,7 @@
 echo "value of epochs in rulglue s $EPOCHS"
 
 
-args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME      --do_train   --do_eval   --do_predict    --data_dir $DATA_DIR    --max_seq_length 128      --per_device_eval_batch_size=16        --per_device_train_batch_size=16       --learning_rate 1e-5      --num_train_epochs $EPOCHS     --output_dir $OUTPUT_DIR --overwrite_output_dir  --weight_decay 0.01 --adam_epsilon 1e-6  --evaluate_during_training --task_type $TASK_TYPE"
+args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME      --do_train   --do_eval   --do_predict    --data_dir $DATA_DIR    --max_seq_length 128      --per_device_eval_batch_size=16        --per_device_train_batch_size=16       --learning_rate 1e-5      --num_train_epochs $EPOCHS     --output_dir $OUTPUT_DIR --overwrite_output_dir  --weight_decay 0.01 --adam_epsilon 1e-6  --evaluate_during_training --task_type $TASK_TYPE --subtask_type $SUB_TASK_TYPE"
 
 echo "TASK_TYPE is $TASK_TYPE"
 if [ "$TASK_TYPE" = "delex" ] ; then
