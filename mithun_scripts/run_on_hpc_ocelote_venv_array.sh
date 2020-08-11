@@ -3,7 +3,7 @@
 #PBS -q standard
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
-#PBS -N lex-uncased
+#PBS -N delex-uncased-figer
 ### Specify the group name
 #PBS -W group_list=msurdeanu
 ### Used if job requires partial node only
@@ -32,6 +32,9 @@ export PYTHONPATH="/home/u11/mithunpaul/xdisk/huggingface_bert_fix_parallelism_p
 
 #for clara
 #export PYTHONPATH="/work/mithunpaul/huggingface_fix_paralellism_per_epoch_issue/src"
+#for laptop;
+#export PYTHONPATH="/Users/mordor/research/huggingface_bert/src"
+
 pip install --upgrade pip
 
 

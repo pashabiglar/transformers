@@ -99,12 +99,12 @@ def main():
 
     # Setup logging
     git_details=get_git_info()
-    log_file_name="log_"+"_"+git_details['repo_sha']+"_"+training_args.task_type+"_"+training_args.model_name_or_path+"_"+training_args.TASK_NAME+".log"
+    log_file_name="log_"+"_"+git_details['repo_sha']+"_"+training_args.task_type+"_"+model_args.model_name_or_path+"_"+data_args.task_name+".log"
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
         level=logging.INFO if training_args.local_rank in [-1, 0] else logging.WARN,
-        filename=log_file_name.log,
+        filename=log_file_name,
         filemode='w'
     )
     logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
