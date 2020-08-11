@@ -710,6 +710,7 @@ class Trainer:
         if self.global_step is None:
             # when logging evaluation metrics without training
             self.global_step = 0
+        log_for_wandb={}
         if self.tb_writer:
             for k, v in logs.items():
                 if isinstance(v, (int, float)):
@@ -719,6 +720,7 @@ class Trainer:
                         for k2,v2 in v.items():
                             if isinstance(v2, (int, float)):
                                 self.tb_writer.add_scalar(k2, v2, self.global_step)
+                                log_for_wandb[k2]=v2
                             else:
                                 logger.warning(
                                     "Trainer is attempting to log a value of "
@@ -733,7 +735,8 @@ class Trainer:
             self.tb_writer.flush()
         if is_wandb_available():
             if self.is_world_master():
-                wandb.log(logs, step=self.global_step)
+                assert len(log_for_wandb.items()) > 0
+                wandb.log(log_for_wandb, step=int(self.epoch))
         output = {**logs, **{"step": self.global_step}}
         if iterator is not None:
             iterator.write(output)
