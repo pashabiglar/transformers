@@ -39,12 +39,12 @@ pip install --upgrade pip
 
 
 
-cd /home/u11/mithunpaul/xdisk/huggingface_bert_fix_master/examples
+cd /home/u11/mithunpaul/xdisk/huggingface_bert_master/examples
 
 
 pip install -r requirements.txt
 
-cd /home/u11/mithunpaul/xdisk/huggingface_bert_fix_master/mithun_scripts/
+cd /home/u11/mithunpaul/xdisk/huggingface_bert_master/mithun_scripts/
 
 bash run_all.sh --epochs_to_run 1 --machine_to_run_on hpc #options include [laptop, hpc,clara]
 # for server clara

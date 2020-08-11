@@ -26,8 +26,8 @@ fi
 
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fix_master/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fix_master/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_master/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_master/data"
 else
         export DATA_DIR_BASE="../src/transformers/data/datasets"
         export OUTPUT_DIR_BASE="output"
