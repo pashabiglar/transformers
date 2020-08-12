@@ -4,7 +4,7 @@ export MACHINE_TO_RUN_ON="laptop" #options include [laptop, hpc,clara]
 export EPOCHS=1
 if [ $# -gt 1 ]
 then
-   echo "number of args is greater than 1"
+   echo "number of args is $#"
    if [ $1 == "--epochs_to_run" ]; then
          export EPOCHS="$2"
     fi
@@ -33,10 +33,11 @@ else
         export OUTPUT_DIR_BASE="output"
 fi
 
-echo $MACHINE_TO_RUN_ON
-echo $OUTPUT_DIR_BASE
-echo $DATA_DIR_BASE
-echo $EPOCHS
+echo "MACHINE_TO_RUN_ON=$MACHINE_TO_RUN_ON"
+echo "OUTPUT_DIR_BASE=$OUTPUT_DIR_BASE"
+echo "DATA_DIR_BASE=$DATA_DIR_BASE"
+echo "EPOCHS=$EPOCHS"
+
 
 
 export DATASET="fever"
@@ -50,6 +51,10 @@ export BERT_MODEL_NAME="bert-base-cased" #options include things like [bert-base
 export MAX_SEQ_LENGTH="512"
 export OUTPUT_DIR="$OUTPUT_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE/$BERT_MODEL_NAME/$MAX_SEQ_LENGTH/"
 echo $OUTPUT_DIR
+
+
+echo "OUTPUT_DIR=$OUTPUT_DIR"
+
 
 
 #commenting this on august 1st since downloading data was becoming a pain. due to tokenization issues. i.e after merging with

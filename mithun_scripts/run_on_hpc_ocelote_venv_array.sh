@@ -34,10 +34,7 @@ export PYTHONPATH="/home/u11/mithunpaul/xdisk/huggingface_bert_master/code/src"
 pip install --upgrade pip
 
 
-
 cd /home/u11/mithunpaul/xdisk/huggingface_bert_master/code/examples
-
-
 pip install -r requirements.txt
 
 cd /home/u11/mithunpaul/xdisk/huggingface_bert_master/code/mithun_scripts
