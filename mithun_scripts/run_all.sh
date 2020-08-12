@@ -26,8 +26,8 @@ fi
 
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_master/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_master/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_dev/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_dev/data"
 else
         export DATA_DIR_BASE="../src/transformers/data/datasets"
         export OUTPUT_DIR_BASE="output"
@@ -59,9 +59,9 @@ echo $OUTPUT_DIR
 #get data only if its 1st epoch
 if [ $EPOCHS = "1" ]; then
         echo "found epopch is equal to 1. going to download data"
-        #rm -rf $DATA_DIR
-        #./get_fever_fnc_data.sh
-        #./convert_to_mnli_format.sh
+        rm -rf $DATA_DIR
+        ./get_fever_fnc_data.sh
+        ./convert_to_mnli_format.sh
 fi
 
 echo "done with data download part if epoch==1. datapath now is $DATA_DIR"
