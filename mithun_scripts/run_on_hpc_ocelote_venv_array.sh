@@ -3,7 +3,7 @@
 #PBS -q standard
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
-#PBS -N dev_branch_delex_cased_figerspec_customvocab
+#PBS -N dev_branch_lex_uncased_512
 ### Specify the group name
 #PBS -W group_list=msurdeanu
 ### Used if job requires partial node only
