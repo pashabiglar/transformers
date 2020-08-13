@@ -93,6 +93,8 @@ class GlueDataset(Dataset):
             ),
         )
         logger.info(f"value of cahced features file is {cached_features_file}")
+
+        #note:right now (as of August 2020)its a hardcoded list of labels. this need to change based on what dataset you are using to tune on
         label_list = self.processor.get_labels()
         if args.task_name in ["mnli", "mnli-mm"] and tokenizer.__class__ in (
             RobertaTokenizer,
@@ -124,7 +126,7 @@ class GlueDataset(Dataset):
 
             else:
                 logger.info(f"found that no cache file exists. Creating features from dataset file at {args.data_dir}. value of mode is {mode}")
-            
+
 
                 if mode == Split.dev:
                     examples = self.processor.get_dev_examples(args.data_dir)
@@ -134,6 +136,7 @@ class GlueDataset(Dataset):
                     logger.info(f"Done readign test data")
                 else:
                     examples = self.processor.get_train_examples(args.data_dir)
+                    assert examples[00].label in label_list
                     logger.info(f"Done readign training data")
                 if limit_length is not None:
                     examples = examples[:limit_length]

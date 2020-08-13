@@ -17,7 +17,7 @@ echo $bert_format_base_folder_path
 
 for complete_path in $(find $bert_format_base_folder_path -name '*.tsv');
 do
-head -40  $complete_path > temp
+head -100  $complete_path > temp
 mv temp $complete_path
 
 done
