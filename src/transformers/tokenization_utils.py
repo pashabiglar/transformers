@@ -525,8 +525,9 @@ class PreTrainedTokenizer(PreTrainedTokenizerBase):
             )
 
         input_ids = []
-
-        for ids_or_pair_ids in batch_text_or_text_pairs:
+        total=len(batch_text_or_text_pairs)
+        for index,ids_or_pair_ids in enumerate(batch_text_or_text_pairs):
+            logger.info(f"{index}/{total}")
             if not isinstance(ids_or_pair_ids, (list, tuple)):
                 ids, pair_ids = ids_or_pair_ids, None
             elif is_pretokenized and not isinstance(ids_or_pair_ids[0], (list, tuple)):

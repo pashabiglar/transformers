@@ -182,14 +182,6 @@ def _glue_convert_examples_to_features(
         padding="max_length",
         truncation=True,
     )
-    #
-    # for example in examples:
-    #     logger.info(example.text_a)
-    #     batch_encoding= tokenizer.batch_encode_plus((example.text_a, example.text_b),
-    #                                 max_length=max_length,
-    #                                 padding="max_length",
-    #                                 truncation=True)
-
 
     features = []
 
