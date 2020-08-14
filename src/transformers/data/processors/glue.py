@@ -175,7 +175,7 @@ def _glue_convert_examples_to_features(
     logger.info(f"done with getting labels from example .  going to do batch _encoding")
     logger.info(f"value of tokenixer is {tokenizer}")
 
-    batch_encoding = tokenizer(
+    batch_encoding = tokenizer.batch_encode_plus(
         [(example.text_a, example.text_b) for example in examples],
         max_length=max_length,
         padding="max_length",
