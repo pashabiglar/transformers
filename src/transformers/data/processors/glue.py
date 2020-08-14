@@ -175,12 +175,21 @@ def _glue_convert_examples_to_features(
     logger.info(f"done with getting labels from example .  going to do batch _encoding")
     logger.info(f"value of tokenixer is {tokenizer}")
 
+
     batch_encoding = tokenizer.batch_encode_plus(
         [(example.text_a, example.text_b) for example in examples],
         max_length=max_length,
         padding="max_length",
         truncation=True,
     )
+    #
+    # for example in examples:
+    #     logger.info(example.text_a)
+    #     batch_encoding= tokenizer.batch_encode_plus((example.text_a, example.text_b),
+    #                                 max_length=max_length,
+    #                                 padding="max_length",
+    #                                 truncation=True)
+
 
     features = []
 
@@ -192,10 +201,10 @@ def _glue_convert_examples_to_features(
         feature = InputFeatures(**inputs, label=labels[i])
         features.append(feature)
 
-    for i, example in enumerate(examples[:5]):
-        logger.info("*** Example ***")
-        logger.info("guid: %s" % (example.guid))
-        logger.info("features: %s" % features[i])
+    #for i, example in enumerate(examples[:5]):
+        # logger.info("*** Example ***")
+        # logger.info("guid: %s" % (example.guid))
+        # logger.info("features: %s" % features[i])
 
     return features
 

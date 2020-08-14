@@ -214,6 +214,7 @@ class BertTokenizer(PreTrainedTokenizer):
 
     def _tokenize(self, text):
         split_tokens = []
+        logger.info(text)
         if self.do_basic_tokenize:
             for token in tqdm(self.basic_tokenizer.tokenize(text, never_split=self.all_special_tokens),desc="tokenizing"):
 
