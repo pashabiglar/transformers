@@ -39,7 +39,7 @@ pip install -r requirements.txt
 
 cd /home/u11/mithunpaul/xdisk/huggingface_bert_master/code/mithun_scripts
 
-bash run_all.sh --epochs_to_run 2 --machine_to_run_on hpc #options include [laptop, hpc,clara]
+bash run_all.sh --epochs_to_run 1 --machine_to_run_on hpc #options include [laptop, hpc,clara]
 
 
 
