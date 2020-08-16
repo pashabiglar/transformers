@@ -37,7 +37,7 @@ from transformers import (
     glue_tasks_num_labels,
     set_seed,
 )
-
+import math
 
 
 
@@ -149,12 +149,13 @@ def main():
         num_labels=num_labels,
         finetuning_task=data_args.task_name,
         cache_dir=model_args.cache_dir,
-        force_download=True,
+
 
     )
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
+        force_download=True,
 
 
     )
@@ -198,7 +199,8 @@ def main():
         if training_args.do_train
         else None
     )
-
+    training_args.save_steps = math.floor(
+        (len(train_dataset) / training_args.per_device_train_batch_size) * training_args.num_train_epochs)
     # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
     # combined model_teacher performs in a delexicalized dataset. This will serve as a verification point
     #to confirm the accuracy (we got 92.91% for fever delx in domain) if something goes wrong in the prediction phase below
