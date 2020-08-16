@@ -7,7 +7,7 @@ import sys
 import warnings
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import  Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 import torch
@@ -742,8 +742,8 @@ class Trainer:
             logger.debug(output)
 
     def _prepare_inputs(
-        self, inputs: Dict[str, Union[torch.Tensor, Any]], model: nn.Module
-    ) -> Dict[str, Union[torch.Tensor, Any]]:
+        self, inputs: Dict[str, torch.Tensor], model: nn.Module
+    ) -> Dict[str, torch.Tensor]:
         """
         Prepare :obj:`inputs` before feeding them to the model, converting them to tensors if they are not already and
         handling potential state.
@@ -760,7 +760,7 @@ class Trainer:
         return inputs
 
     def training_step(
-        self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]], optimizer: torch.optim.Optimizer
+        self, model: nn.Module, inputs: Dict[str, torch.Tensor], optimizer: torch.optim.Optimizer
     ) -> float:
         """
         Perform a training step on :obj:`model` using obj:`inputs` and :obj:`optimizer`.
@@ -1128,7 +1128,7 @@ class Trainer:
         return output
 
     def prediction_step(
-        self, model: nn.Module, inputs: Dict[str, Union[torch.Tensor, Any]], prediction_loss_only: bool
+        self, model: nn.Module, inputs: Dict[str, torch.Tensor, ], prediction_loss_only: bool
     ) -> Tuple[Optional[float], Optional[torch.Tensor], Optional[torch.Tensor]]:
         """
         Perform an evaluation step on :obj:`model` using obj:`inputs`.
