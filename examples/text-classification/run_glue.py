@@ -32,13 +32,14 @@ from transformers import (
     HfArgumentParser,
     Trainer,
     TrainingArguments,
+    StudentTeacherTrainer,
     glue_compute_metrics,
     glue_output_modes,
     glue_tasks_num_labels,
     set_seed,
 )
 import math
-
+from transformers.data.datasets import ParallelDataDataset
 
 
 def get_git_info():
@@ -181,24 +182,25 @@ def main():
             cache_dir=model_args.cache_dir,
         )
 
+        # Get datasets
 
-
-    # Get datasets
-
-    # in a student teacher model_teacher teacher sees the lex data and student sees the delexicalized version of the same data
-    # This is taken care of inside the ParallelDataDataset
-    # if(training_args.do_train_1student_1teacher ==True):
-    #     train_dataset = (
-    #         ParallelDataDataset(args=data_args, tokenizer=tokenizer, data_type_1="lex", data_type_2="delex",
-    #                             cache_dir=model_args.cache_dir) if training_args.do_train else None
-    #     )
-    # else:
-    train_dataset = (
-        GlueDataset(args=data_args, tokenizer=tokenizer, task_type="lex", mode="train",
-                    cache_dir=model_args.cache_dir)
-        if training_args.do_train
-        else None
-    )
+        # ParallelDataDataset is to be used in a student teacher model/architecture.
+        # In this model teacher sees the lex data and student sees the delexicalized version of the same data
+        # The one to one mapping is taken care of inside the ParallelDataDataset
+        if (training_args.do_train_1student_1teacher == True):
+            # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
+            assert training_args.task_type == "combined"
+            train_dataset = (
+                ParallelDataDataset(args=data_args, tokenizer=tokenizer, data_type_1="lex", data_type_2="delex",
+                                    cache_dir=model_args.cache_dir) if training_args.do_train else None
+            )
+        else:
+            train_dataset = (
+                GlueDataset(args=data_args, tokenizer=tokenizer, task_type="lex", mode="train",
+                            cache_dir=model_args.cache_dir)
+                if training_args.do_train
+                else None
+            )
     training_args.save_steps = math.floor(
         (len(train_dataset) / training_args.per_device_train_batch_size) * training_args.num_train_epochs)
     # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
@@ -230,17 +232,18 @@ def main():
 
     dev_compute_metrics = build_compute_metrics_fn("feverindomain")
     test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
-    # Initialize our Trainer
-    # if training_args.do_train_1student_1teacher:
-    #         trainer = StudentTeacherTrainer(
-    #     models={"teacher":model_teacher,"student":model_student},
-    #     args=training_args,
-    #     train_datasets={"combined":train_dataset},
-    #     eval_dataset=eval_dataset,
-    #     eval_compute_metrics=build_compute_metrics_fn(data_args.task_name),
-    # )
-    # else:
-    trainer = Trainer(
+    if training_args.do_train_1student_1teacher:
+        trainer = StudentTeacherTrainer(
+            models={"teacher": model_teacher, "student": model_student},
+            args=training_args,
+            train_datasets={"combined": train_dataset},
+            test_dataset=test_dataset,
+            eval_dataset=eval_dataset,
+            eval_compute_metrics=dev_compute_metrics,
+            test_compute_metrics=test_compute_metrics
+        )
+    else:
+        trainer = Trainer(
             model=model,
             args=training_args,
             train_dataset=train_dataset,
@@ -248,8 +251,8 @@ def main():
             test_dataset=test_dataset,
             eval_compute_metrics=dev_compute_metrics,
             test_compute_metrics=test_compute_metrics
-
         )
+
 
     if training_args.do_train:
 

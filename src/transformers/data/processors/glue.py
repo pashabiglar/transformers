@@ -182,7 +182,9 @@ def _glue_convert_examples_to_features(
 
     features = []
 
-    logger.info(f"done with batch_encoding. value of  batch_encoding are {batch_encoding}.. going to get inside enumerate features")
+    logger.info(f"done with batch_encoding.  going to get inside enumerate features")
+    logger.debug(
+        f"value of  batch_encoding are {batch_encoding}..")
 
     for i in tqdm(range(len(examples)),desc="creating features", total=len(examples)):
         inputs = {k: batch_encoding[k][i] for k in batch_encoding}
