@@ -2526,7 +2526,7 @@ class PreTrainedTokenizerFast(PreTrainedTokenizer):
                         batch_text_or_text_pairs, add_special_tokens=add_special_tokens
                     )
 
-        # Convert encoding to dict
+        # Convert ecoding to dict
         # `Tokens` has type: List[Dict[str, List[List[int]]]] or List[Dict[str, 2D-Tensor]]
         # with nested dimensions corresponding to batch, overflows, sequence length
         tokens = [
@@ -2544,6 +2544,7 @@ class PreTrainedTokenizerFast(PreTrainedTokenizer):
 
         # Sanitize the output to have dict[list] from list[dict]
         sanitized = {}
+
         for key in tokens[0].keys():
             # To List[List[List[int]]] of shape (batch, overflows, sequence length)
             stack = [e for item in tokens for e in item[key]]
