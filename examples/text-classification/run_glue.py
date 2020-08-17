@@ -199,8 +199,10 @@ def main():
     if (training_args.do_train_1student_1teacher == True):
         # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
         assert training_args.task_type == "combined"
+        assert tokenizer is not None
+        assert tokenizer_delex is not None
         train_dataset = (
-            ParallelDataDataset(args=data_args, tokenizer=tokenizer, data_type_1="lex", data_type_2="delex",
+            ParallelDataDataset(args=data_args, tokenizer_lex=tokenizer, tokenizer_delex=tokenizer_delex, data_type_1="lex", data_type_2="delex",
                                 cache_dir=model_args.cache_dir) if training_args.do_train else None
         )
     else:

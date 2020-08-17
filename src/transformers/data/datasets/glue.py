@@ -182,7 +182,8 @@ class ParallelDataDataset(Dataset):
         self,
 
         args: GlueDataTrainingArguments,
-        tokenizer: PreTrainedTokenizer,
+        tokenizer_lex: PreTrainedTokenizer,
+        tokenizer_delex: PreTrainedTokenizer,
         data_type_1: Optional[str] = None,
         data_type_2: Optional[str] = None,
         limit_length: Optional[int] = None,
@@ -203,11 +204,11 @@ class ParallelDataDataset(Dataset):
         cached_features_file = os.path.join(
             cache_dir if cache_dir is not None else args.data_dir,
             "cached_{}_{}_{}_{}".format(
-                mode.value, tokenizer.__class__.__name__, str(args.max_seq_length), args.task_name,
+                mode.value, tokenizer_lex.__class__.__name__, str(args.max_seq_length), args.task_name,
             ),
         )
         label_list = self.processor.get_labels()
-        if args.task_name in ["mnli", "mnli-mm"] and tokenizer.__class__ in (
+        if args.task_name in ["mnli", "mnli-mm"] and tokenizer_lex.__class__ in (
             RobertaTokenizer,
             RobertaTokenizerFast,
             XLMRobertaTokenizer,
@@ -253,7 +254,8 @@ class ParallelDataDataset(Dataset):
                 self.features = glue_convert_pair_examples_to_features(
                     examples1,
                     examples2,
-                    tokenizer,
+                    tokenizer_lex,
+                    tokenizer_delex,
                     max_length=args.max_seq_length,
                     label_list=label_list,
                     output_mode=self.output_mode,
