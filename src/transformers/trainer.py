@@ -239,7 +239,7 @@ class StudentTeacherTrainer:
         test_dataloader = self.get_test_dataloader(test_dataset)
 
         return self.prediction_loop(test_dataloader, description="Prediction")
-    
+
     def evaluate(self, eval_dataset: Optional[Dataset] = None) -> Dict[str, float]:
         """
         Run evaluation and returns metrics.
