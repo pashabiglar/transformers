@@ -153,13 +153,22 @@ def main():
 
 
     )
+
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
         force_download=True,
-
-
     )
+
+    #when in student-teacher mode, you need two tokenizers, one for lexicalized data, and one for the delexicalized data
+    # the regular tokenizer will be used for lexicalized data and special one for delexicalized
+    if (training_args.do_train_1student_1teacher == True):
+        tokenizer_delex = AutoTokenizer.from_pretrained(
+            model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
+            cache_dir=model_args.cache_dir,
+            force_download=True,
+            tokenizer_type="delex"
+        )
 
     if (training_args.do_train_1student_1teacher == True):
         model_teacher = AutoModelForSequenceClassification.from_pretrained(

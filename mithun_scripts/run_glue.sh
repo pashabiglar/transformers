@@ -35,7 +35,7 @@ echo "data_dir is $DATA_DIR"
 
 echo $args
 
-
+exit
 mkdir -p OUTPUT_DIR
 
 
@@ -54,6 +54,9 @@ fi
 
 #fever cross domain with student teacher
 ##--model_name_or_path bert-base-cased --task_name fevercrossdomain --do_train --do_eval --do_predict --data_dir /Users/mordor/research/huggingface/src/transformers/data/datasets/fever/fevercrossdomain/combined/figerspecific --max_seq_length 128 --per_device_eval_batch_size=16 --per_device_train_batch_size=16 --learning_rate 1e-5 --num_train_epochs 1 --output_dir output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/ --overwrite_output_dir --weight_decay 0.01 --adam_epsilon 1e-6 --evaluate_during_training --task_type combined --subtask_type figerspecific --do_train_1student_1teacher
+
+#parameters when in student teacher with bert uncased
+#--model_name_or_path bert-base-uncased --task_name fevercrossdomain --do_train --do_eval --do_predict --data_dir /Users/mordor/research/huggingface/src/transformers/data/datasets/fever/fevercrossdomain/combined/figerspecific --max_seq_length 128 --per_device_eval_batch_size=16 --per_device_train_batch_size=16 --learning_rate 1e-5 --num_train_epochs 1 --output_dir output/fever/fevercrossdomain/combined/figerspecific/bert-base-uncased/128/ --overwrite_output_dir --weight_decay 0.01 --adam_epsilon 1e-6 --evaluate_during_training --task_type combined --subtask_type figerspecific --overwrite_cache --do_train_1student_1teacher
 
 #fever ceoss domain delex
 #--model_name_or_path bert-base-uncased --task_name fevercrossdomain --do_train --do_eval --do_predict --data_dir /Users/mordor/research/transformers/src/transformers/data/datasets/fever/fevercrossdomain/delex --max_seq_length 128 --per_device_eval_batch_size=16 --per_device_train_batch_size=16 --learning_rate 1e-5 --num_train_epochs 1.0 --output_dir output/ --overwrite_output_dir --save_steps 74000 --weight_decay 0.01 --adam_epsilon 1e-6 --overwrite_cache
