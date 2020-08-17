@@ -226,7 +226,8 @@ def main():
         else None
     )
 
-    # in the student teacher mode the evaluation always happens in the delex cross domain dev data. so it will
+    # in the student teacher mode the evaluation always happens in the delex cross domain dev data. here we are loading it as the test partition so that we can keep track of
+    #progress across epochs
     test_dataset = (
         GlueDataset(data_args, tokenizer=tokenizer,task_type="delex", mode="test", cache_dir=model_args.cache_dir)
         if training_args.do_predict
