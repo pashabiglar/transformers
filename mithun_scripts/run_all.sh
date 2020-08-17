@@ -67,12 +67,13 @@ if [ $EPOCHS = "1" ]; then
         rm -rf $DATA_DIR
         ./get_fever_fnc_data.sh
         ./convert_to_mnli_format.sh
+
 fi
+
 
 echo "done with data download part if epoch==1. datapath now is $DATA_DIR"
 
 
-./reduce_size.sh  --data_path $DATA_DIR
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
       ./reduce_size.sh  --data_path $DATA_DIR

@@ -244,7 +244,7 @@ class ParallelDataDataset(Dataset):
                     examples2 = self.processor.get_train_examples_set2(args.data_dir)
 
                     # assert both datasets are congruent
-                    for x, y in zip(examples1, examples2):
+                    for index,(x, y) in enumerate(zip(examples1, examples2)):
                         assert x.label == y.label
                         assert x.guid == y.guid
 
