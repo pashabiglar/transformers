@@ -150,14 +150,14 @@ def main():
         num_labels=num_labels,
         finetuning_task=data_args.task_name,
         cache_dir=model_args.cache_dir,
-
-
     )
+
 
     tokenizer = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
         force_download=True,
+        tokenizer_type=training_args.task_type
     )
 
     #when in student-teacher mode, you need two tokenizers, one for lexicalized data, and one for the delexicalized data
