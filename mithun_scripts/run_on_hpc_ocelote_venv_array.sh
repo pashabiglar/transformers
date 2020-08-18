@@ -3,7 +3,7 @@
 #PBS -q standard
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
-#PBS -N master_branch_delex_cased_figers_128
+#PBS -N master_branch_lex_cased_figers_128
 ### Specify the group name
 #PBS -W group_list=msurdeanu
 ### Used if job requires partial node only
@@ -39,7 +39,7 @@ pip install -r requirements.txt
 
 cd /home/u11/mithunpaul/xdisk/huggingface_bert_master/code/mithun_scripts
 
-bash run_all.sh --epochs_to_run 25 --machine_to_run_on hpc #options include [laptop, hpc,clara]
+bash run_all.sh --epochs_to_run 1 --machine_to_run_on hpc #options include [laptop, hpc,clara]
 
 
 
