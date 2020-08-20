@@ -78,11 +78,11 @@ for (pred,actual_row) in zip(test_prediction_logits.values,test_gold.values):
     gold_labels.append(actual_row[1])
 
 #assuming there is no corresponding prediction for 1st gold value/datapoint
-# for index,predictions_row in enumerate(test_prediction_logits.values):
+# for index,predictions_row in enumerate(lex_predictions.values):
 #     if index<25411:seed
 #         label_index=(np.argmax(predictions_row.tolist()))
 #         label_string=LABELS[label_index]
-#         pred_labels.append(label_string)
+#         lex_labels.append(label_string)
 #
 #         gold_label=(test_gold.values[index+1][1])
 #         gold_labels.append(gold_label)
