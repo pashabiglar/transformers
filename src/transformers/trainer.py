@@ -675,7 +675,6 @@ class Trainer:
                             xm.rendezvous("saving_optimizer_states")
                             xm.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                             xm.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
-                        #temporarily commenting on august 19th since these lines are erroring out
                         elif self.is_world_master():
                             torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                             torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
@@ -695,6 +694,21 @@ class Trainer:
                 best_fnc_score=fnc_score
                 #if the accuracy or fnc_score beats the highest so far, write predictions to disk
                 self.write_predictions_to_disk(self.model,self.test_dataset,predictions_on_test_file_path)
+
+                # Save model checkpoint
+                output_dir = os.path.join(self.args.output_dir)
+                self.save_model(output_dir)
+
+                # if self.is_world_master():
+                #     self._rotate_checkpoints()
+
+                if is_torch_tpu_available():
+                    xm.rendezvous("saving_optimizer_states")
+                    xm.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
+                    xm.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
+                elif self.is_world_master():
+                    torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
+                    torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
 
             if acc > best_acc:
                 best_acc = acc
