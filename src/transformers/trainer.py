@@ -544,6 +544,9 @@ class Trainer:
         with open(predictions_on_test_file_path, "w") as writer:
             writer.write("")
 
+        best_fnc_score=0
+        best_acc=0
+
         for epoch in train_iterator:
             if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
                 logger.info("found that train dataloader is using distributed sampler. This will affect per epoch data going to exit")
@@ -685,11 +688,16 @@ class Trainer:
 
             assert model is self.model
 
-            self._intermediate_eval(datasets=self.test_dataset,
+            fnc_score, acc=self._intermediate_eval(datasets=self.test_dataset,
                                     epoch=epoch, output_eval_file=output_eval_file_path, description="test_partition")
 
-            #if the accuracy or fnc_score beats the highest so far, write predictions to disk
-            self.write_predictions_to_disk(self.model,self.test_dataset,predictions_on_test_file_path)
+            if fnc_score>best_fnc_score:
+                best_fnc_score=fnc_score
+                #if the accuracy or fnc_score beats the highest so far, write predictions to disk
+                self.write_predictions_to_disk(self.model,self.test_dataset,predictions_on_test_file_path)
+
+            if acc > best_acc:
+                best_acc = acc
 
 
             logger.info(f"********************************end of epoch {epoch}************************************************************************")
@@ -957,7 +965,9 @@ class Trainer:
                         logger.info("  %s = %s", key, value)
                         writer.write("%s = %s\n" % (key, value))
             eval_results.update(eval_result)
-        return eval_result
+            fnc_score=eval_result['eval_acc']['fnc_score']
+            acc=eval_result['eval_acc']['acc']
+        return fnc_score,acc
 
     def evaluate(self, eval_dataset: Optional[Dataset] = None) -> Dict[str, float]:
         """

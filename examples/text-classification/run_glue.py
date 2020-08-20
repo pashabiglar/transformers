@@ -350,7 +350,7 @@ def main():
     #                     else:
     #                         item = test_dataset.get_labels()[item]
     #                         writer.write("%d\t%s\n" % (index, item))
-    return eval_results
+    #return eval_results
 
 
 def _mp_fn(index):
