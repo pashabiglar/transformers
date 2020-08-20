@@ -693,7 +693,8 @@ class Trainer:
             if fnc_score>best_fnc_score:
                 best_fnc_score=fnc_score
 
-                logger.info(f"found that the current fncscore:{fnc_score} in epoch {epoch} beats fncscore. going to prediction"
+                logger.info(f"found that the current fncscore:{fnc_score} in epoch "
+                            f"{epoch} beats the bestfncscore so far i.e ={best_fnc_score}. going to prediction"
                             f"on test partition and save that and model to disk")
                 #if the accuracy or fnc_score beats the highest so far, write predictions to disk
                 self.write_predictions_to_disk(self.model,self.test_dataset,predictions_on_test_file_path)
