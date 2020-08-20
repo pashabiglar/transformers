@@ -30,7 +30,7 @@ if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_master/data"
 else
         export DATA_DIR_BASE="../src/transformers/data/datasets"
-        export OUTPUT_DIR_BASE="output"
+        export OUTPUT_DIR_BASE="./output"
 fi
 
 echo "MACHINE_TO_RUN_ON=$MACHINE_TO_RUN_ON"
@@ -71,7 +71,7 @@ fi
 
 echo "done with data download part if epoch==1. datapath now is $DATA_DIR"
 
-./reduce_size.sh  --data_path $DATA_DIR
+
 
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then

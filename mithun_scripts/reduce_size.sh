@@ -12,13 +12,18 @@ else
 
 fi
 
-echo "inside reduce size.value of directory to reduce files from is"
-echo $bert_format_base_folder_path
 
-for complete_path in $(find $bert_format_base_folder_path -name '*.tsv');
+for complete_path in $(find $DATA_DIR -name '*.tsv');
 do
-head -100  $complete_path > temp
-mv temp $complete_path
+if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
+    head -17  $complete_path > temp
+    mv temp $complete_path
+else
+    head -100  $complete_path > temp
+    mv temp $complete_path
+fi
+
+
 
 done
 

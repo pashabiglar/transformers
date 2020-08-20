@@ -236,6 +236,16 @@ class Trainer:
                 ),
                 FutureWarning,
             )
+    def write_predictions_to_disk(self, model,test_dataset, file_to_write_predictions, ):
+        predictions = self.predict(test_dataset).predictions
+        predictions = np.argmax(predictions, axis=1)
+        if self.is_world_master():
+            with open(file_to_write_predictions, "w") as writer:
+                logger.info("***** (Going to write Test results to disk {} *****")
+                writer.write("index\tprediction\n")
+                for index, item in enumerate(predictions):
+                        item = test_dataset.get_labels()[item]
+                        writer.write("%d\t%s\n" % (index, item))
 
     def _get_train_sampler(self) -> Optional[torch.utils.data.sampler.Sampler]:
         if isinstance(self.train_dataset, torch.utils.data.IterableDataset):
@@ -522,9 +532,16 @@ class Trainer:
         )
 
         #empty out the file which stores intermediate evaluations
-        output_eval_file_path = self.args.output_dir + "intermediate_eval_results.txt"
+
+        output_dir_absolute_path=os.path.join(os.getcwd(),self.args.output_dir)
+        output_eval_file_path =  output_dir_absolute_path+ "intermediate_eval_results.txt"
         # empty out the
         with open(output_eval_file_path, "w") as writer:
+            writer.write("")
+
+        # empty out the file which stores intermediate evaluations
+        predictions_on_test_file_path = output_dir_absolute_path + "predictions_on_test_partition.txt"
+        with open(predictions_on_test_file_path, "w") as writer:
             writer.write("")
 
         for epoch in train_iterator:
@@ -655,6 +672,7 @@ class Trainer:
                             xm.rendezvous("saving_optimizer_states")
                             xm.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                             xm.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
+                        #temporarily commenting on august 19th since these lines are erroring out
                         elif self.is_world_master():
                             torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                             torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
@@ -669,6 +687,9 @@ class Trainer:
 
             self._intermediate_eval(datasets=self.test_dataset,
                                     epoch=epoch, output_eval_file=output_eval_file_path, description="test_partition")
+
+            #if the accuracy or fnc_score beats the highest so far, write predictions to disk
+            self.write_predictions_to_disk(self.model,self.test_dataset,predictions_on_test_file_path)
 
 
             logger.info(f"********************************end of epoch {epoch}************************************************************************")
