@@ -66,7 +66,7 @@ if [ $EPOCHS = "1" ]; then
 fi
 
 echo "done with data download part if epoch==1. datapath now is $DATA_DIR"
- ./reduce_size.sh  --data_path $DATA_DIR
+ 
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
       ./reduce_size.sh  --data_path $DATA_DIR
