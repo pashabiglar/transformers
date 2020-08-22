@@ -58,8 +58,8 @@ def report_score(actual,predicted):
 
 
 
-lex_predictions=pd.read_csv("predictions/lex_cased_predictions.txt", sep="\t", header=None)
-delex_predictions=pd.read_csv("predictions/delex_cased_predictions.txt", sep="\t", header=None)
+lex_predictions=pd.read_csv("predictions/predictions_on_test_partition_lex_cased_eec533.txt", sep="\t", header=None)
+delex_predictions=pd.read_csv("predictions/predictions_delexcased_e5040_bestepoch6.txt", sep="\t", header=None)
 test_gold=pd.read_csv("predictions/fnc_dev_gold.tsv",sep="\t",header=None)
 
 # are the lengths different?
@@ -97,9 +97,13 @@ mismatches=0
 learnables=0
 correct_lex=0
 correct_delex=0
+correct_both=0
 for index,(pred_lex, pred_delex,gold) in enumerate(zip(lex_labels,delex_labels,gold_labels)):
     if not (pred_lex==pred_delex):
         mismatches=mismatches+1
+    if pred_lex == gold and pred_delex == gold:
+        correct_both+=1
+
     if pred_lex==gold:
         correct_lex+=1
         if not (pred_lex == pred_delex):
@@ -113,10 +117,11 @@ accuracy_lex= float(correct_lex) * 100 / float(len(gold_labels))
 accuracy_delex= float(correct_delex) * 100 / float(len(gold_labels))
 
 
-print(f"accuracy of lex={accuracy_lex}")
-print(f"accuracy of delex={accuracy_delex}")
-print(f"fnc_score_lex ={fnc_score_lex}")
+print(f"accuracy of lex={correct_lex}")
+print(f"accuracy of delex={correct_delex}")
+print(f"fnc_score_lex ={len(gold_labels)}")
 print(f"fnc_score_delex ={fnc_score_delex}")
-print(f"overall percent_mismatches between lex and delex={percent_mismatches}")
-print(f"percentage where lex predicted correctly but delex didnt={percent_learnables}")
+print(f"overall percent_mismatches between lex and delex={mismatches}")
+print(f"percentage where lex predicted correctly but delex didnt={learnables}")
+print(f"correct_both ={correct_both}")
 
