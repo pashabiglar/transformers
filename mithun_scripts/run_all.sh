@@ -64,7 +64,7 @@ if [ $EPOCHS = "1" ]; then
         ./get_fever_fnc_data.sh
         ./convert_to_mnli_format.sh
 fi
-
+  
 echo "done with data download part if epoch==1. datapath now is $DATA_DIR"
 
 
