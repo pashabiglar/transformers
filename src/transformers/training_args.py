@@ -255,6 +255,8 @@ class TrainingArguments:
     subtask_type: Optional[str] = field(default="figerspecific", metadata={
         "help": "Types of subtasks used in the delexicalization of data. Options include figerspecific,figerabstract, oaneretc."})
 
+    machine_to_run_on: Optional[str] = field(default="hpc", metadata={
+        "help": "machines to test on options include [hpc,clara, laptop]."})
 
 
     def __iter__(self):
