@@ -144,7 +144,7 @@ class Trainer:
             The arguments to tweak training.
         data_collator (:obj:`DataCollator`, `optional`, defaults to :func:`~transformers.default_data_collator`):
             The function to use to from a batch from a list of elements of :obj:`train_dataset` or
-            :obj:`eval_dataset`.
+            :obj:`dev_dataset`.
         train_dataset (:obj:`torch.utils.data.dataset.Dataset`, `optional`):
             The dataset to use for training.
         eval_dataset (:obj:`torch.utils.data.dataset.Dataset`, `optional`):
@@ -166,7 +166,7 @@ class Trainer:
     args: TrainingArguments
     data_collator: DataCollator
     train_dataset: Optional[Dataset]
-    eval_dataset: Optional[Dataset]
+    dev_dataset: Optional[Dataset]
     test_dataset =Optional[Dataset]
     test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     eval_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
@@ -195,8 +195,8 @@ class Trainer:
         self.data_collator = data_collator if data_collator is not None else default_data_collator
         self.train_dataset = train_dataset
 
-        #pointing eval dataset to test dataset is a temporary hack on july 28th to fix reproducability issues.
-        self.eval_dataset = eval_dataset
+        #eval dataset here means on the dev partition
+        self.dev_dataset = eval_dataset
         ###for fnc score evaluation
         self.test_dataset = test_dataset
         self.test_compute_metrics = test_compute_metrics
@@ -297,19 +297,19 @@ class Trainer:
         """
         Returns the evaluation :class:`~torch.utils.data.DataLoader`.
 
-        Will use no sampler if :obj:`self.eval_dataset` is a :obj:`torch.utils.data.IterableDataset`, a sequential
+        Will use no sampler if :obj:`self.dev_dataset` is a :obj:`torch.utils.data.IterableDataset`, a sequential
         sampler (adapted to distributed training if necessary) otherwise.
 
         Subclass and override this method if you want to inject some custom behavior.
 
         Args:
             eval_dataset (:obj:`torch.utils.data.dataset.Dataset`, `optional`):
-                If provided, will override :obj:`self.eval_dataset`.
+                If provided, will override :obj:`self.dev_dataset`.
         """
-        if eval_dataset is None and self.eval_dataset is None:
-            raise ValueError("Trainer: evaluation requires an eval_dataset.")
+        if eval_dataset is None and self.dev_dataset is None:
+            raise ValueError("Trainer: evaluation requires an dev_dataset.")
 
-        eval_dataset = eval_dataset if eval_dataset is not None else self.eval_dataset
+        eval_dataset = eval_dataset if eval_dataset is not None else self.dev_dataset
         eval_sampler = self._get_eval_sampler(eval_dataset)
 
         return DataLoader(
@@ -330,7 +330,7 @@ class Trainer:
         Subclass and override this method if you want to inject some custom behavior.
 
         Args:
-            eval_dataset (:obj:`torch.utils.data.dataset.Dataset`, `optional`):
+            dev_dataset (:obj:`torch.utils.data.dataset.Dataset`, `optional`):
                 The test dataset to use.
         """
         test_sampler = self._get_eval_sampler(test_dataset)
@@ -534,9 +534,14 @@ class Trainer:
         #empty out the file which stores intermediate evaluations
 
         output_dir_absolute_path=os.path.join(os.getcwd(),self.args.output_dir)
-        output_eval_file_path =  output_dir_absolute_path+ "intermediate_eval_results.txt"
+        dev_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_dev_partition_results.txt"
         # empty out the
-        with open(output_eval_file_path, "w") as writer:
+        with open(dev_partition_evaluation_output_file_path, "w") as writer:
+            writer.write("")
+
+        test_partition_evaluation_output_file_path =  output_dir_absolute_path+ "intermediate_evaluation_on_test_partition_results.txt"
+        # empty out the
+        with open(test_partition_evaluation_output_file_path, "w") as writer:
             writer.write("")
 
         # empty out the file which stores intermediate evaluations
@@ -687,16 +692,24 @@ class Trainer:
 
             assert model is self.model
 
-            fnc_score, acc=self._intermediate_eval(datasets=self.test_dataset,
-                                    epoch=epoch, output_eval_file=output_eval_file_path, description="test_partition")
+            dev_partition_evaluation_result = self._intermediate_eval(datasets=self.dev_dataset,
+                                                                      epoch=epoch,
+                                                                      output_eval_file=dev_partition_evaluation_output_file_path,
+                                                                      description="dev_partition")
 
-            if fnc_score>best_fnc_score:
-                best_fnc_score=fnc_score
+            test_partition_evaluation_result=self._intermediate_eval(datasets=self.test_dataset,
+                                    epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path, description="test_partition")
 
-                logger.info(f"found that the current fncscore:{fnc_score} in epoch "
+            fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['fnc_score']
+            accuracy_test_partition = test_partition_evaluation_result['eval_acc']['acc']
+
+            if fnc_score_test_partition>best_fnc_score:
+                best_fnc_score=fnc_score_test_partition
+
+                logger.info(f"found that the current fncscore:{fnc_score_test_partition} in epoch "
                             f"{epoch} beats the bestfncscore so far i.e ={best_fnc_score}. going to prediction"
                             f"on test partition and save that and model to disk")
-                #if the accuracy or fnc_score beats the highest so far, write predictions to disk
+                #if the accuracy or fnc_score_test_partition beats the highest so far, write predictions to disk
                 self.write_predictions_to_disk(self.model,self.test_dataset,predictions_on_test_file_path)
 
                 # Save model checkpoint
@@ -714,8 +727,8 @@ class Trainer:
                     torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                     torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
 
-            if acc > best_acc:
-                best_acc = acc
+            if accuracy_test_partition > best_acc:
+                best_acc = accuracy_test_partition
 
 
             logger.info(f"********************************end of epoch {epoch}************************************************************************")
@@ -733,7 +746,12 @@ class Trainer:
             delattr(self, "_past")
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
-        return TrainOutput(self.global_step, tr_loss / self.global_step)
+
+        # Note: returning for testing purposes only. All performance evaluation measures by now are written to disk.
+        # Note that the assumption here is that the test will be run for 1 epoch only. ELse have to return the best dev and test partition scores
+        return dev_partition_evaluation_result,test_partition_evaluation_result
+
+
 
     def log(self, logs: Dict[str, float], iterator: Optional[tqdm] = None) -> None:
         """
@@ -983,9 +1001,8 @@ class Trainer:
                         logger.info("  %s = %s", key, value)
                         writer.write("%s = %s\n" % (key, value))
             eval_results.update(eval_result)
-            fnc_score=eval_result['eval_acc']['fnc_score']
-            acc=eval_result['eval_acc']['acc']
-        return fnc_score,acc
+
+        return eval_result
 
     def evaluate(self, eval_dataset: Optional[Dataset] = None) -> Dict[str, float]:
         """
@@ -998,7 +1015,7 @@ class Trainer:
 
         Args:
             eval_dataset (:obj:`Dataset`, `optional`):
-                Pass a dataset if you wish to override :obj:`self.eval_dataset`.
+                Pass a dataset if you wish to override :obj:`self.dev_dataset`.
         Returns:
             A dictionary containing the evaluation loss and the potential metrics computed from the predictions.
         """
@@ -1026,7 +1043,7 @@ class Trainer:
 
         Args:
             test_dataset (:obj:`Dataset`, `optional`):
-                Pass a dataset if you wish to override :obj:`self.eval_dataset`.
+                Pass a dataset if you wish to override :obj:`self.dev_dataset`.
         Returns:
             A dictionary containing the evaluation loss and the potential metrics computed from the predictions.
         """

@@ -231,7 +231,7 @@ def main():
     #     models={"teacher":model_teacher,"student":model_student},
     #     args=training_args,
     #     train_datasets={"combined":train_dataset},
-    #     eval_dataset=eval_dataset,
+    #     dev_dataset=dev_dataset,
     #     eval_compute_metrics=build_compute_metrics_fn(data_args.task_name),
     # )
     # else:
@@ -247,20 +247,26 @@ def main():
         )
 
     if training_args.do_train:
-
+        dev_partition_evaluation_result=None
+        test_partition_evaluation_result=None
         if (training_args.do_train_1student_1teacher == True):
-            trainer.train_1teacher_1student(
+            dev_partition_evaluation_result,test_partition_evaluation_result=trainer.train_1teacher_1student(
                 model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
             )
         else:
-            trainer.train(
+            dev_partition_evaluation_result,test_partition_evaluation_result=trainer.train(
                 model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
             )
+
         trainer.save_model(training_args.output_dir)
         # For convenience, we also re-save the tokenizer to the same directory,
         # so that you can share your model_teacher easily on huggingface.co/models =)
         if trainer.is_world_master():
             tokenizer.save_pretrained(training_args.output_dir)
+        assert dev_partition_evaluation_result is not None
+        assert test_partition_evaluation_result is not None
+        return dev_partition_evaluation_result,test_partition_evaluation_result
+
 
 
     # this part is nowdone at the end of each epoch instead
@@ -270,24 +276,24 @@ def main():
     #     logger.info("*** Evaluate1 at the end of all epochs ***")
     #
     #     # Loop to handle MNLI double evaluation (matched, mis-matched)
-    #     eval_datasets = [eval_dataset]
+    #     eval_datasets = [dev_dataset]
     #     if data_args.task_name == "mnli":
     #         mnli_mm_data_args = dataclasses.replace(data_args, task_name="mnli-mm")
     #         eval_datasets.append(
     #             GlueDataset(mnli_mm_data_args, tokenizer=tokenizer, mode="dev", cache_dir=model_args.cache_dir)
     #         )
     #
-    #     for eval_dataset in eval_datasets:
+    #     for dev_dataset in eval_datasets:
     #         #feverindomain compute metric has only accuracy while fever cross domain has both accuracy and fnc score
     #         trainer.eval_compute_metrics = build_compute_metrics_fn("feverindomain")
-    #         eval_result = trainer.evaluate(eval_dataset=eval_dataset)
+    #         eval_result = trainer.evaluate(dev_dataset=dev_dataset)
     #
     #         output_eval_file = os.path.join(
-    #             training_args.output_dir, f"eval_results_{eval_dataset.args.task_name}.txt"
+    #             training_args.output_dir, f"eval_results_{dev_dataset.args.task_name}.txt"
     #         )
     #         if trainer.is_world_master():
     #             with open(output_eval_file, "w") as writer:
-    #                 logger.info("***** dev results {} *****".format(eval_dataset.args.task_name))
+    #                 logger.info("***** dev results {} *****".format(dev_dataset.args.task_name))
     #                 for key, value in eval_result.items():
     #                     logger.info("  %s = %s", key, value)
     #                     writer.write("%s = %s\n" % (key, value))
@@ -307,16 +313,16 @@ def main():
     #             GlueDataset(mnli_mm_data_args, tokenizer=tokenizer, mode="dev", cache_dir=model_args.cache_dir)
     #         )
     #
-    #     for eval_dataset in eval_datasets:
+    #     for dev_dataset in eval_datasets:
     #         trainer.eval_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
-    #         eval_result = trainer.evaluate(eval_dataset=eval_dataset)
+    #         eval_result = trainer.evaluate(dev_dataset=dev_dataset)
     #
     #         output_eval_file = os.path.join(
-    #             training_args.output_dir, f"test_partition_results_{eval_dataset.args.task_name}.txt"
+    #             training_args.output_dir, f"test_partition_results_{dev_dataset.args.task_name}.txt"
     #         )
     #         if trainer.is_world_master():
     #             with open(output_eval_file, "w") as writer:
-    #                 logger.info("***** fnc dev results {} *****".format(eval_dataset.args.task_name))
+    #                 logger.info("***** fnc dev results {} *****".format(dev_dataset.args.task_name))
     #                 for key, value in eval_result.items():
     #                     logger.info("  %s = %s", key, value)
     #                     writer.write("%s = %s\n" % (key, value))

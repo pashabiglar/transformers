@@ -62,15 +62,23 @@ class ExamplesTests(unittest.TestCase):
             """.split()
 
         with patch.object(sys, "argv", testargs):
-            result = run_glue.main()
-            del result["eval_loss"]
-            for value in result.values():
-                self.assertGreaterEqual(value, 0.75)
+            #Note: assumption here that the test will be run for 1 epoch only. ELse have to return the best dev and test partition scores
+            #Note: assumption here that the test will be run for 1 epoch only. ELse have to return the best dev and test partition scores
+            dev_partition_evaluation_result,test_partition_evaluation_result = run_glue.main()
+            accuracy_dev_partition = dev_partition_evaluation_result['eval_acc']
+            fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['fnc_score']
+            accuracy_test_partition = test_partition_evaluation_result['eval_acc']['acc']
+            self.assertGreaterEqual(fnc_score_test_partition, 0.75)
+            self.assertGreaterEqual(accuracy_test_partition, 0.75)
+            self.assertGreaterEqual(accuracy_dev_partition, 0.75)
+
+
+            #todo: run for 100 data points. find good accuracy and fnc score numbers and change from 0.75. do the same for  multiple epochs
 
     def test_run_language_modeling(self):
         stream_handler = logging.StreamHandler(sys.stdout)
         logger.addHandler(stream_handler)
-        # TODO: switch to smaller model like sshleifer/tiny-distilroberta-base
+        # TODO: switch to smaller model like sshleifer/tiny-distilroberta-ba`se
 
         testargs = """
             run_language_modeling.py

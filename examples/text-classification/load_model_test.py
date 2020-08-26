@@ -198,7 +198,7 @@ def main():
             eval_result = trainer.evaluate(eval_dataset=eval_dataset)
 
             output_eval_file = os.path.join(
-                training_args.output_dir, f"eval_results_{eval_dataset.args.task_name}.txt"
+                training_args.output_dir, f"eval_results_{dev_dataset.args.task_name}.txt"
             )
             if trainer.is_world_master():
                 with open(output_eval_file, "w") as writer:
