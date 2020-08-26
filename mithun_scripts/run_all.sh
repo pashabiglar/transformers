@@ -73,6 +73,5 @@ if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
 fi
 
 
-
 ./run_glue.sh
 
