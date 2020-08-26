@@ -58,8 +58,8 @@ def report_score(actual,predicted):
 
 
 
-lex_predictions=pd.read_csv("predictions/predictions_on_test_partition_lex_cased_eec533.txt", sep="\t", header=None)
-delex_predictions=pd.read_csv("predictions/predictions_delexcased_e5040_bestepoch6.txt", sep="\t", header=None)
+lex_predictions=pd.read_csv("predictions/predictions_on_test_partition_lex_uncased_14fc2e8.txt", sep="\t", header=None)
+delex_predictions=pd.read_csv("predictions/predictions_on_test_partition_06d5f_delexuncased.txt", sep="\t", header=None)
 test_gold=pd.read_csv("predictions/fnc_dev_gold.tsv",sep="\t",header=None)
 
 # are the lengths different?
@@ -111,17 +111,31 @@ for index,(pred_lex, pred_delex,gold) in enumerate(zip(lex_labels,delex_labels,g
     if pred_delex == gold:
         correct_delex+=1
 
-percent_mismatches=float(mismatches*100/len(gold_labels))
+
+
+mismatches_percentages=float(mismatches * 100 / len(gold_labels))
 percent_learnables=float(learnables)*100/float(len(gold_labels))
 accuracy_lex= float(correct_lex) * 100 / float(len(gold_labels))
 accuracy_delex= float(correct_delex) * 100 / float(len(gold_labels))
 
 
-print(f"accuracy of lex={correct_lex}")
-print(f"accuracy of delex={correct_delex}")
-print(f"fnc_score_lex ={len(gold_labels)}")
-print(f"fnc_score_delex ={fnc_score_delex}")
-print(f"overall percent_mismatches between lex and delex={mismatches}")
-print(f"percentage where lex predicted correctly but delex didnt={learnables}")
-print(f"correct_both ={correct_both}")
+print(f"correct_lex count={correct_lex}")
+print(f"correct_delex count={correct_delex}")
+print(f"fnc_score_delex ={(fnc_score_delex)}")
+print(f"fnc_score_lex ={(fnc_score_lex)}")
+print(f"gold_labels_count ={len(gold_labels)}")
+
+print(f"overall mismatches_count between lex and delex={mismatches}")
+
+######## everything in percentages wrt total data
+print(f"mismatches_percentages ={mismatches_percentages}")
+print(f"percent_learnables={percent_learnables}")
+print(f"percentage accuracy_lex={accuracy_lex}")
+print(f"percentage accuracy_delex={accuracy_delex}")
+
+print(f"**************details needed for venn diagram")
+print(f"count correct_both ={correct_both}")
+print(f"count only lex got right ={correct_lex-correct_both}")
+print(f"count only delex got right ={correct_delex-correct_both}")
+print(f"count where lex predicted correctly but delex didnt={learnables}")
 
