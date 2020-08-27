@@ -46,6 +46,9 @@ export TASK_TYPE="delex" #options for task type include lex,delex,and combined""
 export SUB_TASK_TYPE="figerspecific" #options for TASK_SUB_TYPE (usually used only for delex)  include [oa, figerspecific, figerabstract, oass, simplener]
 export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
 export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE"
+
+export TOY_DATA_DIR="toydata"
+export TOY_DATA_DIR_PATH="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE/$TOY_DATA_DIR/"
 export PYTHONPATH="../src"
 export BERT_MODEL_NAME="bert-base-cased" #options include things like [bert-base-uncased,bert-base-cased] etc. refer src/transformers/tokenization_bert.py for more.
 export MAX_SEQ_LENGTH="128"
@@ -65,12 +68,11 @@ if [ $EPOCHS = "1" ]; then
         ./convert_to_mnli_format.sh
 fi
 
-echo "done with data download part if epoch==1. datapath now is $DATA_DIR"
+echo "done with data download  TOY_DATA_DIR_PATH now is $TOY_DATA_DIR_PATH"
 
-if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
-      ./reduce_size.sh  --data_path $DATA_DIR
-fi
-
+#create a small part of data as toy data. this will be used to run regresssion tests before the actual run starts
+./reduce_size.sh  --data_path $TOY_DATA_DIR_PATH
+exit
 
 ./run_glue.sh
 
