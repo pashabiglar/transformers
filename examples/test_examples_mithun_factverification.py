@@ -27,6 +27,7 @@ from transformers import (
 from typing import Optional
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
 
+print("reaching here at 1")
 
 SRC_DIRS = [
     os.path.join(os.path.dirname(__file__), dirname)
@@ -34,18 +35,15 @@ SRC_DIRS = [
 ]
 sys.path.extend(SRC_DIRS)
 
-
 if SRC_DIRS is not None:
     import run_generation
     import run_glue
     import run_language_modeling
     import run_squad
 
-
 logging.basicConfig(level=logging.DEBUG)
 
 logger = logging.getLogger()
-
 
 def get_setup_file():
     parser = argparse.ArgumentParser()
@@ -75,19 +73,18 @@ class ModelArguments:
 
 class ExamplesTests(unittest.TestCase):
     def test_run_glue(self):
+
         stream_handler = logging.StreamHandler(sys.stdout)
         logger.addHandler(stream_handler)
+
 
         testargs = f"""
             run_glue.py
            --model_name_or_path bert-base-cased --task_name fevercrossdomain --do_train --do_eval --do_predict --data_dir ../src/transformers/data/datasets/fever/fevercrossdomain/lex/figerspecific/toydata/ --max_seq_length 128 --per_device_eval_batch_size=16 --per_device_train_batch_size=16 --learning_rate 1e-5 --num_train_epochs 1 --output_dir ./output/fever/fevercrossdomain/lex/figerspecific/bert-base-cased/128/ --overwrite_output_dir --weight_decay 0.01 --adam_epsilon 1e-6 --evaluate_during_training --task_type lex --subtask_type figerspecific --machine_to_run_on laptop
             """.split()
-
         parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
 
-
         model_args, data_args, training_args = parser.parse_args_into_dataclasses(args=testargs[1:len(testargs)])
-
 
         with patch.object(sys, "argv", testargs):
             #Note: assumption here that the test will be run for 1 epoch only. ELse have to return the best dev and test partition scores

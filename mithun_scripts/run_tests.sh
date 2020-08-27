@@ -45,7 +45,9 @@ mkdir -p OUTPUT_DIR
 
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
-       python3.6 -m unittest ../examples/text-classification/test_examples_mithun_factverification.py 
+        cd ../examples/
+        python3.6 -m unittest test_examples_mithun_factverification.py
 else
-       python -m unittest ../examples/text-classification/test_examples_mithun_factverification.py
+        cd ../examples/
+        python -m unittest test_examples_mithun_factverification.py
 fi

@@ -41,7 +41,7 @@ cd /home/u11/mithunpaul/xdisk/huggingface_bert_dev/code/mithun_scripts
 
 bash run_all.sh --epochs_to_run 25 --machine_to_run_on hpc #options include [laptop, hpc,clara]
 #stub to use in laptop
-#bash run_all.sh --epochs_to_run 1 --machine_to_run_on laptop #options include [laptop, hpc,clara]
+#bash run_all.sh --epochs_to_run 1 --machine_to_run_on laptop
 
 
 
