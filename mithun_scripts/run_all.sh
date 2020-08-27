@@ -74,5 +74,6 @@ echo "done with data download  TOY_DATA_DIR_PATH now is $TOY_DATA_DIR_PATH"
 ./reduce_size.sh  --data_path $TOY_DATA_DIR_PATH
 
 
-./run_glue.sh
+#./run_glue.sh
+./run_tests.sh
 

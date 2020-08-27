@@ -45,7 +45,7 @@ mkdir -p OUTPUT_DIR
 
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
-       python3.6 ../examples/text-classification/run_glue.py $args
+       python3.6 -m unittest ../examples/text-classification/test_examples_mithun_factverification.py 
 else
-       python3 ../examples/text-classification/run_glue.py $args
+       python -m unittest ../examples/text-classification/test_examples_mithun_factverification.py
 fi
