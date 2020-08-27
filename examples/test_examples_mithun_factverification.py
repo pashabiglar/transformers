@@ -80,13 +80,7 @@ class ExamplesTests(unittest.TestCase):
 
         testargs = f"""
             run_glue.py
-            --model_name_or_path bert-base-uncased 
-            --task_name fevercrossdomain 
-            --do_train --do_eval --do_predict 
-            --data_dir ../src/transformers/data/datasets/fever/fevercrossdomain/lex/figerspecific --max_seq_length 128 
-            --per_device_eval_batch_size=16 --per_device_train_batch_size=16 --learning_rate 1e-5 --num_train_epochs 1 
-            --output_dir ./output/fever/fevercrossdomain/lex/figerspecific/bert-base-uncased/128/ --overwrite_output_dir 
-            --weight_decay 0.01 --adam_epsilon 1e-6 --evaluate_during_training --task_type lex --subtask_type figerspecific --machine_to_run_on laptop
+           --model_name_or_path bert-base-cased --task_name fevercrossdomain --do_train --do_eval --do_predict --data_dir ../src/transformers/data/datasets/fever/fevercrossdomain/lex/figerspecific --max_seq_length 128 --per_device_eval_batch_size=16 --per_device_train_batch_size=16 --learning_rate 1e-5 --num_train_epochs 1 --output_dir ./output/fever/fevercrossdomain/lex/figerspecific/bert-base-cased/128/ --overwrite_output_dir --weight_decay 0.01 --adam_epsilon 1e-6 --evaluate_during_training --task_type lex --subtask_type figerspecific --machine_to_run_on laptop
             """.split()
 
         parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
@@ -106,7 +100,7 @@ class ExamplesTests(unittest.TestCase):
             # in hpc (high performance computing server) we test on 100 data points. so the threshold accuracy to check
             # is different in each case
             #(training_args.task_type)+"_"+(training_args.subtask_type)+"_"+str(model_args.model_name_or_path)
-
+            test_case_encountered=False
             if(training_args.machine_to_run_on=="laptop"):
                 if(training_args.task_type=="lex"):
                     if (training_args.subtask_type=="figerspecific"):
@@ -114,12 +108,28 @@ class ExamplesTests(unittest.TestCase):
                             self.assertGreaterEqual(fnc_score_test_partition, 0.025)
                             self.assertGreaterEqual(accuracy_test_partition, 0.0625)
                             self.assertGreaterEqual(accuracy_dev_partition, 0.0625)
+                            test_case_encountered=True
+                        else:
+                            if (model_args.model_name_or_path == "bert-base-cased"):
+                                self.assertGreaterEqual(fnc_score_test_partition, 0.725)
+                                self.assertGreaterEqual(accuracy_test_partition, 0.75)
+                                self.assertGreaterEqual(accuracy_dev_partition, 0.375)
+                                test_case_encountered = True
+                else:
+                    if (training_args.task_type == "delex"):
+                        if (training_args.subtask_type == "figerspecific"):
+                            if (model_args.model_name_or_path == "bert-base-uncased"):
+                                self.assertGreaterEqual(fnc_score_test_partition, 0.1)
+                                self.assertGreaterEqual(accuracy_test_partition, 0.25)
+                                self.assertGreaterEqual(accuracy_dev_partition, 0.125)
+                                test_case_encountered = True
             else:
                 if (training_args.machine_to_run_on == "hpc"):
                     self.assertGreaterEqual(fnc_score_test_partition, 0.75)
-                    self.assertGreaterEqual(accuracy_test_partition, 0.75)
                     self.assertGreaterEqual(accuracy_dev_partition, 0.75)
 
+
+            assert test_case_encountered is True
             #todo: run for 100 data points. find good accuracy and fnc score numbers and change from 0.75. do the same for  multiple epochs
 
     def test_run_language_modeling(self):

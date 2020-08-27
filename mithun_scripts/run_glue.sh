@@ -40,7 +40,7 @@ echo "data_dir is $DATA_DIR"
 echo $args
 
 
-
+exit
 
 mkdir -p OUTPUT_DIR
 
