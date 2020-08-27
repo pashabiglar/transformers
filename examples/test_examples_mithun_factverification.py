@@ -105,10 +105,15 @@ class ExamplesTests(unittest.TestCase):
             # check if the training meets minimum accuracy. note that in laptop we run on a toy data set of size 16 and
             # in hpc (high performance computing server) we test on 100 data points. so the threshold accuracy to check
             # is different in each case
+            #(training_args.task_type)+"_"+(training_args.subtask_type)+"_"+str(model_args.model_name_or_path)
+
             if(training_args.machine_to_run_on=="laptop"):
-                self.assertGreaterEqual(fnc_score_test_partition, 0.025)
-                self.assertGreaterEqual(accuracy_test_partition, 0.0625)
-                self.assertGreaterEqual(accuracy_dev_partition, 0.0625)
+                if(training_args.task_type=="lex"):
+                    if (training_args.subtask_type=="figerspecific"):
+                        if (model_args.model_name_or_path=="bert-base-uncased"):
+                            self.assertGreaterEqual(fnc_score_test_partition, 0.025)
+                            self.assertGreaterEqual(accuracy_test_partition, 0.0625)
+                            self.assertGreaterEqual(accuracy_dev_partition, 0.0625)
             else:
                 if (training_args.machine_to_run_on == "hpc"):
                     self.assertGreaterEqual(fnc_score_test_partition, 0.75)
