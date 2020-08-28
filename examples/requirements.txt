@@ -14,4 +14,5 @@ elasticsearch
 pandas
 nlp
 tensorflow
+pytest
 

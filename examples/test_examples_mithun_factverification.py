@@ -27,7 +27,7 @@ from transformers import (
 from typing import Optional
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
 
-print("reaching here at 1")
+import pytest
 
 SRC_DIRS = [
     os.path.join(os.path.dirname(__file__), dirname)
@@ -71,8 +71,18 @@ class ModelArguments:
     )
 
 
-class ExamplesTests(unittest.TestCase):
+class ExamplesTests():
     def test_run_glue(self):
+        parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
+        print(f"value of sys.argv is {sys.argv}")
+
+        sys.exit(1)
+        if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
+            # If we pass only one argument to the script and it's the path to a json file,
+            # let's parse it to get our arguments.
+            model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
+        else:
+            model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
         stream_handler = logging.StreamHandler(sys.stdout)
         logger.addHandler(stream_handler)
@@ -82,7 +92,7 @@ class ExamplesTests(unittest.TestCase):
             run_glue.py
            --model_name_or_path bert-base-cased --task_name fevercrossdomain --do_train --do_eval --do_predict --data_dir ../src/transformers/data/datasets/fever/fevercrossdomain/lex/figerspecific/toydata/ --max_seq_length 128 --per_device_eval_batch_size=16 --per_device_train_batch_size=16 --learning_rate 1e-5 --num_train_epochs 1 --output_dir ./output/fever/fevercrossdomain/lex/figerspecific/bert-base-cased/128/ --overwrite_output_dir --weight_decay 0.01 --adam_epsilon 1e-6 --evaluate_during_training --task_type lex --subtask_type figerspecific --machine_to_run_on laptop --overwrite_cache
             """.split()
-        parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
+
 
         model_args, data_args, training_args = parser.parse_args_into_dataclasses(args=testargs[1:len(testargs)])
 
@@ -104,58 +114,58 @@ class ExamplesTests(unittest.TestCase):
                 if(training_args.task_type=="lex"):
                     if (training_args.subtask_type=="figerspecific"):
                         if (model_args.model_name_or_path=="bert-base-uncased"):
-                            self.assertEqual(fnc_score_test_partition, 0.025)
-                            self.assertEqual(accuracy_test_partition, 0.0625)
-                            self.assertEqual(accuracy_dev_partition, 0.0625)
+                            assert(fnc_score_test_partition, 0.025)
+                            assert(accuracy_test_partition, 0.0625)
+                            assert(accuracy_dev_partition, 0.0625)
                             test_case_encountered=True
                         else:
                             if (model_args.model_name_or_path == "bert-base-cased"):
-                                self.assertEqual(fnc_score_test_partition, 0.725)
-                                self.assertEqual(accuracy_test_partition, 0.75)
-                                self.assertEqual(accuracy_dev_partition, 0.375)
+                                assert(fnc_score_test_partition, 0.725)
+                                assert(accuracy_test_partition, 0.75)
+                                assert(accuracy_dev_partition, 0.375)
                                 test_case_encountered = True
                 else:
                     if (training_args.task_type == "delex"):
                         if (training_args.subtask_type == "figerspecific"):
                             if (model_args.model_name_or_path == "bert-base-uncased"):
-                                self.assertEqual(fnc_score_test_partition, 0.1)
-                                self.assertEqual(accuracy_test_partition, 0.25)
-                                self.assertEqual(accuracy_dev_partition, 0.125)
+                                assert(fnc_score_test_partition, 0.1)
+                                assert(accuracy_test_partition, 0.25)
+                                assert(accuracy_dev_partition, 0.125)
                                 test_case_encountered = True
                             else:
                                 if (model_args.model_name_or_path == "bert-base-cased"):
-                                    self.assertEqual(fnc_score_test_partition, 0.225)
-                                    self.assertEqual(accuracy_test_partition, 0.5)
-                                    self.assertEqual(accuracy_dev_partition, 0.125)
+                                    assert(fnc_score_test_partition, 0.225)
+                                    assert(accuracy_test_partition, 0.5)
+                                    assert(accuracy_dev_partition, 0.125)
                                     test_case_encountered = True
             else:
                 if (training_args.machine_to_run_on == "hpc"):
                     if (training_args.task_type == "lex"):
                         if (training_args.subtask_type == "figerspecific"):
                             if (model_args.model_name_or_path == "bert-base-uncased"):
-                                self.assertEqual(fnc_score_test_partition, 0.025)
-                                self.assertEqual(accuracy_test_partition, 0.0625)
-                                self.assertEqual(accuracy_dev_partition, 0.0625)
+                                assert(fnc_score_test_partition, 0.025)
+                                assert(accuracy_test_partition, 0.0625)
+                                assert(accuracy_dev_partition, 0.0625)
                                 test_case_encountered = True
                             else:
                                 if (model_args.model_name_or_path == "bert-base-cased"):
-                                    self.assertEqual(fnc_score_test_partition, 0.5748)
-                                    self.assertEqual(accuracy_test_partition, 0.6565)
-                                    self.assertEqual(accuracy_dev_partition, 0.6565)
+                                    assert(fnc_score_test_partition, 0.5748)
+                                    assert(accuracy_test_partition, 0.6565)
+                                    assert(accuracy_dev_partition, 0.6565)
                                     test_case_encountered = True
                     else:
                         if (training_args.task_type == "delex"):
                             if (training_args.subtask_type == "figerspecific"):
                                 if (model_args.model_name_or_path == "bert-base-uncased"):
-                                    self.assertEqual(fnc_score_test_partition, 0.1)
-                                    self.assertEqual(accuracy_test_partition, 0.25)
-                                    self.assertEqual(accuracy_dev_partition, 0.125)
+                                    assert(fnc_score_test_partition, 0.1)
+                                    assert(accuracy_test_partition, 0.25)
+                                    assert(accuracy_dev_partition, 0.125)
                                     test_case_encountered = True
                                 else:
                                     if (model_args.model_name_or_path == "bert-base-cased"):
-                                        self.assertEqual(fnc_score_test_partition, 0.225)
-                                        self.assertEqual(accuracy_test_partition, 0.5)
-                                        self.assertEqual(accuracy_dev_partition, 0.125)
+                                        assert(fnc_score_test_partition, 0.225)
+                                        assert(accuracy_test_partition, 0.5)
+                                        assert(accuracy_dev_partition, 0.125)
                                         test_case_encountered = True
 
 
@@ -166,3 +176,8 @@ class ExamplesTests(unittest.TestCase):
             sys.exit(1)
             #todo: run for 100 data points. find good accuracy and fnc score numbers and change from 0.75. do the same for  multiple epochs
 
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        ExamplesTests.commandline = sys.argv.pop()
+
+    unittest.main()
