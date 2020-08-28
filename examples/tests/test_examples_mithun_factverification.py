@@ -31,21 +31,20 @@ import pytest
 
 SRC_DIRS = [
     os.path.join(os.path.dirname(__file__), dirname)
-    for dirname in ["text-generation", "text-classification", "language-modeling", "question-answering"]
+    for dirname in ["text-generation", "../text-classification", "language-modeling", "question-answering"]
 ]
 sys.path.extend(SRC_DIRS)
 
 if SRC_DIRS is not None:
-    import run_generation
+
     import run_glue
-    import run_language_modeling
-    import run_squad
 
 logging.basicConfig(level=logging.DEBUG)
 
 logger = logging.getLogger()
 
 def get_setup_file():
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-f")
     args = parser.parse_args()
@@ -71,18 +70,19 @@ class ModelArguments:
     )
 
 
-class ExamplesTests():
-    def test_run_glue(self):
+
+def test_run_glue():
+
         parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
         print(f"value of sys.argv is {sys.argv}")
 
-        sys.exit(1)
-        if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
-            # If we pass only one argument to the script and it's the path to a json file,
-            # let's parse it to get our arguments.
-            model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
-        else:
-            model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+
+        # if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
+        #     # If we pass only one argument to the script and it's the path to a json file,
+        #     # let's parse it to get our arguments.
+        #     model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
+        # else:
+        #     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
         stream_handler = logging.StreamHandler(sys.stdout)
         logger.addHandler(stream_handler)
@@ -114,58 +114,70 @@ class ExamplesTests():
                 if(training_args.task_type=="lex"):
                     if (training_args.subtask_type=="figerspecific"):
                         if (model_args.model_name_or_path=="bert-base-uncased"):
-                            assert(fnc_score_test_partition, 0.025)
-                            assert(accuracy_test_partition, 0.0625)
-                            assert(accuracy_dev_partition, 0.0625)
+                            assert fnc_score_test_partition==0.025
+                            assert accuracy_test_partition == 0.0625
+                            assert accuracy_dev_partition == 0.0625
+
                             test_case_encountered=True
                         else:
                             if (model_args.model_name_or_path == "bert-base-cased"):
-                                assert(fnc_score_test_partition, 0.725)
-                                assert(accuracy_test_partition, 0.75)
-                                assert(accuracy_dev_partition, 0.375)
+                                assert fnc_score_test_partition == 0.725
+                                assert accuracy_test_partition == 0.75
+                                assert accuracy_dev_partition == 0.375
+
+
                                 test_case_encountered = True
                 else:
                     if (training_args.task_type == "delex"):
                         if (training_args.subtask_type == "figerspecific"):
                             if (model_args.model_name_or_path == "bert-base-uncased"):
-                                assert(fnc_score_test_partition, 0.1)
-                                assert(accuracy_test_partition, 0.25)
-                                assert(accuracy_dev_partition, 0.125)
+                                assert fnc_score_test_partition == 0.1
+                                assert accuracy_test_partition == 0.25
+                                assert accuracy_dev_partition == 0.125
+
+
+
                                 test_case_encountered = True
                             else:
                                 if (model_args.model_name_or_path == "bert-base-cased"):
-                                    assert(fnc_score_test_partition, 0.225)
-                                    assert(accuracy_test_partition, 0.5)
-                                    assert(accuracy_dev_partition, 0.125)
+                                    assert fnc_score_test_partition == 0.225
+                                    assert accuracy_test_partition == 0.5
+                                    assert accuracy_dev_partition == 0.125
+
+
                                     test_case_encountered = True
             else:
                 if (training_args.machine_to_run_on == "hpc"):
                     if (training_args.task_type == "lex"):
                         if (training_args.subtask_type == "figerspecific"):
                             if (model_args.model_name_or_path == "bert-base-uncased"):
-                                assert(fnc_score_test_partition, 0.025)
-                                assert(accuracy_test_partition, 0.0625)
-                                assert(accuracy_dev_partition, 0.0625)
+                                assert fnc_score_test_partition == 0.025
+                                assert accuracy_test_partition == 0.0625
+                                assert accuracy_dev_partition == 0.0625
+
                                 test_case_encountered = True
                             else:
                                 if (model_args.model_name_or_path == "bert-base-cased"):
-                                    assert(fnc_score_test_partition, 0.5748)
-                                    assert(accuracy_test_partition, 0.6565)
-                                    assert(accuracy_dev_partition, 0.6565)
+                                    assert fnc_score_test_partition == 0.5748
+                                    assert accuracy_test_partition == 0.6565
+                                    assert accuracy_dev_partition == 0.6565
+
                                     test_case_encountered = True
                     else:
                         if (training_args.task_type == "delex"):
                             if (training_args.subtask_type == "figerspecific"):
                                 if (model_args.model_name_or_path == "bert-base-uncased"):
-                                    assert(fnc_score_test_partition, 0.1)
-                                    assert(accuracy_test_partition, 0.25)
-                                    assert(accuracy_dev_partition, 0.125)
+                                    assert fnc_score_test_partition == 0.1
+                                    assert accuracy_test_partition == 0.25
+                                    assert accuracy_dev_partition == 0.125
+
                                     test_case_encountered = True
                                 else:
                                     if (model_args.model_name_or_path == "bert-base-cased"):
-                                        assert(fnc_score_test_partition, 0.225)
-                                        assert(accuracy_test_partition, 0.5)
-                                        assert(accuracy_dev_partition, 0.125)
+                                        assert fnc_score_test_partition == 0.1
+                                        assert accuracy_test_partition == 0.25
+                                        assert accuracy_dev_partition == 0.125
+
                                         test_case_encountered = True
 
 
@@ -175,9 +187,3 @@ class ExamplesTests():
             logger.info("done with fact verification related testing . going to exit")
             sys.exit(1)
             #todo: run for 100 data points. find good accuracy and fnc score numbers and change from 0.75. do the same for  multiple epochs
-
-if __name__ == "__main__":
-    if len(sys.argv) > 1:
-        ExamplesTests.commandline = sys.argv.pop()
-
-    unittest.main()
