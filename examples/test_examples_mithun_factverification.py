@@ -160,64 +160,9 @@ class ExamplesTests(unittest.TestCase):
 
 
             assert test_case_encountered is True
+
+
+            logger.info("done with fact verification related testing . going to exit")
+            sys.exit(1)
             #todo: run for 100 data points. find good accuracy and fnc score numbers and change from 0.75. do the same for  multiple epochs
 
-    def test_run_language_modeling(self):
-        stream_handler = logging.StreamHandler(sys.stdout)
-        logger.addHandler(stream_handler)
-        # TODO: switch to smaller model like sshleifer/tiny-distilroberta-ba`se
-
-        testargs = """
-            run_language_modeling.py
-            --model_name_or_path distilroberta-base
-            --model_type roberta
-            --mlm
-            --line_by_line
-            --train_data_file ./tests/fixtures/sample_text.txt
-            --eval_data_file ./tests/fixtures/sample_text.txt
-            --output_dir ./tests/fixtures/tests_samples/temp_dir
-            --overwrite_output_dir
-            --do_train
-            --do_eval
-            --num_train_epochs=1
-            --no_cuda
-            """.split()
-        with patch.object(sys, "argv", testargs):
-            result = run_language_modeling.main()
-            self.assertLess(result["perplexity"], 35)
-
-    def test_run_squad(self):
-        stream_handler = logging.StreamHandler(sys.stdout)
-        logger.addHandler(stream_handler)
-
-        testargs = """
-            run_squad.py
-            --model_type=distilbert
-            --model_name_or_path=sshleifer/tiny-distilbert-base-cased-distilled-squad
-            --data_dir=./tests/fixtures/tests_samples/SQUAD
-            --output_dir=./tests/fixtures/tests_samples/temp_dir
-            --max_steps=10
-            --warmup_steps=2
-            --do_train
-            --do_eval
-            --version_2_with_negative
-            --learning_rate=2e-4
-            --per_gpu_train_batch_size=2
-            --per_gpu_eval_batch_size=1
-            --overwrite_output_dir
-            --seed=42
-        """.split()
-        with patch.object(sys, "argv", testargs):
-            result = run_squad.main()
-            self.assertGreaterEqual(result["f1"], 25)
-            self.assertGreaterEqual(result["exact"], 21)
-
-    def test_generation(self):
-        stream_handler = logging.StreamHandler(sys.stdout)
-        logger.addHandler(stream_handler)
-
-        testargs = ["run_generation.py", "--prompt=Hello", "--length=10", "--seed=42"]
-        model_type, model_name = ("--model_type=gpt2", "--model_name_or_path=sshleifer/tiny-gpt2")
-        with patch.object(sys, "argv", testargs + [model_type, model_name]):
-            result = run_generation.main()
-            self.assertGreaterEqual(len(result[0]), 10)
