@@ -73,30 +73,14 @@ def test_run_glue(name):
         name_split = name.split()
         parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
         model_args, data_args, training_args = parser.parse_args_into_dataclasses(args=name_split)
-        print(f"training_args.toy_data_dir_path = {training_args.toy_data_dir_path }")
-        sys.exit(1)
+        #print(f"training_args.toy_data_dir_path = {training_args.toy_data_dir_path }")
+        print(f"training_args.data_dir = {data_args.data_dir }")
 
-        # if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
-        #     # If we pass only one argument to the script and it's the path to a json file,
-        #     # let's parse it to get our arguments.
-        #     model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
-        # else:
         #     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
         stream_handler = logging.StreamHandler(sys.stdout)
         logger.addHandler(stream_handler)
 
-
-        # name = f"""
-        #     run_glue.py
-        #    --model_name_or_path bert-base-cased --task_name fevercrossdomain --do_train --do_eval --do_predict --data_dir ../src/transformers/data/datasets/fever/fevercrossdomain/lex/figerspecific/toydata/ --max_seq_length 128 --per_device_eval_batch_size=16 --per_device_train_batch_size=16 --learning_rate 1e-5 --num_train_epochs 1 --output_dir ./output/fever/fevercrossdomain/lex/figerspecific/bert-base-cased/128/ --overwrite_output_dir --weight_decay 0.01 --adam_epsilon 1e-6 --evaluate_during_training --task_type lex --subtask_type figerspecific --machine_to_run_on laptop --overwrite_cache
-        #     """.split()
-
-
-        #model_args, data_args, training_args = parser.parse_args_into_dataclasses(args=name[1:len(name)])
-
-        #with patch.object(sys, "argv", name):
-            #Note: assumption here that the test will be run for 1 epoch only. ELse have to return the best dev and test partition scores
         dev_partition_evaluation_result,test_partition_evaluation_result = run_glue.run_training( model_args, data_args, training_args)
         accuracy_dev_partition = dev_partition_evaluation_result['eval_acc']
         fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['fnc_score']
