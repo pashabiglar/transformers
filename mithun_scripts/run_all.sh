@@ -29,8 +29,10 @@ if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_dev/output"
         export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_dev/data"
 else
-        export DATA_DIR_BASE="../src/transformers/data/datasets"
-        export OUTPUT_DIR_BASE="./output"
+        #for laptop
+        export DATA_DIR_BASE="/Users/mordor/research/huggingface/src/transformers/data/datasets"
+        export OUTPUT_DIR_BASE="/Users/mordor/research/huggingface/mithun_scripts/output"
+        export PYTHONPATH="/Users/mordor/research/huggingface/src"
 fi
 
 echo "MACHINE_TO_RUN_ON=$MACHINE_TO_RUN_ON"
@@ -49,10 +51,9 @@ export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE"
 
 export TOY_DATA_DIR="toydata"
 export TOY_DATA_DIR_PATH="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE/$TOY_DATA_DIR/"
-export PYTHONPATH="../src"
+#export PYTHONPATH="../src"
 
-#for laptop
-#export PYTHONPATH="/Users/mordor/research/huggingface/src"
+
 export BERT_MODEL_NAME="bert-base-cased" #options include things like [bert-base-uncased,bert-base-cased] etc. refer src/transformers/tokenization_bert.py for more.
 export MAX_SEQ_LENGTH="128"
 export OUTPUT_DIR="$OUTPUT_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE/$BERT_MODEL_NAME/$MAX_SEQ_LENGTH/"
@@ -69,14 +70,25 @@ if [ $EPOCHS = "1" ]; then
         rm -rf $DATA_DIR
         ./get_fever_fnc_data.sh
         ./convert_to_mnli_format.sh
+        #create a small part of data as toy data. this will be used to run regresssion tests before the actual run starts
+        ./reduce_size.sh  --data_path $TOY_DATA_DIR_PATH
 fi
 
 echo "done with data download  TOY_DATA_DIR_PATH now is $TOY_DATA_DIR_PATH"
 
-#create a small part of data as toy data. this will be used to run regresssion tests before the actual run starts
-./reduce_size.sh  --data_path $TOY_DATA_DIR_PATH
+
+#use a smaller toy data to test on laptop
+if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
+        DATA_DIR=$TOY_DATA_DIR_PATH
+fi
+
+
+export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME      --do_train   --do_eval   --do_predict    \
+--data_dir $DATA_DIR    --max_seq_length $MAX_SEQ_LENGTH      --per_device_eval_batch_size=16        --per_device_train_batch_size=16       \
+--learning_rate 1e-5      --num_train_epochs $EPOCHS     --output_dir $OUTPUT_DIR --overwrite_output_dir  \
+--weight_decay 0.01 --adam_epsilon 1e-6  --evaluate_during_training \
+--task_type $TASK_TYPE --subtask_type $SUB_TASK_TYPE --machine_to_run_on $MACHINE_TO_RUN_ON --toy_data_dir_path $TOY_DATA_DIR_PATH"
 
 
 #./run_glue.sh
 ./run_tests.sh
-

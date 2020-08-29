@@ -102,6 +102,9 @@ def main():
             f"Output directory ({training_args.output_dir}) already exists and is not empty. Use --overwrite_output_dir to overcome."
         )
 
+    run_training(model_args, data_args, training_args)
+
+def run_training(model_args, data_args, training_args):
     # Setup logging
     git_details=get_git_info()
 

@@ -258,6 +258,10 @@ class TrainingArguments:
     machine_to_run_on: Optional[str] = field(default="hpc", metadata={
         "help": "machines to test on options include [hpc,clara, laptop]."})
 
+    toy_data_dir_path: Optional[str] = field(default="hpc", metadata={
+        "help": "this is the folder where a smaller version of the data is kept. this data is used for testing purposes."})
+
+
 
     def __iter__(self):
         ''' Returns the Iterator object '''
