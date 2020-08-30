@@ -25,7 +25,7 @@ from transformers import (
 )
 from typing import Optional
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
-
+import git
 
 
 SRC_DIRS = [
@@ -68,15 +68,53 @@ class ModelArguments:
         default=None, metadata={"help": "Where do you want to store the pretrained models downloaded from s3"}
     )
 
+def get_git_info():
+    repo = git.Repo(search_parent_directories=True)
+
+    repo_sha=str(repo.head.object.hexsha),
+    repo_short_sha= str(repo.git.rev_parse(repo_sha, short=6))
+
+    repo_infos = {
+        "repo_id": str(repo),
+        "repo_sha": str(repo.head.object.hexsha),
+        "repo_branch": str(repo.active_branch),
+        "repo_short_sha" :repo_short_sha
+    }
+    return repo_infos
+
+logger = logging.getLogger(__name__)
+
 
 def test_run_glue(name):
+        # Setup logging
+
+
         name_split = name.split()
         parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
         model_args, data_args, training_args = parser.parse_args_into_dataclasses(args=name_split)
-        #print(f"training_args.toy_data_dir_path = {training_args.toy_data_dir_path }")
-        print(f"training_args.data_dir = {data_args.data_dir }")
 
-        #     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+        git_details = get_git_info()
+
+        log_file_name = git_details['repo_short_sha'] + "_" + (training_args.task_type) + "_" + (
+            training_args.subtask_type) + "_" + str(model_args.model_name_or_path).replace("-",
+                                                                                           "_") + "_" + data_args.task_name + ".log"
+        logging.basicConfig(
+            format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
+            datefmt="%m/%d/%Y %H:%M:%S",
+            level=logging.INFO if training_args.local_rank in [-1, 0] else logging.WARN,
+            filename=log_file_name,
+            filemode='w'
+        )
+        logging.getLogger().addHandler(logging.StreamHandler(sys.stdout))
+        logger.warning(
+            "Process rank: %s, device: %s, n_gpu: %s, distributed training: %s, 16-bits training: %s",
+            training_args.local_rank,
+            training_args.device,
+            training_args.n_gpu,
+            bool(training_args.local_rank != -1),
+            training_args.fp16,
+        )
+        logger.info("Training/evaluation parameters %s", training_args)
 
         stream_handler = logging.StreamHandler(sys.stdout)
         logger.addHandler(stream_handler)
