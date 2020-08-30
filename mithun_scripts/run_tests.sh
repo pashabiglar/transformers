@@ -36,7 +36,7 @@ echo $args
 
 
 mkdir -p OUTPUT_DIR
-
+echo $PYTHONPATH
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         cd ../examples/tests/
