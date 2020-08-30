@@ -39,12 +39,11 @@ mkdir -p OUTPUT_DIR
 
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
-        cd ../examples/
-        python3.6 -m unittest test_examples_mithun_factverification.py $args
+        cd ../examples/tests/
+        pytest -s test_examples_mithun_factverification.py --name "$args"
+
 else
         cd ../examples/tests/
-        #python test_examples_mithun_factverification.py  $args
-        #pytest test_examples_mithun_factverification.py
         pytest -s test_examples_mithun_factverification.py --name "$args"
 
 fi
