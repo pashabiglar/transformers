@@ -187,8 +187,8 @@ def test_run_glue(name):
                                 assert accuracy_test_partition > 0.6
                                 assert accuracy_test_partition < 0.7
 
-                                assert accuracy_dev_partition > 0.6
-                                assert accuracy_dev_partition < 0.7
+                                assert accuracy_dev_partition > 0.3
+                                assert accuracy_dev_partition < 0.4
 
                                 test_case_encountered = True
                 else:
