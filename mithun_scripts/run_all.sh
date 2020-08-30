@@ -25,6 +25,16 @@ fi
 
 
 
+if [ $# -gt 3 ]; then
+if [ $5 == "--use_toy_data" ]; then
+        export USE_TOY_DATA=$6
+fi
+fi
+
+
+
+
+
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_dev/output"
         export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_dev/data"
@@ -83,11 +93,22 @@ if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
 fi
 
 
+#use a smaller toy data to test
+
+if  [ "$USE_TOY_DATA" = true ]; then
+        DATA_DIR=$TOY_DATA_DIR_PATH
+        echo "found USE_TOY_DATA is true"
+
+fi
+
+
+
+
 export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME      --do_train   --do_eval   --do_predict    \
 --data_dir $DATA_DIR    --max_seq_length $MAX_SEQ_LENGTH      --per_device_eval_batch_size=16        --per_device_train_batch_size=16       \
 --learning_rate 1e-5      --num_train_epochs $EPOCHS     --output_dir $OUTPUT_DIR --overwrite_output_dir  \
 --weight_decay 0.01 --adam_epsilon 1e-6  --evaluate_during_training \
---task_type $TASK_TYPE --subtask_type $SUB_TASK_TYPE --machine_to_run_on $MACHINE_TO_RUN_ON --toy_data_dir_path $TOY_DATA_DIR_PATH"
+--task_type $TASK_TYPE --subtask_type $SUB_TASK_TYPE --machine_to_run_on $MACHINE_TO_RUN_ON --toy_data_dir_path $TOY_DATA_DIR_PATH "
 
 
 #./run_glue.sh
