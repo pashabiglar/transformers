@@ -174,7 +174,8 @@ def test_run_glue(name):
                         if (model_args.model_name_or_path == "bert-base-uncased"):
                             assert fnc_score_test_partition > 0.0625
                             assert fnc_score_test_partition < 0.07
-                            assert accuracy_test_partition ==0.025
+                            assert accuracy_test_partition > 0.13
+                            assert accuracy_test_partition < 0.14
                             assert accuracy_dev_partition == 0.0625
 
                             test_case_encountered = True
