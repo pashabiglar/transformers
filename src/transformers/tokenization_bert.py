@@ -38,7 +38,7 @@ PRETRAINED_VOCAB_FILES_MAP = {
         #"bert-base-uncased": "https://storage.googleapis.com/fact_verification_mithun_files/bert_related/bert_base_uncased/vocab.txt",
         #"bert-base-cased": "https://storage.googleapis.com/fact_verification_mithun_files/bert_related/bert_base_cased_with_c1_fix/bert-base-cased_with_bothUppercaseC1andhashC1.txt",
         "bert-base-uncased": "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-vocab.txt",
-        #"bert-base-cased": "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-cased-vocab.txt",
+        "bert-base-cased": "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-cased-vocab.txt",
 
 
         "bert-large-uncased": "https://s3.amazonaws.com/models.huggingface.co/bert/bert-large-uncased-vocab.txt",

@@ -131,93 +131,123 @@ def test_run_glue(name):
         # is different in each case
         #(training_args.task_type)+"_"+(training_args.subtask_type)+"_"+str(model_args.model_name_or_path)
         test_case_encountered=False
-        if(training_args.machine_to_run_on=="laptop"):
-            if(training_args.task_type=="lex"):
-                if (training_args.subtask_type=="figerspecific"):
-                    if (model_args.model_name_or_path=="bert-base-uncased"):
-                        assert fnc_score_test_partition==0.025
-                        assert accuracy_test_partition == 0.0625
-                        assert accuracy_dev_partition == 0.0625
 
-                        test_case_encountered=True
-                    else:
-                        if (model_args.model_name_or_path == "bert-base-cased"):
-                            assert fnc_score_test_partition == 0.725
-                            assert accuracy_test_partition == 0.75
-                            assert accuracy_dev_partition == 0.375
+        test_partition_results =  "test_partition_values.txt"
+        # with open(test_partition_results, "w") as writer:
+        #     writer.write(f"parameters \t fnc_score_test_partition \t accuracy_test_partition \t accuracy_dev_partition")
+        #     writer.close()
 
 
-                            test_case_encountered = True
-            else:
-                if (training_args.task_type == "delex"):
-                    if (training_args.subtask_type == "figerspecific"):
-                        if (model_args.model_name_or_path == "bert-base-uncased"):
-                            assert fnc_score_test_partition == 0.1
-                            assert accuracy_test_partition == 0.25
-                            assert accuracy_dev_partition == 0.125
+        parameters=training_args.machine_to_run_on+"_"+training_args.task_type+"_"+training_args.subtask_type+"_"+str(model_args.model_name_or_path).replace("-","_")
+
+        print(parameters)
+
+        with open(test_partition_results, "a") as writer:
+            writer.write("\n")
+
+            if(training_args.machine_to_run_on=="laptop"):
+                if(training_args.task_type=="lex"):
+                    if (training_args.subtask_type=="figerspecific"):
+                        if (model_args.model_name_or_path=="bert-base-uncased"):
+                            writer.write(
+                                f"{parameters} \t {fnc_score_test_partition} \t {accuracy_test_partition} \t {accuracy_dev_partition}")
+
+                            assert fnc_score_test_partition==0.025
+                            assert accuracy_test_partition == 0.0625
+                            assert accuracy_dev_partition == 0.0625
 
 
 
-                            test_case_encountered = True
+
+                            test_case_encountered=True
                         else:
                             if (model_args.model_name_or_path == "bert-base-cased"):
-                                assert fnc_score_test_partition == 0.225
-                                assert accuracy_test_partition == 0.5
-                                assert accuracy_dev_partition == 0.125
+                                writer.write(
+                                    f"{parameters} \t {fnc_score_test_partition} \t {accuracy_test_partition} \t {accuracy_dev_partition}")
+                                assert fnc_score_test_partition == 0.725
+                                assert accuracy_test_partition == 0.75
+                                assert accuracy_dev_partition == 0.375
 
-
-                                test_case_encountered = True
-        else:
-            if (training_args.machine_to_run_on == "hpc"):
-                if (training_args.task_type == "lex"):
-                    if (training_args.subtask_type == "figerspecific"):
-                        if (model_args.model_name_or_path == "bert-base-uncased"):
-                            with open("test_partition values", "a") as writer:
-                                writer.write(f"fnc_score_test_partition:{fnc_score_test_partition}")
-                                writer.write(f"accuracy_test_partition:{accuracy_test_partition}")
-                                writer.write(f"accuracy_dev_partition:{accuracy_dev_partition}")
-                                writer.close()
-
-
-                            assert fnc_score_test_partition > 0.0625
-                            assert fnc_score_test_partition < 0.07
-                            assert accuracy_test_partition > 0.13
-                            assert accuracy_test_partition < 0.14
-                            assert accuracy_dev_partition > 0.13
-                            assert accuracy_dev_partition < 0.14
-                            
-
-                            test_case_encountered = True
-                        else:
-                            if (model_args.model_name_or_path == "bert-base-cased"):
-
-                                #exact value has way too many precision points
-                                assert fnc_score_test_partition > 0.57
-                                assert fnc_score_test_partition < 0.58
-
-                                assert accuracy_test_partition > 0.6
-                                assert accuracy_test_partition < 0.7
-
-                                assert accuracy_dev_partition > 0.3
-                                assert accuracy_dev_partition < 0.4
 
                                 test_case_encountered = True
                 else:
                     if (training_args.task_type == "delex"):
                         if (training_args.subtask_type == "figerspecific"):
                             if (model_args.model_name_or_path == "bert-base-uncased"):
+                                writer.write(
+                                    f"{parameters} \t {fnc_score_test_partition} \t {accuracy_test_partition} \t {accuracy_dev_partition}")
                                 assert fnc_score_test_partition == 0.1
                                 assert accuracy_test_partition == 0.25
                                 assert accuracy_dev_partition == 0.125
 
+
                                 test_case_encountered = True
                             else:
                                 if (model_args.model_name_or_path == "bert-base-cased"):
+                                    writer.write(
+                                        f"{parameters} \t {fnc_score_test_partition} \t {accuracy_test_partition} \t {accuracy_dev_partition}")
+                                    assert fnc_score_test_partition == 0.225
+                                    assert accuracy_test_partition == 0.5
+                                    assert accuracy_dev_partition == 0.125
+
+
+                                    test_case_encountered = True
+            else:
+                if (training_args.machine_to_run_on == "hpc"):
+                    if (training_args.task_type == "lex"):
+                        if (training_args.subtask_type == "figerspecific"):
+                            if (model_args.model_name_or_path == "bert-base-uncased"):
+                                writer.write(
+                                    f"{parameters} \t {fnc_score_test_partition} \t {accuracy_test_partition} \t {accuracy_dev_partition}")
+
+
+
+
+                                assert fnc_score_test_partition > 0.0625
+                                assert fnc_score_test_partition < 0.07
+                                assert accuracy_test_partition > 0.13
+                                assert accuracy_test_partition < 0.14
+                                assert accuracy_dev_partition > 0.13
+                                assert accuracy_dev_partition < 0.14
+
+
+                                test_case_encountered = True
+                            else:
+                                if (model_args.model_name_or_path == "bert-base-cased"):
+                                    writer.write(
+                                        f"{parameters} \t {fnc_score_test_partition} \t {accuracy_test_partition} \t {accuracy_dev_partition}")
+
+                                    #exact value has way too many precision points
+                                    assert fnc_score_test_partition > 0.57
+                                    assert fnc_score_test_partition < 0.58
+
+                                    assert accuracy_test_partition > 0.6
+                                    assert accuracy_test_partition < 0.7
+
+                                    assert accuracy_dev_partition > 0.3
+                                    assert accuracy_dev_partition < 0.4
+
+                                    test_case_encountered = True
+                    else:
+                        if (training_args.task_type == "delex"):
+                            if (training_args.subtask_type == "figerspecific"):
+                                if (model_args.model_name_or_path == "bert-base-uncased"):
+                                    writer.write(
+                                        f"{parameters} \t {fnc_score_test_partition} \t {accuracy_test_partition} \t {accuracy_dev_partition}")
                                     assert fnc_score_test_partition == 0.1
                                     assert accuracy_test_partition == 0.25
                                     assert accuracy_dev_partition == 0.125
 
                                     test_case_encountered = True
+                                else:
+                                    if (model_args.model_name_or_path == "bert-base-cased"):
+                                        writer.write(
+                                            f"{parameters} \t {fnc_score_test_partition} \t {accuracy_test_partition} \t {accuracy_dev_partition}")
+                                        assert fnc_score_test_partition == 0.1
+                                        assert accuracy_test_partition == 0.25
+                                        assert accuracy_dev_partition == 0.125
+
+                                        test_case_encountered = True
 
 
             assert test_case_encountered is True
