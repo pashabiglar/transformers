@@ -40,10 +40,10 @@ echo $PYTHONPATH
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         cd ../examples/tests/
-        pytest -s test_examples_mithun_factverification.py --name "$args"
+        pytest -s test_examples_mithun_factverification.py
 
 else
         cd ../examples/tests/
-        pytest -s test_examples_mithun_factverification.py --name "$args"
+        pytest -s test_examples_mithun_factverification.py
 
 fi

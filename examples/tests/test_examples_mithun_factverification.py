@@ -13,17 +13,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import configparser
 from dataclasses import dataclass, field
-import argparse
 import logging
 import os
 import sys
-from unittest.mock import patch
+import logging
+import os
+import sys
+from dataclasses import dataclass, field
+from typing import Callable, Dict, Optional
+import git
+import numpy as np
+
+
+from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer, EvalPrediction, GlueDataset
+from transformers import GlueDataTrainingArguments as DataTrainingArguments
+from transformers import (
+    HfArgumentParser,
+    Trainer,
+    TrainingArguments,
+    glue_compute_metrics,
+    glue_output_modes,
+    glue_tasks_num_labels,
+    set_seed,
+)
+import math
 from transformers import (
     HfArgumentParser,
     TrainingArguments,
 )
-from typing import Optional
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
 import git
 
@@ -35,19 +54,13 @@ SRC_DIRS = [
 sys.path.extend(SRC_DIRS)
 
 if SRC_DIRS is not None:
-
     import run_glue
 
 logging.basicConfig(level=logging.DEBUG)
 
 logger = logging.getLogger()
 
-def get_setup_file():
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-f")
-    args = parser.parse_args()
-    return args.f
 
 @dataclass
 class ModelArguments:
@@ -85,13 +98,35 @@ def get_git_info():
 logger = logging.getLogger(__name__)
 
 
-def test_run_glue(name):
+def read_and_merge_config_entries():
+    config = configparser.ConfigParser()
+    config.read('config.py')
+    combined_configs=[]
+    for each_section in config.sections():
+        for (each_key, each_val) in config.items(each_section):
+            #some config entries of type bool just need to exist. doesnt need x=True.
+            # so now have to strip True out, until we findc a way to be able to pass it as bool itself
+            # so if True is a value, append only key
+            if (each_val=="True"):
+                combined_configs.append("--"+each_key)
+            else:
+                combined_configs.append("--" + each_key)
+                combined_configs.append(str(each_val).replace("\"",""))
+    combined_configs_str=" ".join(combined_configs)
+    return combined_configs_str
+
+
+def test_run_glue():
         # Setup logging
 
+        configs=read_and_merge_config_entries()
 
-        name_split = name.split()
+        print(f"value of configs is {configs}")
+
+
+        configs_split = configs.split()
         parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
-        model_args, data_args, training_args = parser.parse_args_into_dataclasses(args=name_split)
+        model_args, data_args, training_args = parser.parse_args_into_dataclasses(args=configs_split)
 
         git_details = get_git_info()
 
@@ -99,7 +134,7 @@ def test_run_glue(name):
             training_args.subtask_type) + "_" + str(model_args.model_name_or_path).replace("-",
                                                                                            "_") + "_" + data_args.task_name + ".log"
         logging.basicConfig(
-            format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
+            format="%(asctime)s - %(levelname)s - %(configs)s -   %(message)s",
             datefmt="%m/%d/%Y %H:%M:%S",
             level=logging.INFO if training_args.local_rank in [-1, 0] else logging.WARN,
             filename=log_file_name,
