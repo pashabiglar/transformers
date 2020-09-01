@@ -100,7 +100,7 @@ logger = logging.getLogger(__name__)
 
 def read_and_merge_config_entries():
     config = configparser.ConfigParser()
-    config.read('config.py')
+    config.read('config_bertuncased.py')
     combined_configs=[]
     for each_section in config.sections():
         for (each_key, each_val) in config.items(each_section):
