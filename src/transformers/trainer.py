@@ -754,19 +754,26 @@ class StudentTeacherTrainer:
             writer.write("")
         #for each epoch
         for epoch in train_iterator:
+            logger.debug("just got inside for epoch in train_iterator")
+
             if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
                 train_dataloader.sampler.set_epoch(epoch)
 
             if is_torch_tpu_available():
+                logger.debug("found that is_torch_tpu_available is true")
+
                 parallel_loader = pl.ParallelLoader(train_dataloader, [self.args.device]).per_device_loader(
                     self.args.device
                 )
                 epoch_iterator = tqdm(parallel_loader, desc="batches", disable=not self.is_local_master())
             else:
+                logger.debug("found that is_torch_tpu_available is false")
                 epoch_iterator = tqdm(train_dataloader, desc="batches", disable=not self.is_local_master())
 
             #for each batch
             for step, (input_lex,input_delex) in enumerate(epoch_iterator):
+
+                logger.debug("just got inside for step in enumerate epoch_iterator. i.e for each batch")
 
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:
@@ -774,12 +781,13 @@ class StudentTeacherTrainer:
                     continue
                 assert input_lex['labels'].tolist()==input_delex['labels'].tolist()
 
-                #this is where they do loss.backward()
+
 
                 #model returns # (loss), logits, (hidden_states), (attentions)
                 tr_loss_lex,outputs_lex = self.get_classification_loss(model_teacher, input_lex, optimizer)
                 tr_loss_delex,outputs_delex = self.get_classification_loss(model_student, input_delex, optimizer)
                 combined_classification_loss=tr_loss_lex+tr_loss_delex
+                logger.debug("finished getting classification loss")
 
 
                 # outputs contains in that order # (loss), logits, (hidden_states), (attentions)-src/transformers/modeling_bert.py
@@ -789,10 +797,13 @@ class StudentTeacherTrainer:
                 combined_loss=combined_classification_loss+consistency_loss
 
                 if self.args.fp16:
+                    logger.info("self.args.fp16 is true")
                     with amp.scale_loss(combined_loss, optimizer) as scaled_loss:
                         scaled_loss.backward()
                 else:
+                    logger.debug("self.args.fp16 is false")
                     combined_loss.backward()
+                    logger.debug("just got done with combined_loss.backward()")
 
                 tr_loss_lex_float+=tr_loss_lex.item()
                 tr_loss_delex_float+=tr_loss_delex.item()
@@ -802,17 +813,20 @@ class StudentTeacherTrainer:
                     len(epoch_iterator) <= self.args.gradient_accumulation_steps
                     and (step + 1) == len(epoch_iterator)
                 ):
+                    logger.debug("got inside if condition for if(step+1. i.e last step in epoch)")
+
                     if self.args.fp16:
                         torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), self.args.max_grad_norm)
                     else:
                         torch.nn.utils.clip_grad_norm_(model_teacher.parameters(), self.args.max_grad_norm)
                         torch.nn.utils.clip_grad_norm_(model_student.parameters(), self.args.max_grad_norm)
-
+                        logger.debug("just done with grad clipping)")
 
                     if is_torch_tpu_available():
                         xm.optimizer_step(optimizer)
                     else:
                         optimizer.step()
+                        logger.debug("just done withn optimixer.step)")
 
                     scheduler.step()
                     model_teacher.zero_grad()
@@ -836,8 +850,8 @@ class StudentTeacherTrainer:
 
                         self.log(logs)
 
-                        if self.args.evaluate_during_training:
-                            self.evaluate()
+                        # if self.args.evaluate_during_training:
+                        #     self.evaluate()
 
                     if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0:
                         # In all cases (even distributed/parallel), self.model is always a reference
@@ -1832,8 +1846,8 @@ class Trainer:
 
                         self.log(logs)
 
-                        if self.args.evaluate_during_training:
-                            self.evaluate()
+                        # if self.args.evaluate_during_training:
+                        #     self.evaluate()
 
                     if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0:
                         # In all cases (even distributed/parallel), self.model is always a reference
