@@ -887,6 +887,10 @@ class StudentTeacherTrainer:
                     epoch_iterator.close()
                     break
 
+            self._intermediate_eval(datasets=self.eval_dataset,
+                                            epoch=epoch, output_eval_file=output_eval_file_path,
+                                            description="dev_partition")
+
             self._intermediate_eval(datasets=self.test_dataset,
                                     epoch=epoch, output_eval_file=output_eval_file_path, description="test_partition")
 
@@ -933,6 +937,7 @@ class StudentTeacherTrainer:
             for k, v in logs.items():
                 if isinstance(v, (int, float)):
                     self.tb_writer.add_scalar(k, v, self.global_step)
+                    log_for_wandb[k] = v
                 else:
                     if isinstance(v, (dict)):
                         for k2, v2 in v.items():
