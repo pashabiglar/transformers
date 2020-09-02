@@ -269,7 +269,6 @@ def main():
 
 
     if training_args.do_train:
-
         if (training_args.do_train_1student_1teacher == True):
             trainer.train_1teacher_1student(
                 model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
