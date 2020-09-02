@@ -543,14 +543,14 @@ class StudentTeacherTrainer:
         assert self.compute_metrics is not None
         # Evaluation
         eval_results = {}
-        dataset = [datasets]
-        for eval_dataset in dataset:
+        datasetss = [datasets]
+        for dataset in datasetss:
             eval_result = None
             if "dev" in description:
-                eval_result = self.evaluate(eval_dataset=eval_dataset)
+                eval_result = self.evaluate(eval_dataset=dataset)
             else:
                 if "test" in description:
-                    eval_result = self.evaluate_on_test_partition(test_dataset=eval_dataset)
+                    eval_result = self.evaluate_on_test_partition(test_dataset=dataset)
             assert eval_result is not None
 
             if self.is_world_master():
@@ -873,9 +873,6 @@ class StudentTeacherTrainer:
                     epoch_iterator.close()
                     break
 
-            self._intermediate_eval(datasets=self.eval_dataset,
-                                    epoch=epoch, output_eval_file=output_eval_file_path,
-                                    description="dev_partition")
             self._intermediate_eval(datasets=self.test_dataset,
                                     epoch=epoch, output_eval_file=output_eval_file_path, description="test_partition")
 
