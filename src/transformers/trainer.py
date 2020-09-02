@@ -1435,11 +1435,9 @@ class Trainer:
         # keep track of model topology and gradients
         if os.getenv("WANDB_WATCH") != "false":
             wandb.watch(
-                self.lex_teacher_model, log=os.getenv("WANDB_WATCH", "gradients"), log_freq=max(100, self.args.logging_steps)
+                self.model, log=os.getenv("WANDB_WATCH", "gradients"), log_freq=max(100, self.args.logging_steps)
             )
-            wandb.watch(
-                self.delex_student_model, log=os.getenv("WANDB_WATCH", "gradients"), log_freq=max(100, self.args.logging_steps)
-            )
+
 
     def num_examples(self, dataloader: DataLoader) -> int:
         """
