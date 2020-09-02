@@ -7,47 +7,6 @@
 
 
 
-
-
-#pick according to which kind of dataset you want to use for  train, dev, test on. Eg: train on fever, test on fnc
-
-#######indomain fever lex
-
-#mkdir -p fever/feverindomain/lex
-#
-#FILE=fever/feverindomain/lex/train.tsv
-#if test -f "$FILE";then
-#    echo "$FILE exists"
-#else
-#    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/in-domain/lex/train.tsv -O $FILE
-#fi
-#
-#FILE=fever/feverindomain/lex/dev.tsv
-#if test -f "$FILE";then
-#    echo "$FILE exists"
-#else
-#    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/in-domain/lex/dev.tsv -O $FILE
-#fi
-
-
-##############in domain fever delex oaner
-#mkdir -p fever/feverindomain/delex
-#
-#FILE=fever/feverindomain/delex/train.tsv
-#if test -f "$FILE";then
-#    echo "$FILE exists"
-#else
-#    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/in-domain/oa/train.tsv -O $FILE
-#fi
-#
-#FILE=fever/feverindomain/delex/dev.tsv
-#if test -f "$FILE";then
-#    echo "$FILE exists"
-#else
-#    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/in-domain/oa/dev.tsv -O $FILE
-#fi
-
-
 #######fevercrossdomain lex (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
 if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] ; then
 
@@ -116,7 +75,7 @@ fi
 ########fevercrossdomain delex where delexicalixation was done with figer-specific technique (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
 if [ "$TASK_TYPE" = "delex" ] && [ "$TASK_NAME" = "fevercrossdomain" ]  && [ "$SUB_TASK_TYPE" = "figerspecific" ]; then
 
-echo "found task type is lex and task name as fever cross domain and sub task type ==figerspecific"
+echo "found task type is delex and task name as fever cross domain and sub task type ==figerspecific"
 echo $DATA_DIR
 mkdir -p $DATA_DIR
 

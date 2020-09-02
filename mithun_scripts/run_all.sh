@@ -29,7 +29,7 @@ if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_master/output"
         export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_master/data"
 else
-        export DATA_DIR_BASE="/Users/mordor/research/huggingface/src/transformers/data/datasets/fever/fevercrossdomain/lex/figerspecific/"
+        export DATA_DIR_BASE="/Users/mordor/research/huggingface/src/transformers/data/datasets"
         export OUTPUT_DIR_BASE="output"
 fi
 
@@ -42,7 +42,7 @@ echo "EPOCHS=$EPOCHS"
 
 export DATASET="fever"
 export basedir="$DATA_DIR_BASE/$DATASET"
-export TASK_TYPE="delex" #options for task type include lex,delex,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both lex and delex folders
+export TASK_TYPE="lex" #options for task type include lex,delex,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both lex and delex folders
 export SUB_TASK_TYPE="figerspecific" #options for TASK_SUB_TYPE (usually used only for TASK_TYPEs :[delex,combined])  include [oa, figerspecific, figerabstract, oass, simplener]
 export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
 export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE"
@@ -55,11 +55,10 @@ echo $OUTPUT_DIR
 
 echo "OUTPUT_DIR=$OUTPUT_DIR"
 
+echo "value of epochs is $EPOCHS"
+echo "value of DATA_DIR is $DATA_DIR"
 
 
-#commenting this on august 1st since downloading data was becoming a pain. due to tokenization issues. i.e after merging with
-#latest code of HF, for some reason tokenization was taking 24+ hours. I decided to reuse the old cahced tokenizations instead of
-#trying to figure out what happened due to merge. PIcking my battles.
 
 #get data only if its 1st epoch
 if [ $EPOCHS = "1" ]; then
@@ -73,6 +72,7 @@ fi
 
 echo "done with data download part if epoch==1. datapath now is $DATA_DIR"
 
+#if you want to run on toy data on hpc also.
 ./reduce_size.sh  --data_path $DATA_DIR
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
