@@ -30,7 +30,7 @@ if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_master/data"
 else
         export DATA_DIR_BASE="/Users/mordor/research/huggingface/src/transformers/data/datasets"
-        export OUTPUT_DIR_BASE="output"
+        export OUTPUT_DIR_BASE="/Users/mordor/research/huggingface/mithun_scripts/output"
 fi
 
 echo "MACHINE_TO_RUN_ON=$MACHINE_TO_RUN_ON"
@@ -42,7 +42,7 @@ echo "EPOCHS=$EPOCHS"
 
 export DATASET="fever"
 export basedir="$DATA_DIR_BASE/$DATASET"
-export TASK_TYPE="lex" #options for task type include lex,delex,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both lex and delex folders
+export TASK_TYPE="combined" #options for task type include lex,delex,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both lex and delex folders
 export SUB_TASK_TYPE="figerspecific" #options for TASK_SUB_TYPE (usually used only for TASK_TYPEs :[delex,combined])  include [oa, figerspecific, figerabstract, oass, simplener]
 export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
 export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE"
