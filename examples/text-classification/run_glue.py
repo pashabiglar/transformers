@@ -206,12 +206,23 @@ def main():
                                 cache_dir=model_args.cache_dir) if training_args.do_train else None
         )
     else:
-        train_dataset = (
+        if(training_args.task_type=="lex"):
+            train_dataset = (
             GlueDataset(args=data_args, tokenizer=tokenizer, task_type="lex", mode="train",
                         cache_dir=model_args.cache_dir)
             if training_args.do_train
             else None
-        )
+            )
+        else:
+            if (training_args.task_type == "delex"):
+                train_dataset = (
+                    GlueDataset(args=data_args, tokenizer=tokenizer, task_type="delex", mode="train",
+                                cache_dir=model_args.cache_dir)
+                    if training_args.do_train
+                    else None
+                )
+
+
 
     #save only at the end of each epoch
     #training_args.save_steps = math.floor((len(train_dataset) / training_args.per_device_train_batch_size) * training_args.num_train_epochs)
@@ -220,19 +231,63 @@ def main():
     # combined model_teacher performs in a delexicalized dataset. This will serve as a verification point
     #to confirm the accuracy (we got 92.91% for fever delx in domain) if something goes wrong in the prediction phase below
 
-    eval_dataset = (
-        GlueDataset(args=data_args, tokenizer=tokenizer,task_type="delex", mode="dev", cache_dir=model_args.cache_dir)
-        if training_args.do_eval
-        else None
-    )
 
-    # in the student teacher mode the evaluation always happens in the delex cross domain dev data. here we are loading it as the test partition so that we can keep track of
-    #progress across epochs
-    test_dataset = (
-        GlueDataset(data_args, tokenizer=tokenizer,task_type="delex", mode="test", cache_dir=model_args.cache_dir)
-        if training_args.do_predict
-        else None
-    )
+    if (training_args.do_train_1student_1teacher == True):
+        # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
+        eval_dataset = (
+            GlueDataset(args=data_args, tokenizer=tokenizer, task_type="delex", mode="dev",
+                        cache_dir=model_args.cache_dir)
+            if training_args.do_eval
+            else None
+        )
+    else:
+        if (training_args.task_type == "lex"):
+            eval_dataset = (
+                GlueDataset(args=data_args, tokenizer=tokenizer, task_type="lex", mode="dev",
+                            cache_dir=model_args.cache_dir)
+                if training_args.do_eval
+                else None
+            )
+        else:
+            if (training_args.task_type == "delex"):
+                eval_dataset = (
+                    GlueDataset(args=data_args, tokenizer=tokenizer, task_type="delex", mode="dev",
+                                cache_dir=model_args.cache_dir)
+                    if training_args.do_eval
+                    else None
+                )
+
+
+
+
+
+
+    if (training_args.do_train_1student_1teacher == True):
+        # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
+        # in the student teacher mode the evaluation always happens in the delex cross domain dev data. here we are loading it as the test partition so that we can keep track of
+        # progress across epochs
+        test_dataset = (
+            GlueDataset(data_args, tokenizer=tokenizer, task_type="delex", mode="test", cache_dir=model_args.cache_dir)
+            if training_args.do_predict
+            else None
+        )
+    else:
+        if (training_args.task_type == "lex"):
+            test_dataset = (
+                GlueDataset(data_args, tokenizer=tokenizer, task_type="lex", mode="test",
+                            cache_dir=model_args.cache_dir)
+                if training_args.do_predict
+                else None
+            )
+
+        else:
+            if (training_args.task_type == "delex"):
+                test_dataset = (
+                    GlueDataset(data_args, tokenizer=tokenizer, task_type="delex", mode="test",
+                                cache_dir=model_args.cache_dir)
+                    if training_args.do_predict
+                    else None
+                )
 
     def build_compute_metrics_fn(task_name: str) -> Callable[[EvalPrediction], Dict]:
         def compute_metrics_fn(p: EvalPrediction):

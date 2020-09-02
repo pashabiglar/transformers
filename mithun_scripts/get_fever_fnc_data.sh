@@ -8,9 +8,10 @@
 
 
 #######fevercrossdomain lex (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
-if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] ; then
+if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUB_TASK_TYPE" = "figerspecific" ]; then
 
 echo "found task type is lex and task name as fever cross domain"
+
 echo $DATA_DIR
 mkdir -p $DATA_DIR
 
@@ -108,8 +109,6 @@ fi
 ####################################for cross domain student teacher, there will be two training files.-one for lex and another for delex
 
 
-
-#if [ "$TASK_TYPE" = "combined" ] ; then
 if [ "$TASK_TYPE" = "combined" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUB_TASK_TYPE" = "figerspecific" ]; then
     echo "found task type to be combined, taskname to be feverCrossDomain and subtasktype to be figerspecific"
 

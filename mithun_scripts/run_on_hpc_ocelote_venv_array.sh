@@ -3,7 +3,7 @@
 #PBS -q standard
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
-#PBS -N student_teacher_branch_delex_uncased_figers_128
+#PBS -N student_teacher_branch_lex_uncased_figers_128
 ### Specify the group name
 #PBS -W group_list=msurdeanu
 ### Used if job requires partial node only
@@ -22,22 +22,22 @@ module load cuda90/neuralnet/7/7.3.1.20
 module load python/3.6/3.6.5
 
 #uncomment this if you don't want to reinstall venv- usually you just have to do this only once ever
-#rm -rf my_virtual_env
-#mkdir my_virtual_env
+rm -rf my_virtual_env
+mkdir my_virtual_env
 python3 -m venv my_virtual_env
 
 #this is the only line you need if you already have a virtual_env set up
 source my_virtual_env/bin/activate
-export PYTHONPATH="/home/u11/mithunpaul/xdisk/huggingface_bert_master/code/src"
+export PYTHONPATH="/home/u11/mithunpaul/xdisk/huggingface_bert_merge_master_with_studentteacher_branch/code/src"
 
 
 pip install --upgrade pip
 
    
-cd /home/u11/mithunpaul/xdisk/huggingface_bert_master/code/examples
+cd /home/u11/mithunpaul/xdisk/huggingface_bert_merge_master_with_studentteacher_branch/code/examples
 pip install -r requirements.txt
 
-cd /home/u11/mithunpaul/xdisk/huggingface_bert_master/code/mithun_scripts
+cd /home/u11/mithunpaul/xdisk/huggingface_bert_merge_master_with_studentteacher_branch/code/mithun_scripts
 
 bash run_all.sh --epochs_to_run 1 --machine_to_run_on hpc #options include [laptop, hpc,clara]
 

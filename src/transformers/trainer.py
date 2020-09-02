@@ -1861,6 +1861,10 @@ class Trainer:
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                     epoch_iterator.close()
                     break
+
+            self._intermediate_eval(datasets=self.eval_dataset,
+                                    epoch=epoch, output_eval_file=output_eval_file_path,
+                                    description="dev_partition")
             self._intermediate_eval(datasets=self.test_dataset,
                                     epoch=epoch, output_eval_file=output_eval_file_path, description="test_partition")
 
