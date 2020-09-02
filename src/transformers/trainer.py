@@ -1133,7 +1133,12 @@ class StudentTeacherTrainer:
         if self.compute_metrics is not None and preds is not None and label_ids is not None:
             metrics = self.compute_metrics(EvalPrediction(predictions=preds, label_ids=label_ids))
         else:
-            logger.error("eval metrics is none. going to exit")
+            if self.compute_metrics is None:
+                logger.error("compute_metrics  is none. going to exit")
+            if preds is None:
+                logger.error("preds  is none. going to exit")
+            if label_ids is None:
+                logger.error("label_ids  is none. going to exit")
             import sys
             sys.exit(1)
             metrics = {}
@@ -2149,7 +2154,12 @@ class Trainer:
         if self.compute_metrics is not None and preds is not None and label_ids is not None:
             metrics = self.compute_metrics(EvalPrediction(predictions=preds, label_ids=label_ids))
         else:
-            logger.error("eval metrics is none. going to exit")
+            if self.compute_metrics is None:
+                logger.error("compute_metrics  is none. going to exit")
+            if preds is None:
+                logger.error("preds  is none. going to exit")
+            if label_ids is None:
+                logger.error("label_ids  is none. going to exit")
             import sys
             sys.exit(1)
             metrics = {}
