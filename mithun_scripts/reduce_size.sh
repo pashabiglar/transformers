@@ -23,7 +23,7 @@ if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
     head -100  $complete_path > temp
     mv temp $complete_path
 else
-    head -10  $complete_path > temp
+    head -100  $complete_path > temp
     mv temp $complete_path
 fi
 
