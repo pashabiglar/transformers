@@ -38,7 +38,7 @@ cd /home/u11/mithunpaul/xdisk/huggingface_bert_merge_master_with_studentteacher_
 pip install -r requirements.txt
 
 cd /home/u11/mithunpaul/xdisk/huggingface_bert_merge_master_with_studentteacher_branch/code/mithun_scripts
-
+env CUDA_VISIBLE_DEVICES=0
 bash run_all.sh --epochs_to_run 1 --machine_to_run_on hpc #options include [laptop, hpc,clara]
 
 
