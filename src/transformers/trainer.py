@@ -1088,9 +1088,11 @@ class StudentTeacherTrainer:
         # multi-gpu eval
         if self.args.n_gpu > 1:
             model = torch.nn.DataParallel(model)
-            logger.info(f"found that self.args.Nn_gpu >1. its value now is  {self.args.n_gpu}. inside prediction loop. going to exit.")
-            import sys
-            sys.exit()
+            logger.info(f"found that self.args.Nn_gpu >1. its value now is  {self.args.n_gpu}. inside prediction loop. ")
+            # logger.info(
+            #     f"found that self.args.Nn_gpu >1. its value now is  {self.args.n_gpu}. inside prediction loop. going to exit.")
+            # import sys
+            # sys.exit()
         else:
             model = self.model
         # Note: in torch.distributed mode, there's no point in wrapping the model
@@ -1704,17 +1706,18 @@ class Trainer:
         # multi-gpu training (should be after apex fp16 initialization)
         if self.args.n_gpu > 1:
             model = torch.nn.DataParallel(model)
-            print("fouund that n_gpu>1. going to quit")
-            logger.info(f"fouund that n_gpu>1. going to quit")
-            import sys
-            sys.exit(1)
+            logger.info(f"fouund that n_gpu>1")
+            # print("fouund that n_gpu>1. going to quit")
+            # logger.info(f"fouund that n_gpu>1. going to quit")
+            # import sys
+            # sys.exit(1)
 
         # Distributed training (should be after apex fp16 initialization)
         if self.args.local_rank != -1:
             print("fouund that self.args.local_rank != -1:. going to quit")
-            logger.info(f"fouund that n_gpu>1. going to quit")
-            import sys
-            sys.exit(1)
+            logger.info(f"self.args.local_rank != -1. going to quit")
+            # import sys
+            # sys.exit(1)
             model = torch.nn.parallel.DistributedDataParallel(
                 model,
                 device_ids=[self.args.local_rank],
@@ -2109,9 +2112,11 @@ class Trainer:
         # multi-gpu eval
         if self.args.n_gpu > 1:
             model = torch.nn.DataParallel(model)
-            logger.info(f"found that self.args.Nn_gpu >1. its value now is  {self.args.n_gpu}. inside prediction loop. going to exit.")
-            import sys
-            sys.exit()
+            logger.info(f"found that self.args.Nn_gpu >1. its value now is  {self.args.n_gpu}. inside prediction loop")
+            # logger.info(
+            #     f"found that self.args.Nn_gpu >1. its value now is  {self.args.n_gpu}. inside prediction loop. going to exit.")
+            # import sys
+            # sys.exit()
         else:
             model = self.model
         # Note: in torch.distributed mode, there's no point in wrapping the model
@@ -2148,7 +2153,7 @@ class Trainer:
         if self.args.local_rank != -1:
             logger.info(f"found that local_rank is not minus one. value of local rank is {self.args.local_rank}")
             import sys
-            sys.exit(1)
+            #$sys.exit(1)
             # In distributed mode, concatenate all results from all nodes:
             if preds is not None:
                 preds = self.distributed_concat(preds, num_total_examples=self.num_examples(dataloader))

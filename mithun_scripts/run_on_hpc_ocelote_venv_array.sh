@@ -10,10 +10,10 @@
 #PBS -l place=pack:shared
 ### Walltime is how long your job will run
 #PBS -l walltime=25:00:00
-### Joins standard error and standard out
+### Joins standard error and standd out
 #PBS -j oe
 
-  
+
 
 
 cd /home/u11/mithunpaul/
