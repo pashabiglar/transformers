@@ -37,6 +37,7 @@ echo $args
 mkdir -p OUTPUT_DIR
 
 env CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=0
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
        python3.6 ../examples/text-classification/run_glue.py $args
 else
