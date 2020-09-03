@@ -676,6 +676,11 @@ class StudentTeacherTrainer:
 
         # multi-gpu training (should be after apex fp16 initialization)
         if self.args.n_gpu > 1:
+            logger.info(
+                f"found that self.args.Nn_gpu >1. going to exit.")
+            import sys
+            sys.exit()
+
             model_teacher = torch.nn.DataParallel(model_teacher)
             model_student = torch.nn.DataParallel(model_student)
 
@@ -974,6 +979,10 @@ class StudentTeacherTrainer:
 
         if self.args.n_gpu > 1:
             loss = loss.mean()  # mean() to average on multi-gpu parallel training
+            logger.info(
+                f"found that self.args.Nn_gpu >1. going to exit.")
+            import sys
+            sys.exit()
         if self.args.gradient_accumulation_steps > 1:
             loss = loss / self.args.gradient_accumulation_steps
 
@@ -1005,6 +1014,10 @@ class StudentTeacherTrainer:
 
         if self.args.n_gpu > 1:
             loss = loss.mean()  # mean() to average on multi-gpu parallel training
+            logger.info(
+                f"found that self.args.Nn_gpu >1. going to exit.")
+            import sys
+            sys.exit()
         if self.args.gradient_accumulation_steps > 1:
             loss = loss / self.args.gradient_accumulation_steps
 
@@ -1046,6 +1059,10 @@ class StudentTeacherTrainer:
 
         if self.args.n_gpu > 1:
             loss = loss.mean()  # mean() to average on multi-gpu parallel training
+            logger.info(
+                f"found that self.args.Nn_gpu >1. going to exit.")
+            import sys
+            sys.exit()
         if self.args.gradient_accumulation_steps > 1:
             loss = loss / self.args.gradient_accumulation_steps
 
@@ -1088,11 +1105,10 @@ class StudentTeacherTrainer:
         # multi-gpu eval
         if self.args.n_gpu > 1:
             model = torch.nn.DataParallel(model)
-            logger.info(f"found that self.args.Nn_gpu >1. its value now is  {self.args.n_gpu}. inside prediction loop. ")
-            # logger.info(
-            #     f"found that self.args.Nn_gpu >1. its value now is  {self.args.n_gpu}. inside prediction loop. going to exit.")
-            # import sys
-            # sys.exit()
+            logger.info(
+                f"found that self.args.Nn_gpu >1. going to exit.")
+            import sys
+            sys.exit()
         else:
             model = self.model
         # Note: in torch.distributed mode, there's no point in wrapping the model
@@ -1707,10 +1723,10 @@ class Trainer:
         if self.args.n_gpu > 1:
             model = torch.nn.DataParallel(model)
             logger.info(f"fouund that n_gpu>1")
-            # print("fouund that n_gpu>1. going to quit")
-            # logger.info(f"fouund that n_gpu>1. going to quit")
-            # import sys
-            # sys.exit(1)
+            logger.info(
+                f"found that self.args.Nn_gpu >1. going to exit.")
+            import sys
+            sys.exit()
 
         # Distributed training (should be after apex fp16 initialization)
         if self.args.local_rank != -1:
@@ -1968,6 +1984,10 @@ class Trainer:
 
         if self.args.n_gpu > 1:
             loss = loss.mean()  # mean() to average on multi-gpu parallel training
+            logger.info(
+                f"found that self.args.Nn_gpu >1. going to exit.")
+            import sys
+            sys.exit()
         if self.args.gradient_accumulation_steps > 1:
             loss = loss / self.args.gradient_accumulation_steps
 
@@ -1999,6 +2019,10 @@ class Trainer:
 
         if self.args.n_gpu > 1:
             loss = loss.mean()  # mean() to average on multi-gpu parallel training
+            logger.info(
+                f"found that self.args.Nn_gpu >1. going to exit.")
+            import sys
+            sys.exit()
         if self.args.gradient_accumulation_steps > 1:
             loss = loss / self.args.gradient_accumulation_steps
 
@@ -2040,6 +2064,10 @@ class Trainer:
 
         if self.args.n_gpu > 1:
             loss = loss.mean()  # mean() to average on multi-gpu parallel training
+            logger.info(
+                f"found that self.args.Nn_gpu >1. going to exit.")
+            import sys
+            sys.exit()
         if self.args.gradient_accumulation_steps > 1:
             loss = loss / self.args.gradient_accumulation_steps
 
@@ -2112,11 +2140,10 @@ class Trainer:
         # multi-gpu eval
         if self.args.n_gpu > 1:
             model = torch.nn.DataParallel(model)
-            logger.info(f"found that self.args.Nn_gpu >1. its value now is  {self.args.n_gpu}. inside prediction loop")
-            # logger.info(
-            #     f"found that self.args.Nn_gpu >1. its value now is  {self.args.n_gpu}. inside prediction loop. going to exit.")
-            # import sys
-            # sys.exit()
+            logger.info(
+                f"found that self.args.Nn_gpu >1. its value now is  {self.args.n_gpu}. inside prediction loop. going to exit.")
+            import sys
+            sys.exit()
         else:
             model = self.model
         # Note: in torch.distributed mode, there's no point in wrapping the model
