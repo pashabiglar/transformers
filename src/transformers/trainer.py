@@ -830,7 +830,8 @@ class StudentTeacherTrainer:
                     if self.args.fp16:
                         torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), self.args.max_grad_norm)
                     else:
-                        torch.nn.utils.clip_grad_norm_(model_teacher.parameters(), self.args.max_grad_norm)
+                        # commenting for debug purposes on sep 4th 2020 :to confirm if delex model gives same results when run alone
+                        #torch.nn.utils.clip_grad_norm_(model_teacher.parameters(), self.args.max_grad_norm)
                         torch.nn.utils.clip_grad_norm_(model_student.parameters(), self.args.max_grad_norm)
                         logger.debug("just done with grad clipping)")
 
