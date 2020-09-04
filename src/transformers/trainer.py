@@ -217,7 +217,7 @@ class StudentTeacherTrainer:
             # We'll find a more elegant and not need to do this in the future.
             self.model.config.xla_device = True
 
-    def predict(self, test_dataset: Dataset) -> PredictionOutput:
+    def predict(self, test_dataset: Dataset,model_to_test_with) -> PredictionOutput:
         """
         Run prediction and returns predictions and potential metrics.
 
@@ -238,9 +238,9 @@ class StudentTeacherTrainer:
         """
         test_dataloader = self.get_test_dataloader(test_dataset)
 
-        return self.prediction_loop(test_dataloader, description="Prediction")
+        return self.prediction_loop(test_dataloader,model_to_test_with, description="Prediction")
 
-    def evaluate(self, eval_dataset: Optional[Dataset] = None) -> Dict[str, float]:
+    def evaluate(self, model_to_test_with,eval_dataset: Optional[Dataset] = None) -> Dict[str, float]:
         """
         Run evaluation and returns metrics.
 
@@ -257,7 +257,7 @@ class StudentTeacherTrainer:
         """
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
 
-        output = self.prediction_loop(eval_dataloader, description="Evaluation")
+        output = self.prediction_loop(eval_dataloader,model_to_test_with, description="Evaluation")
 
         self.log(output.metrics)
 
@@ -440,7 +440,7 @@ class StudentTeacherTrainer:
 
 
 
-    def evaluate_on_test_partition(self, test_dataset: Optional[Dataset] = None) -> Dict[str, float]:
+    def evaluate_on_test_partition(self, model_to_test_with,test_dataset: Optional[Dataset] = None,) -> Dict[str, float]:
         """
         Run evaluation and returns metrics.
         The calling script will be responsible for providing a method to compute metrics, as they are
@@ -454,7 +454,7 @@ class StudentTeacherTrainer:
         """
         eval_dataloader = self.get_test_dataloader(test_dataset)
 
-        output = self.prediction_loop(eval_dataloader, description="Evaluation")
+        output = self.prediction_loop(eval_dataloader,model_to_test_with ,description="Evaluation")
 
         self.log(output.metrics)
 
@@ -524,7 +524,7 @@ class StudentTeacherTrainer:
         else:
             logger.info(output)
 
-    def _intermediate_eval(self, datasets, epoch, output_eval_file, description):
+    def _intermediate_eval(self, datasets, epoch, output_eval_file, description,model_to_test_with):
 
         """
         Helper function to call eval() method if and when you want to evaluate after say each epoch,
@@ -547,10 +547,10 @@ class StudentTeacherTrainer:
         for dataset in datasetss:
             eval_result = None
             if "dev" in description:
-                eval_result = self.evaluate(eval_dataset=dataset)
+                eval_result = self.evaluate(model_to_test_with,eval_dataset=dataset)
             else:
                 if "test" in description:
-                    eval_result = self.evaluate_on_test_partition(test_dataset=dataset)
+                    eval_result = self.evaluate_on_test_partition(model_to_test_with,test_dataset=dataset)
             assert eval_result is not None
 
             if self.is_world_master():
@@ -842,7 +842,7 @@ class StudentTeacherTrainer:
                         logger.debug("just done withn optimixer.step)")
 
                     scheduler.step()
-                    model_teacher.zero_grad()
+                    #model_teacher.zero_grad()
                     model_student.zero_grad()
 
                     self.global_step += 1
@@ -902,10 +902,10 @@ class StudentTeacherTrainer:
 
             self._intermediate_eval(datasets=self.eval_dataset,
                                             epoch=epoch, output_eval_file=output_eval_file_path,
-                                            description="dev_partition")
+                                            description="dev_partition",model_to_test_with=model_student)
 
             self._intermediate_eval(datasets=self.test_dataset,
-                                    epoch=epoch, output_eval_file=output_eval_file_path, description="test_partition")
+                                    epoch=epoch, output_eval_file=output_eval_file_path, description="test_partition",model_to_test_with=model_student)
 
 
             logger.info(
@@ -1093,7 +1093,7 @@ class StudentTeacherTrainer:
             return self.args.local_rank == -1 or torch.distributed.get_rank() == 0
 
     def prediction_loop(
-        self, dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None
+        self, dataloader: DataLoader, model_to_test_with,description: str, prediction_loss_only: Optional[bool] = None
     ) -> PredictionOutput:
         """
         Prediction/evaluation loop, shared by :obj:`Trainer.evaluate()` and :obj:`Trainer.predict()`.
@@ -1109,7 +1109,7 @@ class StudentTeacherTrainer:
 
         prediction_loss_only = prediction_loss_only if prediction_loss_only is not None else self.prediction_loss_only
 
-        model = self.model
+        model = model_to_test_with
         # multi-gpu eval
         if self.args.n_gpu > 1:
             model = torch.nn.DataParallel(model)
@@ -1117,8 +1117,7 @@ class StudentTeacherTrainer:
                 f"found that self.args.Nn_gpu >1. going to exit.")
             import sys
             sys.exit()
-        else:
-            model = self.model
+
         # Note: in torch.distributed mode, there's no point in wrapping the model
         # inside a DistributedDataParallel as we'll be under `no_grad` anyways.
 
