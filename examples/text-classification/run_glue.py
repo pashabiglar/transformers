@@ -339,92 +339,94 @@ def main():
             tokenizer.save_pretrained(training_args.output_dir)
 
 
-    # Evaluation
-    eval_results = {}
-    if training_args.do_eval:
-        logger.info("*** Evaluate1 at the end of all epochs ***")
-
-        # Loop to handle MNLI double evaluation (matched, mis-matched)
-        eval_datasets = [eval_dataset]
-        if data_args.task_name == "mnli":
-            mnli_mm_data_args = dataclasses.replace(data_args, task_name="mnli-mm")
-            eval_datasets.append(
-                GlueDataset(mnli_mm_data_args, tokenizer=tokenizer, mode="dev", cache_dir=model_args.cache_dir)
-            )
-
-        for eval_dataset in eval_datasets:
-            #feverindomain compute metric has only accuracy while fever cross domain has both accuracy and fnc score
-            trainer.eval_compute_metrics = build_compute_metrics_fn("feverindomain")
-            eval_result = trainer.evaluate(eval_dataset=eval_dataset)
-
-            output_eval_file = os.path.join(
-                training_args.output_dir, f"eval_results_{eval_dataset.args.task_name}.txt"
-            )
-            if trainer.is_world_master():
-                with open(output_eval_file, "w") as writer:
-                    logger.info("***** dev results {} *****".format(eval_dataset.args.task_name))
-                    for key, value in eval_result.items():
-                        logger.info("  %s = %s", key, value)
-                        writer.write("%s = %s\n" % (key, value))
-
-            eval_results.update(eval_result)
-
-    # RUN Evaluation Again on test partition which is actually crossdomains dev partition
-    eval_results = {}
-    if training_args.do_eval:
-        logger.info("*** Evaluate2 at the end of all epochs= evaluating on the test partition ***")
-
-        # Loop to handle MNLI double evaluation (matched, mis-matched)
-        eval_datasets = [test_dataset]
-        if data_args.task_name == "mnli":
-            mnli_mm_data_args = dataclasses.replace(data_args, task_name="mnli-mm")
-            eval_datasets.append(
-                GlueDataset(mnli_mm_data_args, tokenizer=tokenizer, mode="dev", cache_dir=model_args.cache_dir)
-            )
-
-        for eval_dataset in eval_datasets:
-            trainer.eval_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
-            eval_result = trainer.evaluate(eval_dataset=eval_dataset)
-
-            output_eval_file = os.path.join(
-                training_args.output_dir, f"test_partition_results_{eval_dataset.args.task_name}.txt"
-            )
-            if trainer.is_world_master():
-                with open(output_eval_file, "w") as writer:
-                    logger.info("***** fnc dev results {} *****".format(eval_dataset.args.task_name))
-                    for key, value in eval_result.items():
-                        logger.info("  %s = %s", key, value)
-                        writer.write("%s = %s\n" % (key, value))
-
-            eval_results.update(eval_result)
-    if training_args.do_predict:
-        logging.info("*** Test ***")
-        test_datasets = [test_dataset]
-        if data_args.task_name == "mnli":
-            mnli_mm_data_args = dataclasses.replace(data_args, task_name="mnli-mm")
-            test_datasets.append(
-                GlueDataset(mnli_mm_data_args, tokenizer=tokenizer, mode="test", cache_dir=model_args.cache_dir)
-            )
-
-        for test_dataset in test_datasets:
-            predictions = trainer.predict(test_dataset=test_dataset).predictions
-            if output_mode == "classification":
-                predictions = np.argmax(predictions, axis=1)
-
-            output_test_file = os.path.join(
-                training_args.output_dir, f"predictions_labels_on_test_partition_{test_dataset.args.task_name}.txt"
-            )
-            if trainer.is_world_master():
-                with open(output_test_file, "w") as writer:
-                    logger.info("***** Test results {} *****".format(test_dataset.args.task_name))
-                    writer.write("index\tprediction\n")
-                    for index, item in enumerate(predictions):
-                        if output_mode == "regression":
-                            writer.write("%d\t%3.3f\n" % (index, item))
-                        else:
-                            item = test_dataset.get_labels()[item]
-                            writer.write("%d\t%s\n" % (index, item))
-    return eval_results
+    # Commenting since evaluation is now done at the end of each epoch. not at the end of all epochs
+    #
+    # # Evaluation
+    # eval_results = {}
+    # if training_args.do_eval:
+    #     logger.info("*** Evaluate1 at the end of all epochs ***")
+    #
+    #     # Loop to handle MNLI double evaluation (matched, mis-matched)
+    #     eval_datasets = [eval_dataset]
+    #     if data_args.task_name == "mnli":
+    #         mnli_mm_data_args = dataclasses.replace(data_args, task_name="mnli-mm")
+    #         eval_datasets.append(
+    #             GlueDataset(mnli_mm_data_args, tokenizer=tokenizer, mode="dev", cache_dir=model_args.cache_dir)
+    #         )
+    #
+    #     for eval_dataset in eval_datasets:
+    #         #feverindomain compute metric has only accuracy while fever cross domain has both accuracy and fnc score
+    #         trainer.eval_compute_metrics = build_compute_metrics_fn("feverindomain")
+    #         eval_result = trainer.evaluate(eval_dataset=eval_dataset)
+    #
+    #         output_eval_file = os.path.join(
+    #             training_args.output_dir, f"eval_results_{eval_dataset.args.task_name}.txt"
+    #         )
+    #         if trainer.is_world_master():
+    #             with open(output_eval_file, "w") as writer:
+    #                 logger.info("***** dev results {} *****".format(eval_dataset.args.task_name))
+    #                 for key, value in eval_result.items():
+    #                     logger.info("  %s = %s", key, value)
+    #                     writer.write("%s = %s\n" % (key, value))
+    #
+    #         eval_results.update(eval_result)
+    #
+    # # RUN Evaluation Again on test partition which is actually crossdomains dev partition
+    # eval_results = {}
+    # if training_args.do_eval:
+    #     logger.info("*** Evaluate2 at the end of all epochs= evaluating on the test partition ***")
+    #
+    #     # Loop to handle MNLI double evaluation (matched, mis-matched)
+    #     eval_datasets = [test_dataset]
+    #     if data_args.task_name == "mnli":
+    #         mnli_mm_data_args = dataclasses.replace(data_args, task_name="mnli-mm")
+    #         eval_datasets.append(
+    #             GlueDataset(mnli_mm_data_args, tokenizer=tokenizer, mode="dev", cache_dir=model_args.cache_dir)
+    #         )
+    #
+    #     for eval_dataset in eval_datasets:
+    #         trainer.eval_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
+    #         eval_result = trainer.evaluate(eval_dataset=eval_dataset)
+    #
+    #         output_eval_file = os.path.join(
+    #             training_args.output_dir, f"test_partition_results_{eval_dataset.args.task_name}.txt"
+    #         )
+    #         if trainer.is_world_master():
+    #             with open(output_eval_file, "w") as writer:
+    #                 logger.info("***** fnc dev results {} *****".format(eval_dataset.args.task_name))
+    #                 for key, value in eval_result.items():
+    #                     logger.info("  %s = %s", key, value)
+    #                     writer.write("%s = %s\n" % (key, value))
+    #
+    #         eval_results.update(eval_result)
+    # if training_args.do_predict:
+    #     logging.info("*** Test ***")
+    #     test_datasets = [test_dataset]
+    #     if data_args.task_name == "mnli":
+    #         mnli_mm_data_args = dataclasses.replace(data_args, task_name="mnli-mm")
+    #         test_datasets.append(
+    #             GlueDataset(mnli_mm_data_args, tokenizer=tokenizer, mode="test", cache_dir=model_args.cache_dir)
+    #         )
+    #
+    #     for test_dataset in test_datasets:
+    #         predictions = trainer.predict(test_dataset=test_dataset).predictions
+    #         if output_mode == "classification":
+    #             predictions = np.argmax(predictions, axis=1)
+    #
+    #         output_test_file = os.path.join(
+    #             training_args.output_dir, f"predictions_labels_on_test_partition_{test_dataset.args.task_name}.txt"
+    #         )
+    #         if trainer.is_world_master():
+    #             with open(output_test_file, "w") as writer:
+    #                 logger.info("***** Test results {} *****".format(test_dataset.args.task_name))
+    #                 writer.write("index\tprediction\n")
+    #                 for index, item in enumerate(predictions):
+    #                     if output_mode == "regression":
+    #                         writer.write("%d\t%3.3f\n" % (index, item))
+    #                     else:
+    #                         item = test_dataset.get_labels()[item]
+    #                         writer.write("%d\t%s\n" % (index, item))
+    # return eval_results
 
 
 def _mp_fn(index):
