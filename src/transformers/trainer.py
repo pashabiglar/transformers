@@ -791,10 +791,10 @@ class StudentTeacherTrainer:
                 #model returns # (loss), logits, (hidden_states), (attentions)
                 tr_loss_lex,outputs_lex = self.get_classification_loss(model_teacher, input_lex, optimizer)
                 tr_loss_delex,outputs_delex = self.get_classification_loss(model_student, input_delex, optimizer)
-                #combined_classification_loss=tr_loss_lex+tr_loss_delex
+                combined_classification_loss=tr_loss_lex+tr_loss_delex
 
                 #debug purposes:to confirm if delex model gives same results when run alone
-                combined_classification_loss =   tr_loss_delex
+                #combined_classification_loss =   tr_loss_delex
                 logger.debug("finished getting classification loss")
 
 
@@ -802,10 +802,10 @@ class StudentTeacherTrainer:
                 logits_lex = outputs_lex[1]
                 logits_delex=outputs_delex[1]
                 consistency_loss = self.get_consistency_loss(logits_lex,logits_delex,"mse")
-                #combined_loss=combined_classification_loss+consistency_loss
+                combined_loss=combined_classification_loss+consistency_loss
 
                 # debug purposes:to confirm if delex model gives same results when run alone
-                combined_loss=combined_classification_loss
+               # combined_loss=combined_classification_loss
 
 
                 if self.args.fp16:
@@ -830,8 +830,6 @@ class StudentTeacherTrainer:
                     if self.args.fp16:
                         torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), self.args.max_grad_norm)
                     else:
-                        # commenting for debug purposes on sep 4th 2020 :to confirm if delex model gives same results when run alone
-                        #torch.nn.utils.clip_grad_norm_(model_teacher.parameters(), self.args.max_grad_norm)
                         torch.nn.utils.clip_grad_norm_(model_student.parameters(), self.args.max_grad_norm)
                         logger.debug("just done with grad clipping)")
 
