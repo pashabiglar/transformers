@@ -777,7 +777,6 @@ class StudentTeacherTrainer:
 
             #for each batch
             for step, (input_lex,input_delex) in enumerate(epoch_iterator):
-
                 logger.debug("just got inside for step in enumerate epoch_iterator. i.e for each batch")
 
                 # Skip past any already trained steps if resuming training
@@ -791,10 +790,10 @@ class StudentTeacherTrainer:
                 #model returns # (loss), logits, (hidden_states), (attentions)
                 tr_loss_lex,outputs_lex = self.get_classification_loss(model_teacher, input_lex, optimizer)
                 tr_loss_delex,outputs_delex = self.get_classification_loss(model_student, input_delex, optimizer)
-                combined_classification_loss=tr_loss_lex+tr_loss_delex
+                #combined_classification_loss=tr_loss_lex+tr_loss_delex
 
                 #debug purposes:to confirm if delex model gives same results when run alone
-                #combined_classification_loss =   tr_loss_delex
+                combined_classification_loss =   tr_loss_delex
                 logger.debug("finished getting classification loss")
 
 
@@ -802,10 +801,10 @@ class StudentTeacherTrainer:
                 logits_lex = outputs_lex[1]
                 logits_delex=outputs_delex[1]
                 consistency_loss = self.get_consistency_loss(logits_lex,logits_delex,"mse")
-                combined_loss=combined_classification_loss+consistency_loss
+                #combined_loss=combined_classification_loss+consistency_loss
 
                 # debug purposes:to confirm if delex model gives same results when run alone
-               # combined_loss=combined_classification_loss
+                combined_loss=combined_classification_loss
 
 
                 if self.args.fp16:

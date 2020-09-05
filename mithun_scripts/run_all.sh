@@ -60,20 +60,19 @@ echo "value of DATA_DIR is $DATA_DIR"
 
 
 
-#get data only if its 1st epoch
-if [ $EPOCHS = "1" ]; then
-        echo "found epopch is equal to 1. going to download data"
-        rm -rf $DATA_DIR
-        ./get_fever_fnc_data.sh
+#get data fresh before every run
+#if [ $EPOCHS = "1" ]; then
+echo "found epopch is equal to 1. going to download data"
+rm -rf $DATA_DIR
+./get_fever_fnc_data.sh
+./convert_to_mnli_format.sh
 
-        ./convert_to_mnli_format.sh
-
-fi
+#fi
 
 
-echo "done with data download part if epoch==1. datapath now is $DATA_DIR"
+echo "done with data download part . datapath now is $DATA_DIR"
 
-./reduce_size.sh  --data_path $DATA_DIR
+#./reduce_size.sh  --data_path $DATA_DIR
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
       ./reduce_size.sh  --data_path $DATA_DIR
