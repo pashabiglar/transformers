@@ -839,7 +839,7 @@ class StudentTeacherTrainer:
                         logger.debug("just done withn optimixer.step)")
 
                     scheduler.step()
-                    #model_teacher.zero_grad()
+                    model_teacher.zero_grad()
                     model_student.zero_grad()
 
                     self.global_step += 1
