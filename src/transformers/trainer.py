@@ -757,6 +757,10 @@ class StudentTeacherTrainer:
         # empty out the
         with open(output_eval_file_path, "w") as writer:
             writer.write("")
+
+        flag_run_teacher_alone=True
+        flag_run_student_alone = False
+        flag_run_both = False
         #for each epoch
         for epoch in train_iterator:
             logger.debug("just got inside for epoch in train_iterator")
@@ -790,10 +794,17 @@ class StudentTeacherTrainer:
                 #model returns # (loss), logits, (hidden_states), (attentions)
                 tr_loss_lex,outputs_lex = self.get_classification_loss(model_teacher, input_lex, optimizer)
                 tr_loss_delex,outputs_delex = self.get_classification_loss(model_student, input_delex, optimizer)
-                combined_classification_loss=tr_loss_lex+tr_loss_delex
 
-                #debug purposes:to confirm if delex model gives same results when run alone
-                #combined_classification_loss =   tr_loss_delex
+                if(flag_run_both):
+                    combined_classification_loss=tr_loss_lex+tr_loss_delex
+                else:
+                    if(flag_run_teacher_alone):
+                        combined_classification_loss = tr_loss_lex
+                    else:
+                        if(flag_run_student_alone):
+                            combined_classification_loss = tr_loss_delex
+
+
                 logger.debug("finished getting classification loss")
 
 
@@ -801,10 +812,11 @@ class StudentTeacherTrainer:
                 logits_lex = outputs_lex[1]
                 logits_delex=outputs_delex[1]
                 consistency_loss = self.get_consistency_loss(logits_lex,logits_delex,"mse")
-                combined_loss=combined_classification_loss+consistency_loss
 
-                # debug purposes:to confirm if delex model gives same results when run alone
-                #combined_loss=combined_classification_loss
+                if (flag_run_both):
+                    combined_loss = combined_classification_loss + consistency_loss
+                else:
+                    combined_loss = combined_classification_loss
 
 
                 if self.args.fp16:
@@ -839,8 +851,17 @@ class StudentTeacherTrainer:
                         logger.debug("just done withn optimixer.step)")
 
                     scheduler.step()
-                    model_teacher.zero_grad()
-                    model_student.zero_grad()
+
+                    if (flag_run_both):
+                        model_teacher.zero_grad()
+                        model_student.zero_grad()
+                    else:
+                        if (flag_run_teacher_alone):
+                            model_teacher.zero_grad()
+                        else:
+                            if (flag_run_student_alone):
+                                model_student.zero_grad()
+
 
                     self.global_step += 1
                     self.epoch = epoch + (step + 1) / len(epoch_iterator)
