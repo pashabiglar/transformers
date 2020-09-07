@@ -176,7 +176,7 @@ class TrainingArguments:
     )
 
     gradient_accumulation_steps: int = field(
-        default=10000,
+        default=1,
         metadata={"help": "Number of updates steps to accumulate before performing a backward/update pass."},
     )
 
