@@ -783,6 +783,16 @@ class StudentTeacherTrainer:
             for step, (input_lex,input_delex) in enumerate(epoch_iterator):
                 logger.debug("just got inside for step in enumerate epoch_iterator. i.e for each batch")
 
+                if (flag_run_both):
+                    model_teacher.zero_grad()
+                    model_student.zero_grad()
+                else:
+                    if (flag_run_teacher_alone):
+                        model_teacher.zero_grad()
+                    else:
+                        if (flag_run_student_alone):
+                            model_student.zero_grad()
+
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:
                     steps_trained_in_current_epoch -= 1
@@ -860,15 +870,7 @@ class StudentTeacherTrainer:
                         logger.debug("just done withn optimixer.step)")
                     scheduler.step()
 
-                    if (flag_run_both):
-                        model_teacher.zero_grad()
-                        model_student.zero_grad()
-                    else:
-                        if (flag_run_teacher_alone):
-                            model_teacher.zero_grad()
-                        else:
-                            if (flag_run_student_alone):
-                                model_student.zero_grad()
+
 
 
                     self.global_step += 1
