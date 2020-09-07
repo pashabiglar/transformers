@@ -841,15 +841,23 @@ class StudentTeacherTrainer:
                     if self.args.fp16:
                         torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), self.args.max_grad_norm)
                     else:
-                        torch.nn.utils.clip_grad_norm_(model_student.parameters(), self.args.max_grad_norm)
-                        logger.debug("just done with grad clipping)")
+                        if (flag_run_both):
+                            torch.nn.utils.clip_grad_norm_(model_student.parameters(), self.args.max_grad_norm)
+                            torch.nn.utils.clip_grad_norm_(model_teacher.parameters(), self.args.max_grad_norm)
+                        else:
+                            if (flag_run_teacher_alone):
+                                torch.nn.utils.clip_grad_norm_(model_teacher.parameters(), self.args.max_grad_norm)
+                            else:
+                                if (flag_run_student_alone):
+                                    torch.nn.utils.clip_grad_norm_(model_student.parameters(), self.args.max_grad_norm)
+
+                    logger.debug("just done with grad clipping)")
 
                     if is_torch_tpu_available():
                         xm.optimizer_step(optimizer)
                     else:
                         optimizer.step()
                         logger.debug("just done withn optimixer.step)")
-
                     scheduler.step()
 
                     if (flag_run_both):
