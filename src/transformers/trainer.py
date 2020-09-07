@@ -166,7 +166,7 @@ class StudentTeacherTrainer:
         data_collator: Optional[DataCollator] = None,
         prediction_loss_only=False,
         tb_writer: Optional["SummaryWriter"] = None,
-        optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = None,
+        optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = (None,None)
     ):
         """
         Trainer is a simple but feature-complete training and eval loop for PyTorch,
@@ -192,7 +192,7 @@ class StudentTeacherTrainer:
         self.eval_dataset = eval_dataset
         self.compute_metrics = None
         self.prediction_loss_only = prediction_loss_only
-        self.optimizers = optimizers
+        self.optimizer, self.lr_scheduler = optimizers
         if tb_writer is not None:
             self.tb_writer = tb_writer
         elif is_tensorboard_available() and self.is_world_master():
@@ -367,7 +367,8 @@ class StudentTeacherTrainer:
 
         return data_loader
 
-    def get_optimizers(
+
+    def get_optimizers_for_student_teacher(
         self, num_training_steps: int
     ) -> Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]:
         """
@@ -377,7 +378,7 @@ class StudentTeacherTrainer:
         or override this method in a subclass.
         update: will combine parameters
         """
-        if self.optimizers is not None:
+        if self.optimizer is not None:
             return self.optimizers
         # Prepare optimizer and schedule (linear warmup and decay)
         no_decay = ["bias", "LayerNorm.weight"]
@@ -397,6 +398,37 @@ class StudentTeacherTrainer:
             },
             {
                 "params": [p for n, p in self.delex_student_model.named_parameters() if any(nd in n for nd in no_decay)],
+                "weight_decay": 0.0,
+            },
+        ]
+        optimizer = AdamW(optimizer_grouped_parameters, lr=self.args.learning_rate, eps=self.args.adam_epsilon)
+        scheduler = get_linear_schedule_with_warmup(
+            optimizer, num_warmup_steps=self.args.warmup_steps, num_training_steps=num_training_steps
+        )
+        return optimizer, scheduler
+
+
+    def get_optimizer(
+        self, num_training_steps: int
+    ) -> Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]:
+        """
+        Setup the optimizer and the learning rate scheduler.
+        We provide a reasonable default that works well.
+        If you want to use something else, you can pass a tuple in the Trainer's init,
+        or override this method in a subclass.
+        update: will combine parameters
+        """
+        if self.optimizer is not None:
+            return self.optimizers
+        # Prepare optimizer and schedule (linear warmup and decay)
+        no_decay = ["bias", "LayerNorm.weight"]
+        optimizer_grouped_parameters = [
+            {
+                "params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
+                "weight_decay": self.args.weight_decay,
+            },
+            {
+                "params": [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
                 "weight_decay": 0.0,
             },
         ]
@@ -651,8 +683,22 @@ class StudentTeacherTrainer:
             t_total = int(len(train_dataloader) // self.args.gradient_accumulation_steps * self.args.num_train_epochs)
             num_train_epochs = self.args.num_train_epochs
 
+        flag_run_teacher_alone = True
+        flag_run_student_alone = False
+        flag_run_both = False
 
-        optimizer, scheduler = self.get_optimizers(num_training_steps=self.args.lr_max_value)
+        optimizer = None
+        scheduler = None
+
+        if (flag_run_both):
+
+            optimizer, scheduler = self.get_optimizers_for_student_teacher(num_training_steps=self.args.lr_max_value)
+        else:
+            if (flag_run_teacher_alone) or (flag_run_student_alone):
+                optimizer, scheduler = self.get_optimizer(num_training_steps=self.args.lr_max_value)
+
+        assert optimizer is not None
+        assert scheduler is not None
 
         # Check if saved optimizer or scheduler states exist
         if (
@@ -758,9 +804,7 @@ class StudentTeacherTrainer:
         with open(output_eval_file_path, "w") as writer:
             writer.write("")
 
-        flag_run_teacher_alone=True
-        flag_run_student_alone = False
-        flag_run_both = False
+
         #for each epoch
         for epoch in train_iterator:
             logger.debug("just got inside for epoch in train_iterator")
