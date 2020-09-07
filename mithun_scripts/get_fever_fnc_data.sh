@@ -137,7 +137,7 @@ else
     wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/figer_specific/dev.tsv -O $FILE
 fi
 
-exit
+
 #note that we are  replacing the test partition with cross domain dev partition(in this case it thus becomes the in-domain dev
 # partition of fnc dataset).
 
