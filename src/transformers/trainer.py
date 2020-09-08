@@ -184,7 +184,7 @@ class StudentTeacherTrainer:
         self.eval_compute_metrics = eval_compute_metrics
         self.compute_metrics = None
         #even though we train two models using student teacher architecture we weill only use the student model to do evaluation on fnc-dev delex dataset
-        #self.model=self.delex_student_model
+        self.model=None
         self.args = args
         self.default_data_collator = default_data_collator
         self.data_collator = collate_batch_parallel_datasets
@@ -592,20 +592,21 @@ class StudentTeacherTrainer:
         return eval_result
 
 
-    def _save(self, model_to_save,output_dir: Optional[str] = None):
+    def _save(self,output_dir: Optional[str] = None):
         output_dir = output_dir if output_dir is not None else self.args.output_dir
         os.makedirs(output_dir, exist_ok=True)
         logger.info("Saving model checkpoint to %s", output_dir)
         # Save a trained model and configuration using `save_pretrained()`.
         # They can then be reloaded using `from_pretrained()`
-        if not isinstance(model_to_save, PreTrainedModel):
+        assert self.model is not None
+        if not isinstance(self.model, PreTrainedModel):
             raise ValueError("Trainer.model appears to not be a PreTrainedModel")
-        model_to_save.save_pretrained(output_dir)
+        self.model.save_pretrained(output_dir)
 
         # Good practice: save your training arguments together with the trained model
         torch.save(self.args, os.path.join(output_dir, "training_args.bin"))
 
-    def save_model(self,model_to_save, output_dir: Optional[str] = None):
+    def save_model(self, output_dir: Optional[str] = None):
         """
         Will save the model, so you can reload it using :obj:`from_pretrained()`.
 
@@ -615,7 +616,7 @@ class StudentTeacherTrainer:
         if is_torch_tpu_available():
             self._save_tpu(output_dir)
         elif self.is_world_master():
-            self._save(model_to_save,output_dir)
+            self._save(output_dir)
 
     def prediction_step(
         self, model: nn.Module, inputs: Dict[str, torch.Tensor, ], prediction_loss_only: bool
@@ -956,30 +957,38 @@ class StudentTeacherTrainer:
                             else:
                                 assert model_teacher is self.lex_teacher_model
                                 assert model_student is self.delex_student_model
+
+                            self.model=model_teacher
                             output_dir = os.path.join(self.args.output_dir,
                                                       f"model_teacher_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-                            self.save_model(model_teacher, output_dir)
+                            assert self.model is not None
+                            self.save_model(output_dir)
+
+                            self.model = model_student
                             output_dir = os.path.join(self.args.output_dir,
                                                       f"model_student_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-                            self.save_model(model_student, output_dir)
+                            assert self.model is not None
+                            self.save_model( output_dir)
                         else:
                             if (flag_run_teacher_alone):
                                 if hasattr(model_teacher, "module"):
                                     assert model_teacher.module is self.lex_teacher_model.module
                                 else:
                                     assert model_teacher is self.lex_teacher_model
+                                self.model = model_teacher
                                 output_dir = os.path.join(self.args.output_dir,
                                                           f"model_teacher_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-                                self.save_model(model_teacher, output_dir)
+                                self.save_model( output_dir)
                             else:
                                 if (flag_run_student_alone):
                                     if hasattr(model_teacher, "module"):
                                         assert model_student.module is self.delex_student_model.module
                                     else:
                                         assert model_student is self.delex_student_model
+                                self.model = model_student
                                 output_dir = os.path.join(self.args.output_dir,
                                                           f"model_student_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-                                self.save_model(model_student, output_dir)
+                                self.save_model( output_dir)
 
                         # Save model checkpoint
 
