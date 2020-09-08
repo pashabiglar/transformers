@@ -972,12 +972,24 @@ class StudentTeacherTrainer:
                     epoch_iterator.close()
                     break
 
+            trained_model=None
+            if (flag_run_both):
+                trained_model =model_student
+            else:
+                if (flag_run_teacher_alone):
+                    trained_model = model_teacher
+                else:
+                    if (flag_run_student_alone):
+                        trained_model = model_student
+
+            assert trained_model is not None
+
             self._intermediate_eval(datasets=self.eval_dataset,
                                             epoch=epoch, output_eval_file=output_eval_file_path,
-                                            description="dev_partition",model_to_test_with=model_student)
+                                            description="dev_partition",model_to_test_with=trained_model)
 
             self._intermediate_eval(datasets=self.test_dataset,
-                                    epoch=epoch, output_eval_file=output_eval_file_path, description="test_partition",model_to_test_with=model_student)
+                                    epoch=epoch, output_eval_file=output_eval_file_path, description="test_partition",model_to_test_with=trained_model)
 
 
             logger.info(
