@@ -71,6 +71,7 @@ rm -rf $DATA_DIR
 
 echo "done with data download part . datapath now is $DATA_DIR"
 
+./reduce_size.sh  --data_path $DATA_DIR
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
       ./reduce_size.sh  --data_path $DATA_DIR
