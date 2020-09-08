@@ -1026,7 +1026,7 @@ class StudentTeacherTrainer:
 
 
             logger.info(
-                f"********************************end of epoch {epoch}************************************************************************")
+                f"********************************end of epoch {epoch+1}************************************************************************")
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                 train_iterator.close()
                 break
