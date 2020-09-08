@@ -134,9 +134,10 @@ FILE="$DATA_DIR/dev.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-#feeding dev and test as lex on sep 7th. this is to check if lex model alone works fine from within student teacher
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/dev.tsv -O $FILE
-    #wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/figer_specific/dev.tsv -O $FILE
+    #feeding dev and test as lex on sep 7th. this is to check if lex model alone works fine from within student teacher
+    #wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/dev.tsv -O $FILE
+
+    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/figer_specific/dev.tsv -O $FILE
 fi
 
 
@@ -148,8 +149,8 @@ if test -f "$FILE";then
 echo "$FILE exists"
 else
       #feeding dev and test as lex on sep 7th. this is to check if lex model alone works fine from within student teacher
-      wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/lex/dev.tsv -O $FILE
-      #wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/figer_specific/dev.tsv   -O $FILE
+      #wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/lex/dev.tsv -O $FILE
+      wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/figer_specific/dev.tsv   -O $FILE
 
 fi
 

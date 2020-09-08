@@ -684,8 +684,8 @@ class StudentTeacherTrainer:
 
         model_teacher = self.lex_teacher_model
         model_student = self.delex_student_model
-        flag_run_teacher_alone = True
-        flag_run_student_alone = False
+        flag_run_teacher_alone = False
+        flag_run_student_alone = True
         flag_run_both = False
 
         optimizer = None
