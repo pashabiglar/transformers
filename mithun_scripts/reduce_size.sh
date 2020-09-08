@@ -20,10 +20,10 @@ do
 
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
-    head -9000  $complete_path > temp
+    head -100  $complete_path > temp
     mv temp $complete_path
 else
-    head -10  $complete_path > temp
+    head -50  $complete_path > temp
     mv temp $complete_path
 fi
 

@@ -184,7 +184,7 @@ class StudentTeacherTrainer:
         self.eval_compute_metrics = eval_compute_metrics
         self.compute_metrics = None
         #even though we train two models using student teacher architecture we weill only use the student model to do evaluation on fnc-dev delex dataset
-        self.model=self.delex_student_model
+        #self.model=self.delex_student_model
         self.args = args
         self.default_data_collator = default_data_collator
         self.data_collator = collate_batch_parallel_datasets
@@ -369,8 +369,7 @@ class StudentTeacherTrainer:
 
 
     def get_optimizers_for_student_teacher(
-        self, num_training_steps: int
-    ) -> Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]:
+        self, num_training_steps: int) -> Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]:
         """
         Setup the optimizer and the learning rate scheduler.
         We provide a reasonable default that works well.
@@ -409,8 +408,7 @@ class StudentTeacherTrainer:
 
 
     def get_optimizer(
-        self, num_training_steps: int
-    ) -> Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]:
+        self, model,num_training_steps: int) -> Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]:
         """
         Setup the optimizer and the learning rate scheduler.
         We provide a reasonable default that works well.
@@ -424,11 +422,11 @@ class StudentTeacherTrainer:
         no_decay = ["bias", "LayerNorm.weight"]
         optimizer_grouped_parameters = [
             {
-                "params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
+                "params": [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)],
                 "weight_decay": self.args.weight_decay,
             },
             {
-                "params": [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
+                "params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)],
                 "weight_decay": 0.0,
             },
         ]
@@ -594,7 +592,7 @@ class StudentTeacherTrainer:
         return eval_result
 
 
-    def _save(self, output_dir: Optional[str] = None):
+    def _save(self, model_to_save,output_dir: Optional[str] = None):
         output_dir = output_dir if output_dir is not None else self.args.output_dir
         os.makedirs(output_dir, exist_ok=True)
         logger.info("Saving model checkpoint to %s", output_dir)
@@ -602,12 +600,12 @@ class StudentTeacherTrainer:
         # They can then be reloaded using `from_pretrained()`
         if not isinstance(self.model, PreTrainedModel):
             raise ValueError("Trainer.model appears to not be a PreTrainedModel")
-        self.model.save_pretrained(output_dir)
+        model_to_save.save_pretrained(output_dir)
 
         # Good practice: save your training arguments together with the trained model
         torch.save(self.args, os.path.join(output_dir, "training_args.bin"))
 
-    def save_model(self, output_dir: Optional[str] = None):
+    def save_model(self,model_to_save, output_dir: Optional[str] = None):
         """
         Will save the model, so you can reload it using :obj:`from_pretrained()`.
 
@@ -617,7 +615,7 @@ class StudentTeacherTrainer:
         if is_torch_tpu_available():
             self._save_tpu(output_dir)
         elif self.is_world_master():
-            self._save(output_dir)
+            self._save(model_to_save,output_dir)
 
     def prediction_step(
         self, model: nn.Module, inputs: Dict[str, torch.Tensor, ], prediction_loss_only: bool
@@ -683,6 +681,8 @@ class StudentTeacherTrainer:
             t_total = int(len(train_dataloader) // self.args.gradient_accumulation_steps * self.args.num_train_epochs)
             num_train_epochs = self.args.num_train_epochs
 
+        model_teacher = self.lex_teacher_model
+        model_student = self.delex_student_model
         flag_run_teacher_alone = True
         flag_run_student_alone = False
         flag_run_both = False
@@ -690,12 +690,17 @@ class StudentTeacherTrainer:
         optimizer = None
         scheduler = None
 
-        if (flag_run_both):
 
+        if (flag_run_both):
             optimizer, scheduler = self.get_optimizers_for_student_teacher(num_training_steps=self.args.lr_max_value)
         else:
-            if (flag_run_teacher_alone) or (flag_run_student_alone):
-                optimizer, scheduler = self.get_optimizer(num_training_steps=self.args.lr_max_value)
+            if (flag_run_teacher_alone):
+                optimizer, scheduler = self.get_optimizer(model_teacher,num_training_steps=self.args.lr_max_value)
+            else:
+                if (flag_run_student_alone):
+                    optimizer, scheduler = self.get_optimizer(model_student,num_training_steps=self.args.lr_max_value)
+
+
 
         assert optimizer is not None
         assert scheduler is not None
@@ -712,8 +717,8 @@ class StudentTeacherTrainer:
             )
             scheduler.load_state_dict(torch.load(os.path.join(model_path, "scheduler.pt")))
 
-        model_teacher = self.lex_teacher_model
-        model_student = self.delex_student_model
+
+
         if self.args.fp16:
             if not is_apex_available():
                 raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
@@ -827,15 +832,7 @@ class StudentTeacherTrainer:
             for step, (input_lex,input_delex) in enumerate(epoch_iterator):
                 logger.debug("just got inside for step in enumerate epoch_iterator. i.e for each batch")
 
-                if (flag_run_both):
-                    model_teacher.zero_grad()
-                    model_student.zero_grad()
-                else:
-                    if (flag_run_teacher_alone):
-                        model_teacher.zero_grad()
-                    else:
-                        if (flag_run_student_alone):
-                            model_student.zero_grad()
+
 
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:
@@ -913,6 +910,15 @@ class StudentTeacherTrainer:
                         optimizer.step()
                         logger.debug("just done withn optimixer.step)")
                     scheduler.step()
+                    if (flag_run_both):
+                        model_teacher.zero_grad()
+                        model_student.zero_grad()
+                    else:
+                        if (flag_run_teacher_alone):
+                            model_teacher.zero_grad()
+                        else:
+                            if (flag_run_student_alone):
+                                model_student.zero_grad()
 
 
 
@@ -941,21 +947,48 @@ class StudentTeacherTrainer:
                     if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0:
                         # In all cases (even distributed/parallel), self.model is always a reference
                         # to the model we want to save.
-                        if hasattr(model_teacher, "module"):
-                            assert model_teacher.module is self.lex_teacher_model
+                        #update: in student teacher setting since there are way too many model words going on, we will ezxplicitly pass the model to save
+
+                        if (flag_run_both):
+                            if hasattr(model_teacher, "module"):
+                                assert model_teacher.module is self.lex_teacher_model.module
+                                assert model_student.module is self.delex_student_model.module
+                            else:
+                                assert model_teacher is self.lex_teacher_model
+                                assert model_student is self.delex_student_model
+                            output_dir = os.path.join(self.args.output_dir,
+                                                      f"model_teacher_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
+                            self.save_model(model_teacher, output_dir)
+                            output_dir = os.path.join(self.args.output_dir,
+                                                      f"model_student_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
+                            self.save_model(model_student, output_dir)
                         else:
-                            assert model_teacher is self.lex_teacher_model
+                            if (flag_run_teacher_alone):
+                                if hasattr(model_teacher, "module"):
+                                    assert model_teacher.module is self.lex_teacher_model.module
+                                else:
+                                    assert model_teacher is self.lex_teacher_model
+                                output_dir = os.path.join(self.args.output_dir,
+                                                          f"model_teacher_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
+                                self.save_model(model_teacher, output_dir)
+                            else:
+                                if (flag_run_student_alone):
+                                    if hasattr(model_teacher, "module"):
+                                        assert model_student.module is self.delex_student_model.module
+                                    else:
+                                        assert model_student is self.delex_student_model
+                                output_dir = os.path.join(self.args.output_dir,
+                                                          f"model_student_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
+                                self.save_model(model_student, output_dir)
+
                         # Save model checkpoint
-                        output_dir = os.path.join(self.args.output_dir, f"model_teacher_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-                        self.save_model(output_dir)
+
 
                         if hasattr(model_student, "module"):
                             assert model_student.module is self.delex_student_model
                         else:
                             assert model_student is self.delex_student_model
                         # Save model checkpoint
-                        output_dir = os.path.join(self.args.output_dir, f"model_student_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-                        self.save_model(output_dir)
 
                         if self.is_world_master():
                             self._rotate_checkpoints()
