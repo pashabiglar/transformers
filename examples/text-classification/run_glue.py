@@ -162,13 +162,12 @@ def main():
 
     #when in student-teacher mode, you need two tokenizers, one for lexicalized data, and one for the delexicalized data
     # the regular tokenizer will be used for lexicalized data and special one for delexicalized
-    if (training_args.do_train_1student_1teacher == True):
-        tokenizer_delex = AutoTokenizer.from_pretrained(
-            model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
-            cache_dir=model_args.cache_dir,
-            force_download=True,
-            tokenizer_type="delex"
-        )
+    tokenizer_delex = AutoTokenizer.from_pretrained(
+        model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
+        cache_dir=model_args.cache_dir,
+        force_download=True,
+        tokenizer_type="delex"
+    )
 
     if (training_args.do_train_1student_1teacher == True):
         model_teacher = AutoModelForSequenceClassification.from_pretrained(
@@ -216,7 +215,7 @@ def main():
         else:
             if (training_args.task_type == "delex"):
                 train_dataset = (
-                    GlueDataset(args=data_args, tokenizer=tokenizer, task_type="delex", mode="train",
+                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="train",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_train
                     else None
@@ -235,7 +234,7 @@ def main():
     if (training_args.do_train_1student_1teacher == True):
         # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
         eval_dataset = (
-            GlueDataset(args=data_args, tokenizer=tokenizer, task_type="delex", mode="dev",
+            GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
                         cache_dir=model_args.cache_dir)
             if training_args.do_eval
             else None
@@ -251,7 +250,7 @@ def main():
         else:
             if (training_args.task_type == "delex"):
                 eval_dataset = (
-                    GlueDataset(args=data_args, tokenizer=tokenizer, task_type="delex", mode="dev",
+                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_eval
                     else None
@@ -267,7 +266,7 @@ def main():
         # in the student teacher mode the evaluation always happens in the delex cross domain dev data. here we are loading it as the test partition so that we can keep track of
         # progress across epochs
         test_dataset = (
-            GlueDataset(data_args, tokenizer=tokenizer, task_type="delex", mode="test", cache_dir=model_args.cache_dir)
+            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test", cache_dir=model_args.cache_dir)
             if training_args.do_predict
             else None
         )
@@ -283,7 +282,7 @@ def main():
         else:
             if (training_args.task_type == "delex"):
                 test_dataset = (
-                    GlueDataset(data_args, tokenizer=tokenizer, task_type="delex", mode="test",
+                    GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_predict
                     else None

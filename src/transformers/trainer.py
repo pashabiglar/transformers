@@ -850,7 +850,9 @@ class StudentTeacherTrainer:
 
 
                 #model returns # (loss), logits, (hidden_states), (attentions)
-                tr_loss_lex,outputs_lex = self.get_classification_loss(model_teacher, input_lex, optimizer_teacher)
+
+                #this is a temporary hack on sep 8th 2020. both student and teacher must be pointing to same optimizer
+                tr_loss_lex,outputs_lex = self.get_classification_loss(model_teacher, input_lex, optimizer_student)
                 tr_loss_delex,outputs_delex = self.get_classification_loss(model_student, input_delex, optimizer_student)
 
                 if(flag_run_both):
