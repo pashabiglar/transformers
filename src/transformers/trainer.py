@@ -694,17 +694,23 @@ class StudentTeacherTrainer:
 
         if (flag_run_both):
             optimizer, scheduler = self.get_optimizers_for_student_teacher(num_training_steps=self.args.lr_max_value)
+            assert optimizer is not None
+            assert scheduler is not None
         else:
             if (flag_run_teacher_alone):
-                optimizer, scheduler = self.get_optimizer(model_teacher,num_training_steps=self.args.lr_max_value)
+                optimizer_teacher, scheduler_teacher = self.get_optimizer(model_teacher,num_training_steps=self.args.lr_max_value)
+                assert optimizer_teacher is not None
+                assert scheduler_teacher is not None
             else:
                 if (flag_run_student_alone):
-                    optimizer, scheduler = self.get_optimizer(model_student,num_training_steps=self.args.lr_max_value)
+                    optimizer_student, scheduler_student = self.get_optimizer(model_student,num_training_steps=self.args.lr_max_value)
+                    assert optimizer_student is not None
+                    assert scheduler_student is not None
 
 
 
-        assert optimizer is not None
-        assert scheduler is not None
+
+
 
         # Check if saved optimizer or scheduler states exist
         if (
@@ -844,8 +850,8 @@ class StudentTeacherTrainer:
 
 
                 #model returns # (loss), logits, (hidden_states), (attentions)
-                tr_loss_lex,outputs_lex = self.get_classification_loss(model_teacher, input_lex, optimizer)
-                tr_loss_delex,outputs_delex = self.get_classification_loss(model_student, input_delex, optimizer)
+                tr_loss_lex,outputs_lex = self.get_classification_loss(model_teacher, input_lex, optimizer_teacher)
+                tr_loss_delex,outputs_delex = self.get_classification_loss(model_student, input_delex, optimizer_student)
 
                 if(flag_run_both):
                     combined_classification_loss=tr_loss_lex+tr_loss_delex
@@ -908,9 +914,9 @@ class StudentTeacherTrainer:
                     if is_torch_tpu_available():
                         xm.optimizer_step(optimizer)
                     else:
-                        optimizer.step()
+                        optimizer_student.step()
                         logger.debug("just done withn optimixer.step)")
-                    scheduler.step()
+                    scheduler_student.step()
                     if (flag_run_both):
                         model_teacher.zero_grad()
                         model_student.zero_grad()
