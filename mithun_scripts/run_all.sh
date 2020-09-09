@@ -58,7 +58,7 @@ echo "OUTPUT_DIR=$OUTPUT_DIR"
 echo "value of epochs is $EPOCHS"
 echo "value of DATA_DIR is $DATA_DIR"
 
-
+  
 
 #get data fresh before every run
 echo ". going to download data"
