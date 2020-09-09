@@ -685,8 +685,8 @@ class StudentTeacherTrainer:
         model_teacher = self.lex_teacher_model
         model_student = self.delex_student_model
         flag_run_teacher_alone = False
-        flag_run_student_alone = True
-        flag_run_both = False
+        flag_run_student_alone = False
+        flag_run_both = True
 
         optimizer = None
         scheduler = None
@@ -698,14 +698,14 @@ class StudentTeacherTrainer:
             assert scheduler is not None
         else:
             if (flag_run_teacher_alone):
-                optimizer_teacher, scheduler_teacher = self.get_optimizer(model_teacher,num_training_steps=self.args.lr_max_value)
-                assert optimizer_teacher is not None
-                assert scheduler_teacher is not None
+                optimizer, scheduler = self.get_optimizer(model_teacher,num_training_steps=self.args.lr_max_value)
+                assert optimizer is not None
+                assert scheduler is not None
             else:
                 if (flag_run_student_alone):
-                    optimizer_student, scheduler_student = self.get_optimizer(model_student,num_training_steps=self.args.lr_max_value)
-                    assert optimizer_student is not None
-                    assert scheduler_student is not None
+                    optimizer, scheduler = self.get_optimizer(model_student,num_training_steps=self.args.lr_max_value)
+                    assert optimizer is not None
+                    assert scheduler is not None
 
 
 
@@ -850,10 +850,8 @@ class StudentTeacherTrainer:
 
 
                 #model returns # (loss), logits, (hidden_states), (attentions)
-
-                #this is a temporary hack on sep 8th 2020. both student and teacher must be pointing to same optimizer
-                tr_loss_lex,outputs_lex = self.get_classification_loss(model_teacher, input_lex, optimizer_student)
-                tr_loss_delex,outputs_delex = self.get_classification_loss(model_student, input_delex, optimizer_student)
+                tr_loss_lex,outputs_lex = self.get_classification_loss(model_teacher, input_lex, optimizer)
+                tr_loss_delex,outputs_delex = self.get_classification_loss(model_student, input_delex, optimizer)
 
                 if(flag_run_both):
                     combined_classification_loss=tr_loss_lex+tr_loss_delex
@@ -916,9 +914,9 @@ class StudentTeacherTrainer:
                     if is_torch_tpu_available():
                         xm.optimizer_step(optimizer)
                     else:
-                        optimizer_student.step()
+                        optimizer.step()
                         logger.debug("just done withn optimixer.step)")
-                    scheduler_student.step()
+                    scheduler.step()
                     if (flag_run_both):
                         model_teacher.zero_grad()
                         model_student.zero_grad()
