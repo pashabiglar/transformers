@@ -687,7 +687,8 @@ class StudentTeacherTrainer:
         flag_run_teacher_alone = False
         flag_run_student_alone = False
         flag_run_both = True
-        weight_consistency_loss=0.5
+        weight_consistency_loss=1
+        weight_classification_loss = 0.5
 
         optimizer = None
         scheduler = None
@@ -873,7 +874,7 @@ class StudentTeacherTrainer:
                 consistency_loss = self.get_consistency_loss(logits_lex,logits_delex,"mse")
 
                 if (flag_run_both):
-                    combined_loss = combined_classification_loss + weight_consistency_loss*consistency_loss
+                    combined_loss = (weight_classification_loss*combined_classification_loss) + (weight_consistency_loss*consistency_loss)
                 else:
                     combined_loss = combined_classification_loss
 
