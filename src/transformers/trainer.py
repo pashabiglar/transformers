@@ -688,7 +688,7 @@ class StudentTeacherTrainer:
         flag_run_student_alone = False
         flag_run_both = True
         weight_consistency_loss=1
-        weight_classification_loss = 0.5
+        weight_classification_loss = 0.2
 
         optimizer = None
         scheduler = None
