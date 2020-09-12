@@ -102,7 +102,7 @@ logger = logging.getLogger(__name__)
 
 def read_and_merge_config_entries():
     config = configparser.ConfigParser()
-    config.read('config.py')
+    config.read('config_delex_cased.py')
     assert not len(config.sections())==0
     combined_configs=[]
     for each_section in config.sections():
