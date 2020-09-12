@@ -1,5 +1,7 @@
 #!/bin/bash
 
+
+
 export MACHINE_TO_RUN_ON="laptop" #options include [laptop, hpc,clara]
 export EPOCHS=1
 if [ $# -gt 1 ]
@@ -112,5 +114,5 @@ export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME     
 
 
 
-#./run_glue.sh
-./run_tests.sh
+./run_glue.sh
+#./run_tests.sh

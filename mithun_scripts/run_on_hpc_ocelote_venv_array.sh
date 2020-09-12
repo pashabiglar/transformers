@@ -41,7 +41,7 @@ cd /home/u11/mithunpaul/xdisk/huggingface_bert_dev/code/mithun_scripts
 
 bash run_all.sh --epochs_to_run 1 --machine_to_run_on hpc --use_toy_data true #options include [laptop, hpc,clara]
 #stub to use in laptop
-#bash run_all.sh --epochs_to_run 1 --machine_to_run_on laptop
+#bash run_all.sh --epochs_to_run 2 --machine_to_run_on laptop --use_toy_data true
 
 
 

@@ -261,6 +261,11 @@ class TrainingArguments:
     toy_data_dir_path: Optional[str] = field(default="hpc", metadata={
         "help": "this is the folder where a smaller version of the data is kept. this data is used for testing purposes."})
     use_toy_data: bool = field(default=False, metadata={"help": "Run on a small part of the entire data. usually used for testing purposes"})
+    fever_in_domain_accuracy_on_toy_data_17_datapoints: float = field(default=1.0, metadata={"help": "For testing. accuracy when the code was run earlier on a toy data of size 17 data points"})
+    fever_cross_domain_accuracy_on_toy_data_17_datapoints: float = field(default=1.0, metadata={
+        "help": "For testing. accuracy when the code was run earlier on a toy data of size 17 data points"})
+    fever_cross_domain_fncscore_on_toy_data_17_datapoints: float = field(default=1.0, metadata={
+        "help": "For testing. accuracy when the code was run earlier on a toy data of size 17 data points"})
 
 
     def __iter__(self):
