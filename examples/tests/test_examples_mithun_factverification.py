@@ -179,5 +179,4 @@ def test_run_glue():
 
 
         logger.info("done with fact verification related testing . going to exit")
-        sys.exit(1)
-#
+
