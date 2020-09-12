@@ -12,7 +12,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#to debug this file go to Run edit configurations, add python test, select pytest, then select this file
 
+from unittest import TestCase
 import configparser
 from dataclasses import dataclass, field
 import logging
@@ -100,7 +102,8 @@ logger = logging.getLogger(__name__)
 
 def read_and_merge_config_entries():
     config = configparser.ConfigParser()
-    config.read('config_bertuncased.py')
+    config.read('config.py')
+    assert not len(config.sections())==0
     combined_configs=[]
     for each_section in config.sections():
         for (each_key, each_val) in config.items(each_section):
