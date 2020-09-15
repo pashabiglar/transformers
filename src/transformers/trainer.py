@@ -135,15 +135,43 @@ def get_tpu_sampler(dataset: Dataset):
 class StudentTeacherTrainer:
     """
     Trainer is a simple but feature-complete training and eval loop for PyTorch,
-    optimized for Transformers.
+
+    optimized for 🤗 Transformers.
+
+    Args:
+        model (:class:`~transformers.PreTrainedModel`):
+            The model to train, evaluate or use for predictions.
+        args (:class:`~transformers.TrainingArguments`):
+            The arguments to tweak training.
+        data_collator (:obj:`DataCollator`, `optional`, defaults to :func:`~transformers.default_data_collator`):
+            The function to use to from a batch from a list of elements of :obj:`train_dataset` or
+            :obj:`dev_dataset`.
+        train_dataset (:obj:`torch.utils.data.dataset.Dataset`, `optional`):
+            The dataset to use for training.
+        eval_dataset (:obj:`torch.utils.data.dataset.Dataset`, `optional`):
+            The dataset to use for evaluation.
+        compute_metrics (:obj:`Callable[[EvalPrediction], Dict]`, `optional`):
+            The function that will be used to compute metrics at evaluation. Must take a
+            :class:`~transformers.EvalPrediction` and return a dictionary string to metric values.
+        prediction_loss_only (:obj:`bool`, `optional`, defaults to `False`):
+            When performing evaluation and predictions, only returns the loss.
+        tb_writer (:obj:`SummaryWriter`, `optional`):
+            Object to write to TensorBoard.
+        optimizers (:obj:`Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR`, `optional`):
+            A tuple containing the optimizer and the scheduler to use. Will default to an instance of
+            :class:`~transformers.AdamW` on your model and a scheduler given by
+            :func:`~transformers.get_linear_schedule_with_warmup` controlled by :obj:`args`.
+
     """
 
     models: {}
     args: TrainingArguments
     data_collator: DataCollator
-    train_datasest:{}
+
+    train_dataset: Optional[Dataset]
     eval_dataset: Optional[Dataset]
-    test_dataset = Optional[Dataset]
+    test_dataset =Optional[Dataset]
+
     test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     eval_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
@@ -168,6 +196,15 @@ class StudentTeacherTrainer:
         tb_writer: Optional["SummaryWriter"] = None,
         optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = (None,None)
     ):
+
+        self.model = model.to(args.device)
+        self.args = args
+        self.data_collator = data_collator if data_collator is not None else default_data_collator
+        self.train_dataset = train_dataset
+
+        #eval dataset here means on the dev partition
+        self.dev_dataset = eval_dataset
+
         """
         Trainer is a simple but feature-complete training and eval loop for PyTorch,
         optimized for Transformers.
@@ -178,6 +215,7 @@ class StudentTeacherTrainer:
         self.lex_teacher_model = models.get("teacher").to(args.device)
         self.delex_student_model = models.get("student").to(args.device)
         self.eval_dataset = eval_dataset
+
         ###for fnc score evaluation
         self.test_dataset = test_dataset
         self.test_compute_metrics = test_compute_metrics
@@ -216,6 +254,27 @@ class StudentTeacherTrainer:
             # Set an xla_device flag on the model's config.
             # We'll find a more elegant and not need to do this in the future.
             self.model.config.xla_device = True
+
+        if not callable(self.data_collator) and callable(getattr(self.data_collator, "collate_batch", None)):
+            self.data_collator = self.data_collator.collate_batch
+            warnings.warn(
+                (
+                    "The `data_collator` should now be a simple callable (function, class with `__call__`), classes "
+                    + "with a `collate_batch` are deprecated and won't be supported in a future version."
+                ),
+                FutureWarning,
+            )
+    def write_predictions_to_disk(self, model,test_dataset, file_to_write_predictions, ):
+        predictions = self.predict(test_dataset).predictions
+        predictions = np.argmax(predictions, axis=1)
+        if self.is_world_master():
+            with open(file_to_write_predictions, "w") as writer:
+                logger.info("***** (Going to write Test results to disk {} *****")
+                writer.write("index\tprediction\n")
+                for index, item in enumerate(predictions):
+                        item = test_dataset.get_labels()[item]
+                        writer.write("%d\t%s\n" % (index, item))
+
 
     def predict(self, test_dataset: Dataset,model_to_test_with) -> PredictionOutput:
         """
@@ -259,13 +318,14 @@ class StudentTeacherTrainer:
 
         output = self.prediction_loop(eval_dataloader,model_to_test_with, description="Evaluation")
 
+
         self.log(output.metrics)
+       if self.args.tpu_metrics_debug or self.args.debug:
+          # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
+          xm.master_print(met.metrics_report())
 
-        if self.args.tpu_metrics_debug or self.args.debug:
-            # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
-            xm.master_print(met.metrics_report())
+      return output.metrics
 
-        return output.metrics
 
     def _prepare_inputs(
         self, inputs: Dict[str, torch.Tensor], model: nn.Module
@@ -345,7 +405,6 @@ class StudentTeacherTrainer:
             collate_fn=self.default_data_collator
         )
 
-        return data_loader
 
     def get_test_dataloader(self, test_dataset: Dataset) -> DataLoader:
         # We use the same batch_size as for eval.
@@ -813,13 +872,30 @@ class StudentTeacherTrainer:
         )
 
         #empty out the file which stores intermediate evaluations
-        output_eval_file_path = self.args.output_dir + "intermediate_eval_results.txt"
+
+        output_dir_absolute_path=os.path.join(os.getcwd(),self.args.output_dir)
+        dev_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_dev_partition_results.txt"
         # empty out the
-        with open(output_eval_file_path, "w") as writer:
+        with open(dev_partition_evaluation_output_file_path, "w") as writer:
+            writer.write("")
+
+        test_partition_evaluation_output_file_path =  output_dir_absolute_path+ "intermediate_evaluation_on_test_partition_results.txt"
+        # empty out the
+        with open(test_partition_evaluation_output_file_path, "w") as writer:
             writer.write("")
 
 
+        # empty out the file which stores intermediate evaluations
+        predictions_on_test_file_path = output_dir_absolute_path + "predictions_on_test_partition.txt"
+        with open(predictions_on_test_file_path, "w") as writer:
+            writer.write("")
+
+        best_fnc_score=0
+        best_acc=0
+
+
         #for each epoch
+
         for epoch in train_iterator:
             logger.debug("just got inside for epoch in train_iterator")
 
@@ -1034,12 +1110,45 @@ class StudentTeacherTrainer:
 
             assert trained_model is not None
 
-            self._intermediate_eval(datasets=self.eval_dataset,
-                                            epoch=epoch, output_eval_file=output_eval_file_path,
-                                            description="dev_partition",model_to_test_with=trained_model)
+           
+            dev_partition_evaluation_result = self._intermediate_eval(datasets=self.dev_dataset,
+                                                                      epoch=epoch,
+                                                                      output_eval_file=dev_partition_evaluation_output_file_path,
+                                                                      description="dev_partition",,model_to_test_with=trained_model)
 
-            self._intermediate_eval(datasets=self.test_dataset,
-                                    epoch=epoch, output_eval_file=output_eval_file_path, description="test_partition",model_to_test_with=trained_model)
+            test_partition_evaluation_result=self._intermediate_eval(datasets=self.test_dataset,
+                                    epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",model_to_test_with=trained_model)
+
+            fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['fnc_score']
+            accuracy_test_partition = test_partition_evaluation_result['eval_acc']['acc']
+
+            if fnc_score_test_partition>best_fnc_score:
+                best_fnc_score=fnc_score_test_partition
+
+                logger.info(f"found that the current fncscore:{fnc_score_test_partition} in epoch "
+                            f"{epoch} beats the bestfncscore so far i.e ={best_fnc_score}. going to prediction"
+                            f"on test partition and save that and model to disk")
+                #if the accuracy or fnc_score_test_partition beats the highest so far, write predictions to disk
+                self.write_predictions_to_disk(self.model,self.test_dataset,predictions_on_test_file_path)
+
+                # Save model checkpoint
+                output_dir = os.path.join(self.args.output_dir)
+                self.save_model(output_dir)
+
+                # if self.is_world_master():
+                #     self._rotate_checkpoints()
+
+                if is_torch_tpu_available():
+                    xm.rendezvous("saving_optimizer_states")
+                    xm.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
+                    xm.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
+                elif self.is_world_master():
+                    torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
+                    torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
+
+            if accuracy_test_partition > best_acc:
+                best_acc = accuracy_test_partition
+
 
 
             logger.info(
@@ -1055,7 +1164,12 @@ class StudentTeacherTrainer:
             self.tb_writer.close()
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
-        return TrainOutput(self.global_step, tr_loss_lex_float / self.global_step)
+
+
+        # Note: returning for testing purposes only. All performance evaluation measures by now are written to disk.
+        # Note that the assumption here is that the test will be run for 1 epoch only. ELse have to return the best dev and test partition scores
+        return dev_partition_evaluation_result,test_partition_evaluation_result
+
 
     def log(self, logs: Dict[str, float], iterator: Optional[tqdm] = None) -> None:
         """
@@ -1136,6 +1250,96 @@ class StudentTeacherTrainer:
 
         return loss.item()
 
+
+    def is_local_master(self) -> bool:
+        if is_torch_tpu_available():
+            return xm.is_master_ordinal(local=True)
+        else:
+            return self.args.local_rank in [-1, 0]
+
+    def is_world_master(self) -> bool:
+        """
+        This will be True only in one process, even in distributed mode,
+        even when training on multiple machines.
+        """
+        if is_torch_tpu_available():
+            return xm.is_master_ordinal(local=False)
+        else:
+            return self.args.local_rank == -1 or torch.distributed.get_rank() == 0
+
+    def save_model(self, output_dir: Optional[str] = None):
+        """
+        Will save the model, so you can reload it using :obj:`from_pretrained()`.
+
+        Will only save from the world_master process (unless in TPUs).
+        """
+
+        if is_torch_tpu_available():
+            self._save_tpu(output_dir)
+        elif self.is_world_master():
+            self._save(output_dir)
+
+    def _save_tpu(self, output_dir: Optional[str] = None):
+        output_dir = output_dir if output_dir is not None else self.args.output_dir
+        logger.info("Saving model checkpoint to %s", output_dir)
+
+        if xm.is_master_ordinal():
+            os.makedirs(output_dir, exist_ok=True)
+            torch.save(self.args, os.path.join(output_dir, "training_args.bin"))
+
+        # Save a trained model and configuration using `save_pretrained()`.
+        # They can then be reloaded using `from_pretrained()`
+        if not isinstance(self.model, PreTrainedModel):
+            raise ValueError("Trainer.model appears to not be a PreTrainedModel")
+
+        xm.rendezvous("saving_checkpoint")
+        self.model.save_pretrained(output_dir)
+
+    def _save(self, output_dir: Optional[str] = None):
+        output_dir = output_dir if output_dir is not None else self.args.output_dir
+        os.makedirs(output_dir, exist_ok=True)
+        logger.info("Saving model checkpoint to %s", output_dir)
+        # Save a trained model and configuration using `save_pretrained()`.
+        # They can then be reloaded using `from_pretrained()`
+        if not isinstance(self.model, PreTrainedModel):
+            raise ValueError("Trainer.model appears to not be a PreTrainedModel")
+        self.model.save_pretrained(output_dir)
+
+        # Good practice: save your training arguments together with the trained model
+        torch.save(self.args, os.path.join(output_dir, "training_args.bin"))
+
+    def _sorted_checkpoints(self, checkpoint_prefix=PREFIX_CHECKPOINT_DIR, use_mtime=False) -> List[str]:
+        ordering_and_checkpoint_path = []
+
+        glob_checkpoints = [str(x) for x in Path(self.args.output_dir).glob(f"{checkpoint_prefix}-*")]
+
+        for path in glob_checkpoints:
+            if use_mtime:
+                ordering_and_checkpoint_path.append((os.path.getmtime(path), path))
+            else:
+                regex_match = re.match(f".*{checkpoint_prefix}-([0-9]+)", path)
+                if regex_match and regex_match.groups():
+                    ordering_and_checkpoint_path.append((int(regex_match.groups()[0]), path))
+
+        checkpoints_sorted = sorted(ordering_and_checkpoint_path)
+        checkpoints_sorted = [checkpoint[1] for checkpoint in checkpoints_sorted]
+        return checkpoints_sorted
+
+    def _rotate_checkpoints(self, use_mtime=False) -> None:
+        if self.args.save_total_limit is None or self.args.save_total_limit <= 0:
+            return
+
+        # Check if we should delete older checkpoint(s)
+        checkpoints_sorted = self._sorted_checkpoints(use_mtime=use_mtime)
+        if len(checkpoints_sorted) <= self.args.save_total_limit:
+            return
+
+        number_of_checkpoints_to_delete = max(0, len(checkpoints_sorted) - self.args.save_total_limit)
+        checkpoints_to_be_deleted = checkpoints_sorted[:number_of_checkpoints_to_delete]
+        for checkpoint in checkpoints_to_be_deleted:
+            logger.info("Deleting older checkpoint [{}] due to args.save_total_limit".format(checkpoint))
+            shutil.rmtree(checkpoint)
+
     def get_classification_loss(
             self, model: nn.Module, inputs: Dict[str, torch.Tensor], optimizer: torch.optim.Optimizer
     ) -> float:
@@ -1188,11 +1392,13 @@ class StudentTeacherTrainer:
         '''
         similar to _training_step however returns loss instead of doing .backward
         Args:
+
             model:
             inputs:
             optimizer:
         Returns:loss
         '''\
+
 
         if(loss_function=="mse"):
             loss_fct = MSELoss()

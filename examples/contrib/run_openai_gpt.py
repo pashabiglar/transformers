@@ -23,7 +23,7 @@
           --do_train \
           --do_eval \
           --train_dataset "$ROC_STORIES_DIR/cloze_test_val__spring2016 - cloze_test_ALL_val.csv" \
-          --eval_dataset "$ROC_STORIES_DIR/cloze_test_test__spring2016 - cloze_test_ALL_test.csv" \
+          --dev_dataset "$ROC_STORIES_DIR/cloze_test_test__spring2016 - cloze_test_ALL_test.csv" \
           --output_dir ../log \
           --train_batch_size 16 \
 """
@@ -111,7 +111,7 @@ def main():
         help="The output directory where the model predictions and checkpoints will be written.",
     )
     parser.add_argument("--train_dataset", type=str, default="")
-    parser.add_argument("--eval_dataset", type=str, default="")
+    parser.add_argument("--dev_dataset", type=str, default="")
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--num_train_epochs", type=int, default=3)
     parser.add_argument("--train_batch_size", type=int, default=8)

@@ -103,6 +103,9 @@ def main():
             f"Output directory ({training_args.output_dir}) already exists and is not empty. Use --overwrite_output_dir to overcome."
         )
 
+    run_training(model_args, data_args, training_args)
+
+def run_training(model_args, data_args, training_args):
     # Setup logging
     git_details=get_git_info()
 
@@ -155,7 +158,6 @@ def main():
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
         force_download=True,
-        tokenizer_type=training_args.task_type
     )
 
     #when in student-teacher mode, you need two tokenizers, one for lexicalized data, and one for the delexicalized data
@@ -221,8 +223,7 @@ def main():
 
 
 
-    #save only at the end of each epoch
-    #training_args.save_steps = math.floor((len(train_dataset) / training_args.per_device_train_batch_size) * training_args.num_train_epochs)
+
 
     # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
     # combined model_teacher performs in a delexicalized dataset. This will serve as a verification point
@@ -297,6 +298,7 @@ def main():
 
     dev_compute_metrics = build_compute_metrics_fn("feverindomain")
     test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
+
     if training_args.do_train_1student_1teacher:
         trainer = StudentTeacherTrainer(
             models={"teacher": model_teacher, "student": model_student},
@@ -320,19 +322,26 @@ def main():
 
 
     if training_args.do_train:
+        dev_partition_evaluation_result=None
+        test_partition_evaluation_result=None
+
         if (training_args.do_train_1student_1teacher == True):
-            trainer.train_1teacher_1student(
+            dev_partition_evaluation_result,test_partition_evaluation_result=trainer.train_1teacher_1student(
                 model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
             )
         else:
-            trainer.train(
+            dev_partition_evaluation_result,test_partition_evaluation_result=trainer.train(
                 model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
             )
+
 
         # For convenience, we also re-save the tokenizer to the same directory,
         # so that you can share your model_teacher easily on huggingface.co/models =)
         if trainer.is_world_master():
             tokenizer.save_pretrained(training_args.output_dir)
+        assert dev_partition_evaluation_result is not None
+        assert test_partition_evaluation_result is not None
+        return dev_partition_evaluation_result,test_partition_evaluation_result
 
 
 def _mp_fn(index):
