@@ -1,10 +1,7 @@
 #!/usr/bin/env bash
 
-#cd /home/u11/mithunpaul/huggingfacev2/mithun_scripts/
-#bert_format_base_folder_path="/xdisk/msurdeanu/mithunpaul/huggingface/transformers/src/transformers/data/datasets/fever/"
-bert_format_base_folder_path="../src/transformers/data/datasets/fever"
-echo "value of basedir is $basedir"
-for complete_path in $(find $basedir -name '*.tsv');
+echo "value of basedir is $DATA_DIR"
+for complete_path in $(find $DATA_DIR -name '*.tsv');
 do
 echo "going to convert the following file to mnli format"
 echo $complete_path

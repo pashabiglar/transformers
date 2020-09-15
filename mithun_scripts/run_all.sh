@@ -26,11 +26,11 @@ fi
 
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_master/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_master/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_merge_master_with_studentteacher_branch/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_merge_master_with_studentteacher_branch/data"
 else
-        export DATA_DIR_BASE="../src/transformers/data/datasets"
-        export OUTPUT_DIR_BASE="output"
+        export DATA_DIR_BASE="/Users/mordor/research/huggingface/src/transformers/data/datasets"
+        export OUTPUT_DIR_BASE="/Users/mordor/research/huggingface/mithun_scripts/output"
 fi
 
 echo "MACHINE_TO_RUN_ON=$MACHINE_TO_RUN_ON"
@@ -42,8 +42,8 @@ echo "EPOCHS=$EPOCHS"
 
 export DATASET="fever"
 export basedir="$DATA_DIR_BASE/$DATASET"
-export TASK_TYPE="delex" #options for task type include lex,delex,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both lex and delex folders
-export SUB_TASK_TYPE="figerspecific" #options for TASK_SUB_TYPE (usually used only for delex)  include [oa, figerspecific, figerabstract, oass, simplener]
+export TASK_TYPE="combined" #options for task type include lex,delex,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both lex and delex folders
+export SUB_TASK_TYPE="figerspecific" #options for TASK_SUB_TYPE (usually used only for TASK_TYPEs :[delex,combined])  include [oa, figerspecific, figerabstract, oass, simplener]
 export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
 export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE"
 export PYTHONPATH="../src"
@@ -55,23 +55,23 @@ echo $OUTPUT_DIR
 
 echo "OUTPUT_DIR=$OUTPUT_DIR"
 
+echo "value of epochs is $EPOCHS"
+echo "value of DATA_DIR is $DATA_DIR"
 
 
-#commenting this on august 1st since downloading data was becoming a pain. due to tokenization issues. i.e after merging with
-#latest code of HF, for some reason tokenization was taking 24+ hours. I decided to reuse the old cahced tokenizations instead of
-#trying to figure out what happened due to merge. PIcking my battles.
 
-#get data only if its 1st epoch
-if [ $EPOCHS = "1" ]; then
-        echo "found epopch is equal to 1. going to download data"
-        rm -rf $DATA_DIR
-        ./get_fever_fnc_data.sh
-        ./convert_to_mnli_format.sh
-fi
+#get data fresh before every run
+echo ". going to download data"
+rm -rf $DATA_DIR
+./get_fever_fnc_data.sh
+./convert_to_mnli_format.sh
 
-echo "done with data download part if epoch==1. datapath now is $DATA_DIR"
 
-./reduce_size.sh  --data_path $DATA_DIR
+
+
+
+echo "done with data download part . datapath now is $DATA_DIR"
+
 
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then

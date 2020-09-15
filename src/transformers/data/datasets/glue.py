@@ -182,7 +182,8 @@ class ParallelDataDataset(Dataset):
         self,
 
         args: GlueDataTrainingArguments,
-        tokenizer: PreTrainedTokenizer,
+        tokenizer_lex: PreTrainedTokenizer,
+        tokenizer_delex: PreTrainedTokenizer,
         data_type_1: Optional[str] = None,
         data_type_2: Optional[str] = None,
         limit_length: Optional[int] = None,
@@ -203,11 +204,11 @@ class ParallelDataDataset(Dataset):
         cached_features_file = os.path.join(
             cache_dir if cache_dir is not None else args.data_dir,
             "cached_{}_{}_{}_{}".format(
-                mode.value, tokenizer.__class__.__name__, str(args.max_seq_length), args.task_name,
+                mode.value, tokenizer_lex.__class__.__name__, str(args.max_seq_length), args.task_name,
             ),
         )
         label_list = self.processor.get_labels()
-        if args.task_name in ["mnli", "mnli-mm"] and tokenizer.__class__ in (
+        if args.task_name in ["mnli", "mnli-mm"] and tokenizer_lex.__class__ in (
             RobertaTokenizer,
             RobertaTokenizerFast,
             XLMRobertaTokenizer,
@@ -218,6 +219,9 @@ class ParallelDataDataset(Dataset):
 
         # Make sure only the first process in distributed training processes the dataset,
         # and the others will use the cache.
+
+        #note: when running student teacher first time a long time, pass--overwrite_cache so that parallell dataset is created and tokenized.
+
         lock_path = cached_features_file + ".lock"
         with FileLock(lock_path):
             if os.path.exists(cached_features_file) and not args.overwrite_cache:
@@ -236,17 +240,22 @@ class ParallelDataDataset(Dataset):
                 else:
                     #when using parallel datasets get two features of examples and pass it to glue_convert_pair_examples_to_features
                     #which in turn creates features and combines them both
-                    #data_dir1 = os.path.join(args.data_dir, data_type_1)
                     examples1 = self.processor.get_train_examples_set1(args.data_dir)
-                    #data_dir2 = os.path.join(args.data_dir, data_type_2)
                     examples2 = self.processor.get_train_examples_set2(args.data_dir)
+
+                    # assert both datasets are congruent
+                    for index,(x, y) in enumerate(zip(examples1, examples2)):
+                        assert x.label == y.label
+                        assert x.guid == y.guid
+
                 if limit_length is not None:
                     examples1 = examples1[:limit_length]
                     examples2 = examples2[:limit_length]
                 self.features = glue_convert_pair_examples_to_features(
                     examples1,
                     examples2,
-                    tokenizer,
+                    tokenizer_lex,
+                    tokenizer_delex,
                     max_length=args.max_seq_length,
                     label_list=label_list,
                     output_mode=self.output_mode,

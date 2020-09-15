@@ -17,8 +17,16 @@ echo $bert_format_base_folder_path
 
 for complete_path in $(find $bert_format_base_folder_path -name '*.tsv');
 do
-head -100  $complete_path > temp
-mv temp $complete_path
+
+
+if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
+    head -9000  $complete_path > temp
+    mv temp $complete_path
+else
+    head -10  $complete_path > temp
+    mv temp $complete_path
+fi
+
 
 done
 
