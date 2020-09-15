@@ -38,13 +38,14 @@ fi
 
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_dev/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_dev/data"
+
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_merge_master_with_studentteacher_branch/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_merge_master_with_studentteacher_branch/data"
 else
-        #for laptop
         export DATA_DIR_BASE="/Users/mordor/research/huggingface/src/transformers/data/datasets"
         export OUTPUT_DIR_BASE="/Users/mordor/research/huggingface/mithun_scripts/output"
         export PYTHONPATH="/Users/mordor/research/huggingface/src/"
+
 fi
 
 echo "MACHINE_TO_RUN_ON=$MACHINE_TO_RUN_ON"
@@ -56,8 +57,8 @@ echo "EPOCHS=$EPOCHS"
 
 export DATASET="fever"
 export basedir="$DATA_DIR_BASE/$DATASET"
-export TASK_TYPE="delex" #options for task type include lex,delex,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both lex and delex folders
-export SUB_TASK_TYPE="figerspecific" #options for TASK_SUB_TYPE (usually used only for delex)  include [oa, figerspecific, figerabstract, oass, simplener]
+export TASK_TYPE="combined" #options for task type include lex,delex,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both lex and delex folders
+export SUB_TASK_TYPE="figerspecific" #options for TASK_SUB_TYPE (usually used only for TASK_TYPEs :[delex,combined])  include [oa, figerspecific, figerabstract, oass, simplener]
 export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
 export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE"
 
@@ -74,6 +75,17 @@ echo $OUTPUT_DIR
 
 echo "OUTPUT_DIR=$OUTPUT_DIR"
 
+echo "value of epochs is $EPOCHS"
+echo "value of DATA_DIR is $DATA_DIR"
+
+
+
+#get data fresh before every run
+echo ". going to download data"
+rm -rf $DATA_DIR
+./get_fever_fnc_data.sh
+./convert_to_mnli_format.sh
+
 
 
 #get data only if its 1st epoch
@@ -85,6 +97,7 @@ rm -rf $DATA_DIR
 ./reduce_size.sh  --data_path $TOY_DATA_DIR_PATH
 
 echo "done with data download  TOY_DATA_DIR_PATH now is $TOY_DATA_DIR_PATH"
+
 
 
 #use a smaller toy data to test on laptop

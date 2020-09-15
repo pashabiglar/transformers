@@ -19,6 +19,7 @@ echo "value of toy_data_path is $toy_data_path"
 
 for complete_path in $(find $DATA_DIR -name '*.tsv');
 do
+
 FILE="`basename $complete_path`"
 echo $FILE
 #laptop cant handle more than 17 data points at a time
@@ -33,6 +34,8 @@ else
     mv temp $toy_data_full_path
     echo "found that MACHINE_TO_RUN_ON is laptop . reduced size toy data created at to $toy_data_full_path"
 fi
+
+
 
 
 
