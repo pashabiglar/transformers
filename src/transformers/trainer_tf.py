@@ -130,10 +130,10 @@ class TFTrainer:
 
         Args:
             eval_dataset (:class:`~tf.data.Dataset`, `optional`):
-                If provided, will override `self.eval_dataset`.
+                If provided, will override `self.dev_dataset`.
         """
         if eval_dataset is None and self.eval_dataset is None:
-            raise ValueError("Trainer: evaluation requires an eval_dataset.")
+            raise ValueError("Trainer: evaluation requires an dev_dataset.")
 
         eval_dataset = eval_dataset if eval_dataset is not None else self.eval_dataset
         ds = (
@@ -316,7 +316,7 @@ class TFTrainer:
 
         Args:
             eval_dataset (:class:`~tf.data.Dataset`, `optional`):
-                Pass a dataset if you wish to override :obj:`self.eval_dataset`.
+                Pass a dataset if you wish to override :obj:`self.dev_dataset`.
         Returns:
             A dictionary containing the evaluation loss and the potential metrics computed from the predictions.
         """
