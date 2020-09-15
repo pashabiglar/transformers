@@ -33,12 +33,18 @@ if _has_sklearn:
         return (preds == labels).mean()
 
 
+    def acc_renamed(preds, labels):
+        acc = simple_accuracy(preds, labels)
+        return {
+            "in_domain_acc": acc
+        }
+
     def acc_and_fnc_score(preds, labels):
         acc = simple_accuracy(preds, labels)
         cm, f1 = calculate_fnc_score(labels, preds)
         return {
-            "acc": acc,
-            "fnc_score": f1,
+            "cross_domain_acc": acc,
+            "cross_domain_fnc_score": f1,
             "confusion matrix": cm
         }
 
@@ -85,7 +91,7 @@ if _has_sklearn:
         elif task_name == "hans":
             return {"acc": simple_accuracy(preds, labels)}
         elif task_name == "feverindomain":
-            return {"acc": simple_accuracy(preds, labels)}
+            return {"acc": acc_renamed(preds, labels)}
         elif task_name == "fevercrossdomain":
             return {"acc": acc_and_fnc_score(preds, labels)}
         else:

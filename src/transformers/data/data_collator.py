@@ -64,7 +64,7 @@ def default_data_collator(features: List[InputDataClass]) -> Dict[str, torch.Ten
 
     return batch
 
-    def collate_batch_parallel_datasets(self, features: List[InputDataClass]) -> Dict[str, torch.Tensor]:
+def collate_batch_parallel_datasets(features: List[InputDataClass]) -> Dict[str, torch.Tensor]:
         # In this method we'll make the assumption that all `features` in the batch
         # have the same attributes.
         # So we will look at the first element as a proxy for what attributes exist
