@@ -197,14 +197,6 @@ class StudentTeacherTrainer:
         optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = (None,None)
     ):
 
-        self.model = model.to(args.device)
-        self.args = args
-        self.data_collator = data_collator if data_collator is not None else default_data_collator
-        self.train_dataset = train_dataset
-
-        #eval dataset here means on the dev partition
-        self.dev_dataset = eval_dataset
-
         """
         Trainer is a simple but feature-complete training and eval loop for PyTorch,
         optimized for Transformers.
@@ -320,11 +312,11 @@ class StudentTeacherTrainer:
 
 
         self.log(output.metrics)
-       if self.args.tpu_metrics_debug or self.args.debug:
-          # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
-          xm.master_print(met.metrics_report())
+        if self.args.tpu_metrics_debug or self.args.debug:
+            # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
+            xm.master_print(met.metrics_report())
 
-      return output.metrics
+        return output.metrics
 
 
     def _prepare_inputs(
@@ -743,14 +735,18 @@ class StudentTeacherTrainer:
 
         model_teacher = self.lex_teacher_model
         model_student = self.delex_student_model
+        weight_consistency_loss = 1
+        weight_classification_loss = 0.01
+        optimizer = None
+        scheduler = None
+
+        #these flags are used for testing purposes. IDeally when running in student teacher mode this should be
+        # flag_run_both=True. Other two flags are to test by loading each of these models independently from within
+        #the same trainer class
         flag_run_teacher_alone = False
         flag_run_student_alone = False
         flag_run_both = True
-        weight_consistency_loss=1
-        weight_classification_loss = 0.01
 
-        optimizer = None
-        scheduler = None
 
 
         if (flag_run_both):
@@ -1111,10 +1107,10 @@ class StudentTeacherTrainer:
             assert trained_model is not None
 
            
-            dev_partition_evaluation_result = self._intermediate_eval(datasets=self.dev_dataset,
+            dev_partition_evaluation_result = self._intermediate_eval(datasets=self.eval_dataset,
                                                                       epoch=epoch,
                                                                       output_eval_file=dev_partition_evaluation_output_file_path,
-                                                                      description="dev_partition",,model_to_test_with=trained_model)
+                                                                      description="dev_partition",model_to_test_with=trained_model)
 
             test_partition_evaluation_result=self._intermediate_eval(datasets=self.test_dataset,
                                     epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",model_to_test_with=trained_model)
@@ -1637,15 +1633,12 @@ class Trainer:
 
         return self.prediction_loop(test_dataloader, description="Prediction")
 
-    def evaluate(self, eval_dataset: Optional[Dataset] = None) -> Dict[str, float]:
+    def evaluate(self, model_to_test_with, eval_dataset: Optional[Dataset] = None) -> Dict[str, float]:
         """
         Run evaluation and returns metrics.
-
         The calling script will be responsible for providing a method to compute metrics, as they are
         task-dependent (pass it to the init :obj:`eval_compute_metrics` argument).
-
         You can also subclass and override this method to inject custom behavior.
-
         Args:
             eval_dataset (:obj:`Dataset`, `optional`):
                 Pass a dataset if you wish to override :obj:`self.eval_dataset`.
@@ -1654,7 +1647,7 @@ class Trainer:
         """
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
 
-        output = self.prediction_loop(eval_dataloader, description="Evaluation")
+        output = self.prediction_loop(eval_dataloader, model_to_test_with, description="Evaluation")
 
         self.log(output.metrics)
 
@@ -1918,7 +1911,7 @@ class Trainer:
         else:
             logger.info(output)
 
-    def _intermediate_eval(self, datasets, epoch, output_eval_file, description):
+    def _intermediate_eval(self, datasets, epoch, output_eval_file, description, model_to_test_with):
 
         """
         Helper function to call eval() method if and when you want to evaluate after say each epoch,
@@ -1937,14 +1930,14 @@ class Trainer:
         assert self.compute_metrics is not None
         # Evaluation
         eval_results = {}
-        dataset = [datasets]
-        for eval_dataset in dataset:
+        datasetss = [datasets]
+        for dataset in datasetss:
             eval_result = None
             if "dev" in description:
-                eval_result = self.evaluate(eval_dataset=eval_dataset)
+                eval_result = self.evaluate(model_to_test_with, eval_dataset=dataset)
             else:
                 if "test" in description:
-                    eval_result = self.evaluate_on_test_partition(test_dataset=eval_dataset)
+                    eval_result = self.evaluate_on_test_partition(model_to_test_with, test_dataset=dataset)
             assert eval_result is not None
 
             if self.is_world_master():
@@ -1954,7 +1947,6 @@ class Trainer:
                         writer.write("%s = %s\n" % (key, value))
             eval_results.update(eval_result)
         return eval_result
-
 
     def _save(self, output_dir: Optional[str] = None):
         output_dir = output_dir if output_dir is not None else self.args.output_dir
@@ -2141,10 +2133,26 @@ class Trainer:
         )
 
         #empty out the file which stores intermediate evaluations
-        output_eval_file_path = self.args.output_dir + "intermediate_eval_results.txt"
+        output_dir_absolute_path = os.path.join(os.getcwd(), self.args.output_dir)
+        dev_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_dev_partition_results.txt"
         # empty out the
-        with open(output_eval_file_path, "w") as writer:
+        with open(dev_partition_evaluation_output_file_path, "w") as writer:
             writer.write("")
+
+        test_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_test_partition_results.txt"
+        # empty out the
+        with open(test_partition_evaluation_output_file_path, "w") as writer:
+            writer.write("")
+
+
+        # empty out the file which stores intermediate evaluations
+        predictions_on_test_file_path = output_dir_absolute_path + "predictions_on_test_partition.txt"
+        with open(predictions_on_test_file_path, "w") as writer:
+            writer.write("")
+
+        best_fnc_score=0
+        best_acc=0
+
         #for each epoch
         for epoch in train_iterator:
             if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
@@ -2247,11 +2255,47 @@ class Trainer:
                     epoch_iterator.close()
                     break
 
-            self._intermediate_eval(datasets=self.eval_dataset,
-                                    epoch=epoch, output_eval_file=output_eval_file_path,
-                                    description="dev_partition")
-            self._intermediate_eval(datasets=self.test_dataset,
-                                    epoch=epoch, output_eval_file=output_eval_file_path, description="test_partition")
+            dev_partition_evaluation_result = self._intermediate_eval(datasets=self.eval_dataset,
+                                                                      epoch=epoch,
+                                                                      output_eval_file=dev_partition_evaluation_output_file_path,
+                                                                      description="dev_partition",
+                                                                      model_to_test_with=model)
+
+            test_partition_evaluation_result = self._intermediate_eval(datasets=self.test_dataset,
+                                                                       epoch=epoch,
+                                                                       output_eval_file=test_partition_evaluation_output_file_path,
+                                                                       description="test_partition",
+                                                                       model_to_test_with=model)
+
+            fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['fnc_score']
+            accuracy_test_partition = test_partition_evaluation_result['eval_acc']['acc']
+
+            if fnc_score_test_partition > best_fnc_score:
+                best_fnc_score = fnc_score_test_partition
+
+                logger.info(f"found that the current fncscore:{fnc_score_test_partition} in epoch "
+                            f"{epoch} beats the bestfncscore so far i.e ={best_fnc_score}. going to prediction"
+                            f"on test partition and save that and model to disk")
+                # if the accuracy or fnc_score_test_partition beats the highest so far, write predictions to disk
+                self.write_predictions_to_disk(self.model, self.test_dataset, predictions_on_test_file_path)
+
+                # Save model checkpoint
+                output_dir = os.path.join(self.args.output_dir)
+                self.save_model(output_dir)
+
+                # if self.is_world_master():
+                #     self._rotate_checkpoints()
+
+                if is_torch_tpu_available():
+                    xm.rendezvous("saving_optimizer_states")
+                    xm.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
+                    xm.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
+                elif self.is_world_master():
+                    torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
+                    torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
+
+            if accuracy_test_partition > best_acc:
+                best_acc = accuracy_test_partition
 
             logger.info(
                 f"********************************end of epoch {epoch}************************************************************************")
@@ -2266,7 +2310,20 @@ class Trainer:
             self.tb_writer.close()
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
-        return TrainOutput(self.global_step, tr_loss_lex_float / self.global_step)
+        # Note: returning for testing purposes only. All performance evaluation measures by now are written to disk.
+        # Note that the assumption here is that the test will be run for 1 epoch only. ELse have to return the best dev and test partition scores
+        return dev_partition_evaluation_result,test_partition_evaluation_result
+
+    def write_predictions_to_disk(self, model, test_dataset, file_to_write_predictions, ):
+        predictions = self.predict(test_dataset).predictions
+        predictions = np.argmax(predictions, axis=1)
+        if self.is_world_master():
+            with open(file_to_write_predictions, "w") as writer:
+                logger.info("***** (Going to write Test results to disk {} *****")
+                writer.write("index\tprediction\n")
+                for index, item in enumerate(predictions):
+                    item = test_dataset.get_labels()[item]
+                    writer.write("%d\t%s\n" % (index, item))
 
     def log(self, logs: Dict[str, float], iterator: Optional[tqdm] = None) -> None:
         """
@@ -2465,105 +2522,104 @@ class Trainer:
             optimizer, num_warmup_steps=self.args.warmup_steps, num_training_steps=lr_max_value)
         return optimizer, scheduler
 
-
     def prediction_loop(
-        self, dataloader: DataLoader, description: str, prediction_loss_only: Optional[bool] = None
-    ) -> PredictionOutput:
-        """
-        Prediction/evaluation loop, shared by :obj:`Trainer.evaluate()` and :obj:`Trainer.predict()`.
+            self, dataloader: DataLoader, model_to_test_with,description: str, prediction_loss_only: Optional[bool] = None) -> PredictionOutput:
+            """
+            Prediction/evaluation loop, shared by :obj:`Trainer.evaluate()` and :obj:`Trainer.predict()`.
 
-        Works both with or without labels.
-        """
-        if hasattr(self, "_prediction_loop"):
-            warnings.warn(
-                "The `_prediction_loop` method is deprecated and won't be called in a future version, define `prediction_loop` in your subclass.",
-                FutureWarning,
-            )
-            return self._prediction_loop(dataloader, description, prediction_loss_only=prediction_loss_only)
+            Works both with or without labels.
+            """
+            if hasattr(self, "_prediction_loop"):
+                warnings.warn(
+                    "The `_prediction_loop` method is deprecated and won't be called in a future version, define `prediction_loop` in your subclass.",
+                    FutureWarning,
+                )
+                return self._prediction_loop(dataloader, description, prediction_loss_only=prediction_loss_only)
 
-        prediction_loss_only = prediction_loss_only if prediction_loss_only is not None else self.prediction_loss_only
+            prediction_loss_only = prediction_loss_only if prediction_loss_only is not None else self.prediction_loss_only
 
-        model = self.model
-        # multi-gpu eval
-        if self.args.n_gpu > 1:
-            model = torch.nn.DataParallel(model)
-            logger.info(
-                f"found that self.args.Nn_gpu >1. its value now is  {self.args.n_gpu}. inside prediction loop. going to exit.")
-            import sys
-            sys.exit()
-        else:
-            model = self.model
-        # Note: in torch.distributed mode, there's no point in wrapping the model
-        # inside a DistributedDataParallel as we'll be under `no_grad` anyways.
+            model = model_to_test_with
+            # multi-gpu eval
+            if self.args.n_gpu > 1:
+                model = torch.nn.DataParallel(model)
+                logger.info(
+                    f"found that self.args.Nn_gpu >1. going to exit.")
+                import sys
+                sys.exit()
 
-        batch_size = dataloader.batch_size
-        logger.debug("***** Running %s at epoch number:%s *****", description,self.epoch)
-        logger.debug("  Num examples = %d", self.num_examples(dataloader))
-        logger.debug("  Batch size = %d", batch_size)
-        eval_losses: List[float] = []
-        preds: torch.Tensor = None
-        label_ids: torch.Tensor = None
-        model.eval()
+            # Note: in torch.distributed mode, there's no point in wrapping the model
+            # inside a DistributedDataParallel as we'll be under `no_grad` anyways.
 
-        if is_torch_tpu_available():
-            dataloader = pl.ParallelLoader(dataloader, [self.args.device]).per_device_loader(self.args.device)
+            batch_size = dataloader.batch_size
+            logger.debug("***** Running %s at epoch number:%s *****", description,self.epoch)
+            logger.debug("  Num examples = %d", self.num_examples(dataloader))
+            logger.debug("  Batch size = %d", batch_size)
+            eval_losses: List[float] = []
+            preds: torch.Tensor = None
+            label_ids: torch.Tensor = None
+            model.eval()
 
-        if self.args.past_index >= 0:
-            self._past = None
+            if is_torch_tpu_available():
+                dataloader = pl.ParallelLoader(dataloader, [self.args.device]).per_device_loader(self.args.device)
 
-        for inputs in tqdm(dataloader, desc=description):
-            loss, logits, labels = self.prediction_step(model, inputs, prediction_loss_only)
-            if loss is not None:
-                eval_losses.append(loss)
-            if logits is not None:
-                preds = logits if preds is None else torch.cat((preds, logits), dim=0)
-            if labels is not None:
-                label_ids = labels if label_ids is None else torch.cat((label_ids, labels), dim=0)
+            if self.args.past_index >= 0:
+                self._past = None
 
-        if self.args.past_index and hasattr(self, "_past"):
-            # Clean the state at the end of the evaluation loop
-            delattr(self, "_past")
-        logger.debug(f" value of local rank is {self.args.local_rank}")
-        if self.args.local_rank != -1:
-            logger.info(f"found that local_rank is not minus one. value of local rank is {self.args.local_rank}")
-            import sys
-            #$sys.exit(1)
-            # In distributed mode, concatenate all results from all nodes:
+            for inputs in tqdm(dataloader, desc=description):
+                loss, logits, labels = self.prediction_step(model, inputs, prediction_loss_only)
+                if loss is not None:
+                    eval_losses.append(loss)
+                if logits is not None:
+                    preds = logits if preds is None else torch.cat((preds, logits), dim=0)
+                if labels is not None:
+                    label_ids = labels if label_ids is None else torch.cat((label_ids, labels), dim=0)
+
+            if self.args.past_index and hasattr(self, "_past"):
+                # Clean the state at the end of the evaluation loop
+                delattr(self, "_past")
+            logger.debug(f" value of local rank is {self.args.local_rank}")
+            if self.args.local_rank != -1:
+                logger.info(f"found that local_rank is not minus one. value of local rank is {self.args.local_rank}")
+                import sys
+                sys.exit(1)
+                # In distributed mode, concatenate all results from all nodes:
+                if preds is not None:
+                    preds = self.distributed_concat(preds, num_total_examples=self.num_examples(dataloader))
+                if label_ids is not None:
+                    label_ids = self.distributed_concat(label_ids, num_total_examples=self.num_examples(dataloader))
+            elif is_torch_tpu_available():
+                # tpu-comment: Get all predictions and labels from all worker shards of eval dataset
+                if preds is not None:
+                    preds = xm.mesh_reduce("eval_preds", preds, torch.cat)
+                if label_ids is not None:
+                    label_ids = xm.mesh_reduce("eval_label_ids", label_ids, torch.cat)
+
+            # Finally, turn the aggregated tensors into numpy arrays.
             if preds is not None:
-                preds = self.distributed_concat(preds, num_total_examples=self.num_examples(dataloader))
+                preds = preds.cpu().numpy()
             if label_ids is not None:
-                label_ids = self.distributed_concat(label_ids, num_total_examples=self.num_examples(dataloader))
-        elif is_torch_tpu_available():
-            # tpu-comment: Get all predictions and labels from all worker shards of eval dataset
-            if preds is not None:
-                preds = xm.mesh_reduce("eval_preds", preds, torch.cat)
-            if label_ids is not None:
-                label_ids = xm.mesh_reduce("eval_label_ids", label_ids, torch.cat)
+                label_ids = label_ids.cpu().numpy()
 
-        # Finally, turn the aggregated tensors into numpy arrays.
-        if preds is not None:
-            preds = preds.cpu().numpy()
-        if label_ids is not None:
-            label_ids = label_ids.cpu().numpy()
+            if self.compute_metrics is not None and preds is not None and label_ids is not None:
+                metrics = self.compute_metrics(EvalPrediction(predictions=preds, label_ids=label_ids))
+            else:
+                if self.compute_metrics is None:
+                    logger.error("compute_metrics  is none. going to exit")
+                if preds is None:
+                    logger.error("preds  is none. going to exit")
+                if label_ids is None:
+                    logger.error("label_ids  is none. going to exit")
+                import sys
+                sys.exit(1)
+                metrics = {}
+            if len(eval_losses) > 0:
+                metrics["eval_loss"] = np.mean(eval_losses)
 
-        if self.compute_metrics is not None and preds is not None and label_ids is not None:
-            metrics = self.compute_metrics(EvalPrediction(predictions=preds, label_ids=label_ids))
-        else:
-            if self.compute_metrics is None:
-                logger.error("compute_metrics  is none. going to exit")
-            if preds is None:
-                logger.error("preds  is none. going to exit")
-            if label_ids is None:
-                logger.error("label_ids  is none. going to exit")
-            import sys
-            sys.exit(1)
-            metrics = {}
-        if len(eval_losses) > 0:
-            metrics["eval_loss"] = np.mean(eval_losses)
+            # Prefix all keys with eval_
+            for key in list(metrics.keys()):
+                if not key.startswith("eval_"):
+                    metrics[f"eval_{key}"] = metrics.pop(key)
 
-        # Prefix all keys with eval_
-        for key in list(metrics.keys()):
-            if not key.startswith("eval_"):
-                metrics[f"eval_{key}"] = metrics.pop(key)
+            return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics)
 
-        return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics)
+
