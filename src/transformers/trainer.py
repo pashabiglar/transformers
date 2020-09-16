@@ -1610,13 +1610,11 @@ class Trainer:
             # We'll find a more elegant and not need to do this in the future.
             self.model.config.xla_device = True
 
-    def predict(self, test_dataset: Dataset) -> PredictionOutput:
+    def predict(self, test_dataset: Dataset, model_to_test_with) -> PredictionOutput:
         """
         Run prediction and returns predictions and potential metrics.
-
         Depending on the dataset and your use case, your test dataset may contain labels.
         In that case, this method will also return metrics, like in :obj:`evaluate()`.
-
         Args:
             test_dataset (:obj:`Dataset`):
                 Dataset to run the predictions on.
@@ -1631,7 +1629,7 @@ class Trainer:
         """
         test_dataloader = self.get_test_dataloader(test_dataset)
 
-        return self.prediction_loop(test_dataloader, description="Prediction")
+        return self.prediction_loop(test_dataloader, model_to_test_with, description="Prediction")
 
     def evaluate(self, model_to_test_with, eval_dataset: Optional[Dataset] = None) -> Dict[str, float]:
         """
@@ -1824,10 +1822,8 @@ class Trainer:
         """
         return len(dataloader.dataset)
 
-
-
-
-    def evaluate_on_test_partition(self, test_dataset: Optional[Dataset] = None) -> Dict[str, float]:
+    def evaluate_on_test_partition(self, model_to_test_with, test_dataset: Optional[Dataset] = None, ) -> Dict[
+        str, float]:
         """
         Run evaluation and returns metrics.
         The calling script will be responsible for providing a method to compute metrics, as they are
@@ -1841,7 +1837,7 @@ class Trainer:
         """
         eval_dataloader = self.get_test_dataloader(test_dataset)
 
-        output = self.prediction_loop(eval_dataloader, description="Evaluation")
+        output = self.prediction_loop(eval_dataloader, model_to_test_with, description="Evaluation")
 
         self.log(output.metrics)
 
@@ -1850,6 +1846,7 @@ class Trainer:
             xm.master_print(met.metrics_report())
 
         return output.metrics
+
     def _rotate_checkpoints(self, use_mtime=False) -> None:
         if self.args.save_total_limit is None or self.args.save_total_limit <= 0:
             return
@@ -2267,8 +2264,9 @@ class Trainer:
                                                                        description="test_partition",
                                                                        model_to_test_with=model)
 
-            fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['fnc_score']
-            accuracy_test_partition = test_partition_evaluation_result['eval_acc']['acc']
+            fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
+            accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
+
 
             if fnc_score_test_partition > best_fnc_score:
                 best_fnc_score = fnc_score_test_partition
@@ -2310,12 +2308,13 @@ class Trainer:
             self.tb_writer.close()
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
-        # Note: returning for testing purposes only. All performance evaluation measures by now are written to disk.
-        # Note that the assumption here is that the test will be run for 1 epoch only. ELse have to return the best dev and test partition scores
+        # Note: returning the dev and test partition evaluation results to be used in test cases
+        # Also note that all performance evaluation measures by now are written to disk in the log file.
+        # Todo: the assumption here is that the testing/testcase will be run for 1 epoch only.  Ideally have to return the best dev and test partition scores and should work for any epoch
         return dev_partition_evaluation_result,test_partition_evaluation_result
 
-    def write_predictions_to_disk(self, model, test_dataset, file_to_write_predictions, ):
-        predictions = self.predict(test_dataset).predictions
+    def write_predictions_to_disk(self, model, test_dataset, file_to_write_predictions):
+        predictions = self.predict(test_dataset,model).predictions
         predictions = np.argmax(predictions, axis=1)
         if self.is_world_master():
             with open(file_to_write_predictions, "w") as writer:
