@@ -102,7 +102,7 @@ logger = logging.getLogger(__name__)
 
 def read_and_merge_config_entries():
     config = configparser.ConfigParser()
-    config.read('config_lex_cased.py')
+    config.read('config_combined_cased.py')
     assert not len(config.sections())==0
     combined_configs=[]
     for each_section in config.sections():
@@ -171,9 +171,6 @@ def test_run_glue():
         assert training_args.fever_cross_domain_accuracy_on_toy_data_17_datapoints != 1.0
         assert training_args.fever_cross_domain_fncscore_on_toy_data_17_datapoints != 1.0
 
-        # assert type(accuracy_dev_partition) == type(training_args.fever_in_domain_accuracy_on_toy_data_17_datapoints)
-        # assert type(accuracy_test_partition) == type(training_args.fever_cross_domain_accuracy_on_toy_data_17_datapoints)
-        # assert type(fnc_score_test_partition) == type(training_args.fever_cross_domain_fncscore_on_toy_data_17_datapoints)
 
         assert accuracy_dev_partition == training_args.fever_in_domain_accuracy_on_toy_data_17_datapoints
         assert accuracy_test_partition == training_args.fever_cross_domain_accuracy_on_toy_data_17_datapoints

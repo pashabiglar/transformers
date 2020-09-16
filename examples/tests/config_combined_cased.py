@@ -4,6 +4,7 @@ task_name="fevercrossdomain"
 do_train=True
 do_eval=True
 do_predict=True
+do_train_1student_1teacher=True
 data_dir="/Users/mordor/research/huggingface/src/transformers/data/datasets/fever/fevercrossdomain/lex/figerspecific/toydata/"
 max_seq_length="128"
 per_device_eval_batch_size="16"
