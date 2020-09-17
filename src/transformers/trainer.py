@@ -396,6 +396,8 @@ class StudentTeacherTrainer:
             batch_size=self.args.eval_batch_size,
             collate_fn=self.default_data_collator
         )
+        
+        return data_loader
 
 
     def get_test_dataloader(self, test_dataset: Dataset) -> DataLoader:
@@ -736,7 +738,7 @@ class StudentTeacherTrainer:
         model_teacher = self.lex_teacher_model
         model_student = self.delex_student_model
         weight_consistency_loss = 1
-        weight_classification_loss = 0.05
+        weight_classification_loss = 0.01
         optimizer = None
         scheduler = None
 
@@ -1115,8 +1117,8 @@ class StudentTeacherTrainer:
             test_partition_evaluation_result=self._intermediate_eval(datasets=self.test_dataset,
                                     epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",model_to_test_with=trained_model)
 
-            fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['fnc_score']
-            accuracy_test_partition = test_partition_evaluation_result['eval_acc']['acc']
+            fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
+            accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
 
             if fnc_score_test_partition>best_fnc_score:
                 best_fnc_score=fnc_score_test_partition
