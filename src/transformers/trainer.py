@@ -1127,9 +1127,9 @@ class StudentTeacherTrainer:
                             f"{epoch} beats the bestfncscore so far i.e ={best_fnc_score}. going to prediction"
                             f"on test partition and save that and model to disk")
                 #if the accuracy or fnc_score_test_partition beats the highest so far, write predictions to disk
-                self.write_predictions_to_disk(self.model,self.test_dataset,predictions_on_test_file_path)
-
+                self.write_predictions_to_disk(trained_model,self.test_dataset,predictions_on_test_file_path)
                 # Save model checkpoint
+                self.model=trained_model
                 output_dir = os.path.join(self.args.output_dir)
                 self.save_model(output_dir)
 
