@@ -309,7 +309,7 @@ class StudentTeacherTrainer:
         """
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
 
-        output = self.prediction_loop(eval_dataloader,model_to_test_with, description="Evaluation")
+        output,plain_text = self.prediction_loop(eval_dataloader,model_to_test_with, description="Evaluation")
 
 
         self.log(output.metrics)
@@ -542,15 +542,17 @@ class StudentTeacherTrainer:
 
 
 
-        output = self.prediction_loop(eval_dataloader,model_to_test_with ,description="Evaluation")
+        output,plain_text = self.prediction_loop(eval_dataloader,model_to_test_with ,description="Evaluation")
+        gold_labels = output.label_ids
+        predictions = output.predictions
 
         self.log(output.metrics)
 
         if self.args.tpu_metrics_debug or self.args.debug:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
             xm.master_print(met.metrics_report())
+        return output.metrics, plain_text,gold_labels,predictions
 
-        return output.metrics
     def _rotate_checkpoints(self, use_mtime=False) -> None:
         if self.args.save_total_limit is None or self.args.save_total_limit <= 0:
             return
@@ -638,7 +640,7 @@ class StudentTeacherTrainer:
                 eval_result = self.evaluate(model_to_test_with,eval_dataset=dataset)
             else:
                 if "test" in description:
-                    eval_result = self.evaluate_on_test_partition(model_to_test_with,test_dataset=dataset)
+                    eval_result, plain_text,gold_labels,predictions = self.evaluate_on_test_partition(model_to_test_with,test_dataset=dataset)
             assert eval_result is not None
 
             if self.is_world_master():
@@ -647,7 +649,7 @@ class StudentTeacherTrainer:
                         logger.info("  %s = %s", key, value)
                         writer.write("%s = %s\n" % (key, value))
             eval_results.update(eval_result)
-        return eval_result
+        return eval_result,plain_text,gold_labels,predictions
 
 
     def _save(self,output_dir: Optional[str] = None):
@@ -1113,12 +1115,12 @@ class StudentTeacherTrainer:
             assert trained_model is not None
 
            
-            dev_partition_evaluation_result = self._intermediate_eval(datasets=self.eval_dataset,
+            dev_partition_evaluation_result,plain_text,gold_labels,predictions = self._intermediate_eval(datasets=self.eval_dataset,
                                                                       epoch=epoch,
                                                                       output_eval_file=dev_partition_evaluation_output_file_path,
                                                                       description="dev_partition",model_to_test_with=trained_model)
 
-            test_partition_evaluation_result=self._intermediate_eval(datasets=self.test_dataset,
+            test_partition_evaluation_result,plain_text,gold_labels,predictions=self._intermediate_eval(datasets=self.test_dataset,
                                     epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",model_to_test_with=trained_model)
 
             fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
@@ -1477,10 +1479,9 @@ class StudentTeacherTrainer:
 
         if self.args.past_index >= 0:
             self._past = None
-
+        plain_text=None
         for inputs in tqdm(dataloader, desc=description):
-            plain_text_delex = self.delex_tokenizer.batch_decode(inputs['input_ids'])
-            
+            plain_text = self.delex_tokenizer.batch_decode(inputs['input_ids'])
 
             loss, logits, labels = self.prediction_step(model, inputs, prediction_loss_only)
             if loss is not None:
@@ -1535,8 +1536,8 @@ class StudentTeacherTrainer:
         for key in list(metrics.keys()):
             if not key.startswith("eval_"):
                 metrics[f"eval_{key}"] = metrics.pop(key)
-
-        return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics)
+        assert plain_text is not None
+        return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics),plain_text
 
 
 
@@ -1562,6 +1563,8 @@ class Trainer:
 
     def __init__(
             self,
+            tokenizer_delex,
+            tokenizer_lex,
             model: PreTrainedModel,
             args: TrainingArguments,
             data_collator: Optional[DataCollator] = None,
@@ -1585,7 +1588,8 @@ class Trainer:
         self.args = args
         self.data_collator = data_collator if data_collator is not None else default_data_collator
         self.train_dataset = train_dataset
-
+        self.lex_tokenizer = tokenizer_lex
+        self.delex_tokenizer = tokenizer_delex
         # pointing eval dataset to test dataset is a temporary hack on july 28th to fix reproducability issues.
         self.eval_dataset = eval_dataset
         ###for fnc score evaluation
@@ -1654,7 +1658,9 @@ class Trainer:
         """
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
 
-        output = self.prediction_loop(eval_dataloader, model_to_test_with, description="Evaluation")
+        output,plain_text = self.prediction_loop(eval_dataloader, model_to_test_with, description="Evaluation")
+        gold_labels = output.label_ids
+        predictions = output.predictions
 
         self.log(output.metrics)
 
@@ -1662,7 +1668,7 @@ class Trainer:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
             xm.master_print(met.metrics_report())
 
-        return output.metrics
+        return  output.metrics, plain_text,gold_labels,predictions
 
     def _prepare_inputs(
         self, inputs: Dict[str, torch.Tensor], model: nn.Module
@@ -1846,15 +1852,16 @@ class Trainer:
         """
         eval_dataloader = self.get_test_dataloader(test_dataset)
 
-        output = self.prediction_loop(eval_dataloader, model_to_test_with, description="Evaluation")
-
+        output,plain_text = self.prediction_loop(eval_dataloader, model_to_test_with, description="Evaluation")
+        gold_labels = output.label_ids
+        predictions = output.predictions
         self.log(output.metrics)
 
         if self.args.tpu_metrics_debug or self.args.debug:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
             xm.master_print(met.metrics_report())
 
-        return output.metrics
+        return output.metrics, plain_text, gold_labels, predictions
 
     def _rotate_checkpoints(self, use_mtime=False) -> None:
         if self.args.save_total_limit is None or self.args.save_total_limit <= 0:
@@ -1939,11 +1946,14 @@ class Trainer:
         datasetss = [datasets]
         for dataset in datasetss:
             eval_result = None
+            plain_text=None
+            gold_labels=None
+            predictions=None
             if "dev" in description:
-                eval_result = self.evaluate(model_to_test_with, eval_dataset=dataset)
+                eval_result,plain_text, gold_labels, predictions  = self.evaluate(model_to_test_with, eval_dataset=dataset)
             else:
                 if "test" in description:
-                    eval_result = self.evaluate_on_test_partition(model_to_test_with, test_dataset=dataset)
+                    eval_result, plain_text, gold_labels, predictions = self.evaluate_on_test_partition(model_to_test_with, test_dataset=dataset)
             assert eval_result is not None
 
             if self.is_world_master():
@@ -1952,7 +1962,7 @@ class Trainer:
                         logger.info("  %s = %s", key, value)
                         writer.write("%s = %s\n" % (key, value))
             eval_results.update(eval_result)
-        return eval_result
+        return eval_result, plain_text,gold_labels,predictions
 
     def _save(self, output_dir: Optional[str] = None):
         output_dir = output_dir if output_dir is not None else self.args.output_dir
@@ -2267,7 +2277,7 @@ class Trainer:
                                                                       description="dev_partition",
                                                                       model_to_test_with=model)
 
-            test_partition_evaluation_result = self._intermediate_eval(datasets=self.test_dataset,
+            test_partition_evaluation_result, plain_text,gold_labels,predictions = self._intermediate_eval(datasets=self.test_dataset,
                                                                        epoch=epoch,
                                                                        output_eval_file=test_partition_evaluation_output_file_path,
                                                                        description="test_partition",
@@ -2275,7 +2285,9 @@ class Trainer:
 
             fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
             accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
-
+            self.write_predictions_to_disk(plain_text, gold_labels, predictions, predictions_on_test_file_path,self.test_dataset)
+            import sys
+            sys.exit(1)
 
             if fnc_score_test_partition > best_fnc_score:
                 best_fnc_score = fnc_score_test_partition
@@ -2284,7 +2296,7 @@ class Trainer:
                             f"{epoch} beats the bestfncscore so far i.e ={best_fnc_score}. going to prediction"
                             f"on test partition and save that and model to disk")
                 # if the accuracy or fnc_score_test_partition beats the highest so far, write predictions to disk
-                self.write_predictions_to_disk(self.model, self.test_dataset, predictions_on_test_file_path)
+                self.write_predictions_to_disk(plain_text,gold_labels,predictions, predictions_on_test_file_path)
 
                 # Save model checkpoint
                 output_dir = os.path.join(self.args.output_dir)
@@ -2322,16 +2334,17 @@ class Trainer:
         # Todo: the assumption here is that the testing/testcase will be run for 1 epoch only.  Ideally have to return the best dev and test partition scores and should work for any epoch
         return dev_partition_evaluation_result,test_partition_evaluation_result
 
-    def write_predictions_to_disk(self, model, test_dataset, file_to_write_predictions):
-        predictions = self.predict(test_dataset,model).predictions
+    def write_predictions_to_disk(self,plain_text,gold_labels,predictions, file_to_write_predictions, test_dataset):
+        #predictions = self.predict(test_dataset,model).predictions
         predictions = np.argmax(predictions, axis=1)
         if self.is_world_master():
             with open(file_to_write_predictions, "w") as writer:
                 logger.info("***** (Going to write Test results to disk {} *****")
-                writer.write("index\tprediction\n")
-                for index, item in enumerate(predictions):
-                    item = test_dataset.get_labels()[item]
-                    writer.write("%d\t%s\n" % (index, item))
+                writer.write("index\t gold\tprediction\tplain_text\n")
+                for index,(gold, pred, plain) in enumerate(zip(gold_labels,predictions,plain_text)):
+                    gold_string = test_dataset.get_labels()[gold]
+                    pred_string = test_dataset.get_labels()[pred]
+                    writer.write("%d\t%s\t%s\t%s\n" % (index, gold_string, pred_string,plain))
 
     def log(self, logs: Dict[str, float], iterator: Optional[tqdm] = None) -> None:
         """
@@ -2574,6 +2587,7 @@ class Trainer:
                 self._past = None
 
             for inputs in tqdm(dataloader, desc=description):
+                plain_text_delex = self.delex_tokenizer.batch_decode(inputs['input_ids'])
                 loss, logits, labels = self.prediction_step(model, inputs, prediction_loss_only)
                 if loss is not None:
                     eval_losses.append(loss)
@@ -2628,6 +2642,6 @@ class Trainer:
                 if not key.startswith("eval_"):
                     metrics[f"eval_{key}"] = metrics.pop(key)
 
-            return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics)
+            return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics),plain_text_delex
 
 

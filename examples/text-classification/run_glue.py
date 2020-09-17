@@ -313,6 +313,8 @@ def run_training(model_args, data_args, training_args):
         )
     else:
         trainer = Trainer(
+            tokenizer_delex,
+            tokenizer_lex,
             model=model,
             args=training_args,
             train_dataset=train_dataset,
