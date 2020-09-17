@@ -18,7 +18,6 @@ from torch.utils.data.dataset import Dataset
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.sampler import RandomSampler, Sampler, SequentialSampler
 from tqdm.auto import tqdm, trange
-
 from .data.data_collator import DataCollator, default_data_collator, collate_batch_parallel_datasets
 from .file_utils import is_apex_available, is_torch_tpu_available
 from .modeling_utils import PreTrainedModel
@@ -167,11 +166,9 @@ class StudentTeacherTrainer:
     models: {}
     args: TrainingArguments
     data_collator: DataCollator
-
     train_dataset: Optional[Dataset]
     eval_dataset: Optional[Dataset]
     test_dataset =Optional[Dataset]
-
     test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     eval_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
@@ -183,6 +180,8 @@ class StudentTeacherTrainer:
 
     def __init__(
         self,
+        tokenizer_delex,
+        tokenizer_lex,
         models: {},
         args: TrainingArguments,
         train_datasets: {},
@@ -207,6 +206,8 @@ class StudentTeacherTrainer:
         self.lex_teacher_model = models.get("teacher").to(args.device)
         self.delex_student_model = models.get("student").to(args.device)
         self.eval_dataset = eval_dataset
+        self.lex_tokenizer=tokenizer_lex
+        self.delex_tokenizer = tokenizer_delex
 
         ###for fnc score evaluation
         self.test_dataset = test_dataset
@@ -521,7 +522,9 @@ class StudentTeacherTrainer:
         return len(dataloader.dataset)
 
 
-
+    def get_plaintext_given_dataloader(self):
+        pass
+        #return eval_dataloader.dataset.features
 
     def evaluate_on_test_partition(self, model_to_test_with,test_dataset: Optional[Dataset] = None,) -> Dict[str, float]:
         """
@@ -536,6 +539,8 @@ class StudentTeacherTrainer:
             A dictionary containing the evaluation loss and the potential metrics computed from the predictions.
         """
         eval_dataloader = self.get_test_dataloader(test_dataset)
+
+
 
         output = self.prediction_loop(eval_dataloader,model_to_test_with ,description="Evaluation")
 
@@ -914,7 +919,6 @@ class StudentTeacherTrainer:
             #for each batch
             for step, (input_lex,input_delex) in enumerate(epoch_iterator):
                 logger.debug("just got inside for step in enumerate epoch_iterator. i.e for each batch")
-
 
 
                 # Skip past any already trained steps if resuming training
@@ -1475,6 +1479,9 @@ class StudentTeacherTrainer:
             self._past = None
 
         for inputs in tqdm(dataloader, desc=description):
+            plain_text_delex = self.delex_tokenizer.batch_decode(inputs['input_ids'])
+            
+
             loss, logits, labels = self.prediction_step(model, inputs, prediction_loss_only)
             if loss is not None:
                 eval_losses.append(loss)
