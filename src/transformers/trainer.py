@@ -257,7 +257,7 @@ class StudentTeacherTrainer:
                 FutureWarning,
             )
     def write_predictions_to_disk(self, model,test_dataset, file_to_write_predictions, ):
-        predictions = self.predict(test_dataset).predictions
+        predictions = self.predict(test_dataset,model).predictions
         predictions = np.argmax(predictions, axis=1)
         if self.is_world_master():
             with open(file_to_write_predictions, "w") as writer:
