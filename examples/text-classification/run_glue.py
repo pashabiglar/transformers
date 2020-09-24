@@ -182,6 +182,12 @@ def run_training(model_args, data_args, training_args):
         config=config,
         cache_dir=model_args.cache_dir,
         )
+        model_student_not_combined = AutoModelForSequenceClassification.from_pretrained(
+            model_args.model_name_or_path,
+            from_tf=bool(".ckpt" in model_args.model_name_or_path),
+            config=config,
+            cache_dir=model_args.cache_dir,
+        )
     else:
         model = AutoModelForSequenceClassification.from_pretrained(
             model_args.model_name_or_path,
@@ -301,9 +307,10 @@ def run_training(model_args, data_args, training_args):
 
     if training_args.do_train_1student_1teacher:
         trainer = StudentTeacherTrainer(
+
             tokenizer_delex,
             tokenizer_lex,
-            models={"teacher": model_teacher, "student": model_student},
+            models={"teacher": model_teacher, "student": model_student, "stand_alone_student":model_student_not_combined},
             args=training_args,
             train_datasets={"combined": train_dataset},
             test_dataset=test_dataset,
