@@ -142,7 +142,7 @@ def run_training(model_args, data_args, training_args):
     except KeyError:
         raise ValueError("Task not found: %s" % (data_args.task_name))
 
-    # Load pretrained model_teacher and tokenizer
+    # Load pretrained model_teacher and tokenizer_lex
     #
     # Distributed training:
     # The .from_pretrained methods guarantee that only one local process can concurrently
@@ -154,14 +154,14 @@ def run_training(model_args, data_args, training_args):
         finetuning_task=data_args.task_name,
         cache_dir=model_args.cache_dir,
     )
-    tokenizer = AutoTokenizer.from_pretrained(
+    tokenizer_lex = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
         force_download=True,
     )
 
     #when in student-teacher mode, you need two tokenizers, one for lexicalized data, and one for the delexicalized data
-    # the regular tokenizer will be used for lexicalized data and special one for delexicalized
+    # the regular tokenizer_lex will be used for lexicalized data and special one for delexicalized
     tokenizer_delex = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
@@ -198,16 +198,16 @@ def run_training(model_args, data_args, training_args):
     if (training_args.do_train_1student_1teacher == True):
         # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
         assert training_args.task_type == "combined"
-        assert tokenizer is not None
+        assert tokenizer_lex is not None
         assert tokenizer_delex is not None
         train_dataset = (
-            ParallelDataDataset(args=data_args, tokenizer_lex=tokenizer, tokenizer_delex=tokenizer_delex, data_type_1="lex", data_type_2="delex",
+            ParallelDataDataset(args=data_args, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex, data_type_1="lex", data_type_2="delex",
                                 cache_dir=model_args.cache_dir) if training_args.do_train else None
         )
     else:
         if(training_args.task_type=="lex"):
             train_dataset = (
-            GlueDataset(args=data_args, tokenizer=tokenizer, task_type="lex", mode="train",
+            GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="train",
                         cache_dir=model_args.cache_dir)
             if training_args.do_train
             else None
@@ -241,7 +241,7 @@ def run_training(model_args, data_args, training_args):
     else:
         if (training_args.task_type == "lex"):
             eval_dataset = (
-                GlueDataset(args=data_args, tokenizer=tokenizer, task_type="lex", mode="dev",
+                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="dev",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_eval
                 else None
@@ -271,7 +271,7 @@ def run_training(model_args, data_args, training_args):
     else:
         if (training_args.task_type == "lex"):
             test_dataset = (
-                GlueDataset(data_args, tokenizer=tokenizer, task_type="lex", mode="test",
+                GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="lex", mode="test",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_predict
                 else None
@@ -301,6 +301,8 @@ def run_training(model_args, data_args, training_args):
 
     if training_args.do_train_1student_1teacher:
         trainer = StudentTeacherTrainer(
+            tokenizer_delex,
+            tokenizer_lex,
             models={"teacher": model_teacher, "student": model_student},
             args=training_args,
             train_datasets={"combined": train_dataset},
@@ -311,6 +313,8 @@ def run_training(model_args, data_args, training_args):
         )
     else:
         trainer = Trainer(
+            tokenizer_delex,
+            tokenizer_lex,
             model=model,
             args=training_args,
             train_dataset=train_dataset,
@@ -335,10 +339,10 @@ def run_training(model_args, data_args, training_args):
             )
 
 
-        # For convenience, we also re-save the tokenizer to the same directory,
+        # For convenience, we also re-save the tokenizer_lex to the same directory,
         # so that you can share your model_teacher easily on huggingface.co/models =)
         if trainer.is_world_master():
-            tokenizer.save_pretrained(training_args.output_dir)
+            tokenizer_lex.save_pretrained(training_args.output_dir)
         assert dev_partition_evaluation_result is not None
         assert test_partition_evaluation_result is not None
         return dev_partition_evaluation_result,test_partition_evaluation_result
