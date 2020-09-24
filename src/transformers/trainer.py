@@ -258,7 +258,7 @@ class StudentTeacherTrainer:
                 FutureWarning,
             )
     def write_predictions_to_disk(self, model,test_dataset, file_to_write_predictions, ):
-        predictions = self.predict(test_dataset).predictions
+        predictions = self.predict(test_dataset,model).predictions
         predictions = np.argmax(predictions, axis=1)
         if self.is_world_master():
             with open(file_to_write_predictions, "w") as writer:
@@ -745,7 +745,7 @@ class StudentTeacherTrainer:
         model_teacher = self.lex_teacher_model
         model_student = self.delex_student_model
         weight_consistency_loss = 1
-        weight_classification_loss = 0.01
+        weight_classification_loss = 0.05
         optimizer = None
         scheduler = None
 
@@ -1133,9 +1133,9 @@ class StudentTeacherTrainer:
                             f"{epoch} beats the bestfncscore so far i.e ={best_fnc_score}. going to prediction"
                             f"on test partition and save that and model to disk")
                 #if the accuracy or fnc_score_test_partition beats the highest so far, write predictions to disk
-                self.write_predictions_to_disk(self.model,self.test_dataset,predictions_on_test_file_path)
-
+                self.write_predictions_to_disk(trained_model,self.test_dataset,predictions_on_test_file_path)
                 # Save model checkpoint
+                self.model=trained_model
                 output_dir = os.path.join(self.args.output_dir)
                 self.save_model(output_dir)
 
