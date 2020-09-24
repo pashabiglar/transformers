@@ -240,6 +240,7 @@ class TrainingArguments:
         metadata={"help": "Deprecated, the use of `--debug` is preferred. TPU: Whether to print debug metrics"},
     )
     debug: bool = field(default=False, metadata={"help": "Whether to print debug metrics on TPU"})
+    use_trained_model: bool = field(default=False, metadata={"help": "Whether to print debug metrics on TPU"})
 
     dataloader_drop_last: bool = field(
         default=False, metadata={"help": "Drop the last incomplete batch if it is not divisible by the batch size."}

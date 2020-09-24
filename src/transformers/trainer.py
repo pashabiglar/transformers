@@ -258,7 +258,6 @@ class StudentTeacherTrainer:
                 FutureWarning,
             )
     def write_predictions_to_disk(self, plain_text, gold_labels, predictions_logits, file_to_write_predictions, test_dataset):
-        #predictions_argmaxes = self.predict(test_dataset,model).predictions_argmaxes
         predictions_argmaxes = np.argmax(predictions_logits, axis=1)
         sf=torch.nn.Softmax(dim=1)
         predictions_softmax=sf(torch.FloatTensor(predictions_logits))
@@ -270,6 +269,10 @@ class StudentTeacherTrainer:
                     gold_string = test_dataset.get_labels()[gold]
                     pred_string = test_dataset.get_labels()[pred_argmax]
                     writer.write("%d\t%s\t%s\t%s\t%s\n" % (index, gold_string, str(pred_sf.tolist()),pred_string,plain))
+
+
+    def predict_given_trained_model(self, model, test_dataset):
+        predictions_argmaxes = self.predict(test_dataset,model).predictions_argmaxes
 
 
     def predict(self, test_dataset: Dataset,model_to_test_with) -> PredictionOutput:
@@ -1130,6 +1133,8 @@ class StudentTeacherTrainer:
 
             fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
             accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
+
+
 
             if fnc_score_test_partition>best_fnc_score:
                 best_fnc_score=fnc_score_test_partition
