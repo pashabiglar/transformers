@@ -257,16 +257,19 @@ class StudentTeacherTrainer:
                 ),
                 FutureWarning,
             )
-    def write_predictions_to_disk(self, model,test_dataset, file_to_write_predictions, ):
-        predictions = self.predict(test_dataset).predictions
-        predictions = np.argmax(predictions, axis=1)
+    def write_predictions_to_disk(self, plain_text, gold_labels, predictions_logits, file_to_write_predictions, test_dataset):
+        #predictions_argmaxes = self.predict(test_dataset,model).predictions_argmaxes
+        predictions_argmaxes = np.argmax(predictions_logits, axis=1)
+        sf=torch.nn.Softmax(dim=1)
+        predictions_softmax=sf(torch.FloatTensor(predictions_logits))
         if self.is_world_master():
             with open(file_to_write_predictions, "w") as writer:
                 logger.info("***** (Going to write Test results to disk {} *****")
-                writer.write("index\tprediction\n")
-                for index, item in enumerate(predictions):
-                        item = test_dataset.get_labels()[item]
-                        writer.write("%d\t%s\n" % (index, item))
+                writer.write("index\t gold\tprediction_logits\t prediction_label\tplain_text\n")
+                for index,(gold, pred_sf, pred_argmax, plain) in enumerate(zip(gold_labels, predictions_softmax,predictions_argmaxes, plain_text)):
+                    gold_string = test_dataset.get_labels()[gold]
+                    pred_string = test_dataset.get_labels()[pred_argmax]
+                    writer.write("%d\t%s\t%s\t%s\t%s\n" % (index, gold_string, str(pred_sf.tolist()),pred_string,plain))
 
 
     def predict(self, test_dataset: Dataset,model_to_test_with) -> PredictionOutput:
@@ -1115,12 +1118,12 @@ class StudentTeacherTrainer:
             assert trained_model is not None
 
            
-            dev_partition_evaluation_result,plain_text,gold_labels,predictions = self._intermediate_eval(datasets=self.eval_dataset,
-                                                                      epoch=epoch,
-                                                                      output_eval_file=dev_partition_evaluation_output_file_path,
-                                                                      description="dev_partition",model_to_test_with=trained_model)
+            # dev_partition_evaluation_result,plain_text,gold_labels,predictions = self._intermediate_eval(datasets=self.eval_dataset,
+            #                                                           epoch=epoch,
+            #                                                           output_eval_file=dev_partition_evaluation_output_file_path,
+            #                                                           description="dev_partition",model_to_test_with=trained_model)
 
-            test_partition_evaluation_result,plain_text,gold_labels,predictions=self._intermediate_eval(datasets=self.test_dataset,
+            test_partition_evaluation_result,plain_text,gold_labels,predictions_logits=self._intermediate_eval(datasets=self.test_dataset,
                                     epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",model_to_test_with=trained_model)
 
             fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
@@ -1133,7 +1136,8 @@ class StudentTeacherTrainer:
                             f"{epoch} beats the bestfncscore so far i.e ={best_fnc_score}. going to prediction"
                             f"on test partition and save that and model to disk")
                 #if the accuracy or fnc_score_test_partition beats the highest so far, write predictions to disk
-                self.write_predictions_to_disk(self.model,self.test_dataset,predictions_on_test_file_path)
+                self.write_predictions_to_disk(plain_text, gold_labels, predictions_logits, predictions_on_test_file_path,
+                                               self.test_dataset)
 
                 # Save model checkpoint
                 output_dir = os.path.join(self.args.output_dir)
