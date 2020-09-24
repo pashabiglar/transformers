@@ -313,6 +313,8 @@ class StudentTeacherTrainer:
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
 
         output,plain_text = self.prediction_loop(eval_dataloader,model_to_test_with, description="Evaluation")
+        gold_labels = output.label_ids
+        predictions = output.predictions
 
 
         self.log(output.metrics)
@@ -320,7 +322,7 @@ class StudentTeacherTrainer:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
             xm.master_print(met.metrics_report())
 
-        return output.metrics
+        return output.metrics, plain_text, gold_labels, predictions
 
 
     def _prepare_inputs(
@@ -640,7 +642,7 @@ class StudentTeacherTrainer:
         for dataset in datasetss:
             eval_result = None
             if "dev" in description:
-                eval_result = self.evaluate(model_to_test_with,eval_dataset=dataset)
+                eval_result, plain_text, gold_labels, predictions = self.evaluate(model_to_test_with,eval_dataset=dataset)
             else:
                 if "test" in description:
                     eval_result, plain_text,gold_labels,predictions = self.evaluate_on_test_partition(model_to_test_with,test_dataset=dataset)
@@ -1118,10 +1120,10 @@ class StudentTeacherTrainer:
             assert trained_model is not None
 
            
-            # dev_partition_evaluation_result,plain_text,gold_labels,predictions = self._intermediate_eval(datasets=self.eval_dataset,
-            #                                                           epoch=epoch,
-            #                                                           output_eval_file=dev_partition_evaluation_output_file_path,
-            #                                                           description="dev_partition",model_to_test_with=trained_model)
+            dev_partition_evaluation_result,plain_text,gold_labels,predictions = self._intermediate_eval(datasets=self.eval_dataset,
+                                                                      epoch=epoch,
+                                                                      output_eval_file=dev_partition_evaluation_output_file_path,
+                                                                      description="dev_partition",model_to_test_with=trained_model)
 
             test_partition_evaluation_result,plain_text,gold_labels,predictions_logits=self._intermediate_eval(datasets=self.test_dataset,
                                     epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",model_to_test_with=trained_model)
@@ -1140,6 +1142,7 @@ class StudentTeacherTrainer:
                                                self.test_dataset)
 
                 # Save model checkpoint
+                self.model=trained_model
                 output_dir = os.path.join(self.args.output_dir)
                 self.save_model(output_dir)
 
