@@ -29,18 +29,18 @@ python3 -m venv my_virtual_env
 #this is the only line you need if you already have a virtual_env set up
 source my_virtual_env/bin/activate
 
-export PYTHONPATH="/home/u11/mithunpaul/xdisk/huggingface_bert_merge_master_with_studentteacher_branch/code/src"
+export PYTHONPATH="/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/code/src"
 export CUDA_VISIBLE_DEVICES=0
 
 pip install --upgrade pip
 
    
-cd /home/u11/mithunpaul/xdisk/huggingface_bert_merge_master_with_studentteacher_branch/code/examples
+cd /home/u11/mithunpaul/xdisk/huggingface_bert_expt1/code/examples
 
 pip install -r requirements.txt
 pip install transformers
 
-cd /home/u11/mithunpaul/xdisk/huggingface_bert_merge_master_with_studentteacher_branch/code/mithun_scripts
+cd /home/u11/mithunpaul/xdisk/huggingface_bert_expt1/code/mithun_scripts
 
 bash run_all.sh --epochs_to_run 1 --machine_to_run_on hpc #options include [laptop, hpc,clara]
 #stub to use in laptop
