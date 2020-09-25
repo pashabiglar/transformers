@@ -37,8 +37,7 @@ mkdir -p OUTPUT_DIR
 env CUDA_VISIBLE_DEVICES=0
 export CUDA_VISIBLE_DEVICES=0
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
-       python3.6 ../examples/text-classification/load_trained_model_predict.py
-        $args
+       python3.6 ../examples/text-classification/load_trained_model_predict.py $args
 else
        python3 ../examples/text-classification/load_trained_model_predict.py $args
 fi
