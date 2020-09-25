@@ -296,6 +296,44 @@ def run_training(model_args, data_args, training_args):
     dev_compute_metrics = build_compute_metrics_fn("feverindomain")
     test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
 
+    def predict_and_eval( datasets, output_eval_file, description, model_to_test_with):
+        compute_metrics = test_compute_metrics
+        assert compute_metrics is not None
+        # Evaluation
+        eval_results = {}
+        datasetss = [datasets]
+        for dataset in datasetss:
+            eval_result = None
+            plain_text=None
+            gold_labels=None
+            predictions=None
+
+            eval_result, plain_text, gold_labels, predictions = evaluate_on_test_partition(model_to_test_with, test_dataset=dataset)
+            assert eval_result is not None
+
+
+            with open(output_eval_file, "a") as writer:
+                    for key, value in eval_result.items():
+                        logger.info("  %s = %s", key, value)
+                        writer.write("%s = %s\n" % (key, value))
+            eval_results.update(eval_result)
+        return eval_result, plain_text,gold_labels,predictions
+
+
+    def write_predictions_to_disk(self, plain_text, gold_labels, predictions_logits, file_to_write_predictions, test_dataset):
+        #predictions_argmaxes = self.predict(test_dataset,model).predictions_argmaxes
+        predictions_argmaxes = np.argmax(predictions_logits, axis=1)
+        sf=torch.nn.Softmax(dim=1)
+        predictions_softmax=sf(torch.FloatTensor(predictions_logits))
+        if self.is_world_master():
+            with open(file_to_write_predictions, "w") as writer:
+                logger.info("***** (Going to write Test results to disk {} *****")
+                writer.write("index\t gold\tprediction_logits\t prediction_label\tplain_text\n")
+                for index,(gold, pred_sf, pred_argmax, plain) in enumerate(zip(gold_labels, predictions_softmax,predictions_argmaxes, plain_text)):
+                    gold_string = test_dataset.get_labels()[gold]
+                    pred_string = test_dataset.get_labels()[pred_argmax]
+                    writer.write("%d\t%s\t%s\t%s\t%s\n" % (index, gold_string, str(pred_sf.tolist()),pred_string,plain))
+
 
 
 
@@ -324,7 +362,8 @@ def run_training(model_args, data_args, training_args):
             test_compute_metrics=test_compute_metrics
         )
 
-    model_path="/Users/mordor/research/huggingface/mithun_scripts/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"
+    #model_path="/Users/mordor/research/huggingface/mithun_scripts/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"
+    model_path = "/home/u11/mithunpaul/xdisk/huggingface_bert_merge_master_with_studentteacher_branch/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"
     assert model_student is not None
     model_student.load_state_dict(torch.load(model_path))
     model_student.eval()
