@@ -104,9 +104,9 @@ def main():
             f"Output directory ({training_args.output_dir}) already exists and is not empty. Use --overwrite_output_dir to overcome."
         )
 
-    run_training(model_args, data_args, training_args)
+    run_loading_and_testing(model_args, data_args, training_args)
 
-def run_training(model_args, data_args, training_args):
+def run_loading_and_testing(model_args, data_args, training_args):
     # Setup logging
     git_details=get_git_info()
 
@@ -194,20 +194,9 @@ def run_training(model_args, data_args, training_args):
             cache_dir=model_args.cache_dir,
         )
 
-        # Get datasets
-
-
-
-        # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
-        # combined model_teacher performs in a delexicalized dataset. This will serve as a verification point
-        # to confirm the accuracy (we got 92.91% for fever delx in domain) if something goes wrong in the prediction phase below
-
 
 
     if (training_args.do_train_1student_1teacher == True):
-        # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
-        # in the student teacher mode the evaluation always happens in the delex cross domain dev data. here we are loading it as the test partition so that we can keep track of
-        # progress across epochs
         test_dataset = (
             GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
                         cache_dir=model_args.cache_dir)
@@ -272,8 +261,10 @@ def run_training(model_args, data_args, training_args):
             test_compute_metrics=test_compute_metrics
         )
 
-    #model_path="/Users/mordor/research/huggingface/mithun_scripts/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"
-    model_path = "/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"
+    model_path="/Users/mordor/research/huggingface/mithun_scripts/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"  #for laptop combined model from hpc
+    #model_path = "/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin" #hpc combined
+    #model_path="/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/delex/figerspecific/bert-base-cased/128/pytorch_model.bin" #hpc delex alone
+
     assert model_student is not None
     model_student.load_state_dict(torch.load(model_path))
     model_student.eval()
@@ -281,10 +272,6 @@ def run_training(model_args, data_args, training_args):
 
     # empty out the file which stores intermediate evaluations
     output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
-    dev_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_dev_partition_results.txt"
-    # empty out the
-    with open(dev_partition_evaluation_output_file_path, "w") as writer:
-        writer.write("")
 
     test_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_test_partition_results.txt"
 
@@ -304,6 +291,9 @@ def run_training(model_args, data_args, training_args):
                                                test_dataset)
 
 
+
+    assert test_partition_evaluation_result is not None
+    return test_partition_evaluation_result
 
 
 

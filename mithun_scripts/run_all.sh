@@ -124,7 +124,7 @@ export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME     
 echo $args
 
 
-#./run_tests.sh
+./run_tests.sh
 #./run_glue.sh
-./load_model_test.sh
+#./load_model_test.sh
 

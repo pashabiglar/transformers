@@ -1,18 +1,10 @@
-# coding=utf-8
-# Copyright 2018 HuggingFace Inc..
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#to debug this file go to Run edit configurations, add python test, select pytest, then select this file
+#how to run this file:
+#first make sure you are pointing to the expected config file in CONFIG_FILE_TO_TEST_WITH
+# if from command line, uncomment the line ./run_tests.sh inside mithun_scripts/run_all.sh and
+# from command line do ` bash run_all.sh --epochs_to_run 1 --machine_to_run_on laptop `
+#if from IDE like pycharm, run config test_examples_mithun_factverification
+#to create  a new debug config in pycharm:go to Run edit configurations, add python test, select pytest, then select this file
+
 
 from unittest import TestCase
 import configparser
@@ -48,7 +40,7 @@ from transformers import (
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
 import git
 
-
+CONFIG_FILE_TO_TEST_WITH="config_combined_cased_trained_model_light_plasma_886.py"
 SRC_DIRS = [
     os.path.join(os.path.dirname(__file__), dirname)
     for dirname in ["text-generation", "../text-classification", "language-modeling", "question-answering"]
@@ -56,7 +48,7 @@ SRC_DIRS = [
 sys.path.extend(SRC_DIRS)
 
 if SRC_DIRS is not None:
-    import run_glue
+    import load_trained_model_predict
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -102,7 +94,7 @@ logger = logging.getLogger(__name__)
 
 def read_and_merge_config_entries():
     config = configparser.ConfigParser()
-    config.read('config_combined_cased.py')
+    config.read(CONFIG_FILE_TO_TEST_WITH)
     assert not len(config.sections())==0
     combined_configs=[]
     for each_section in config.sections():
@@ -119,14 +111,9 @@ def read_and_merge_config_entries():
     return combined_configs_str
 
 
-def test_run_glue():
-        # Setup logging
-
+def test_run_loading_model():
         configs=read_and_merge_config_entries()
-
         print(f"value of configs is {configs}")
-
-
         configs_split = configs.split()
         parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
         model_args, data_args, training_args = parser.parse_args_into_dataclasses(args=configs_split)
@@ -157,11 +144,12 @@ def test_run_glue():
         stream_handler = logging.StreamHandler(sys.stdout)
         logger.addHandler(stream_handler)
 
-        dev_partition_evaluation_result,test_partition_evaluation_result = run_glue.run_training( model_args, data_args, training_args)
-        accuracy_dev_partition = dev_partition_evaluation_result['eval_acc']['in_domain_acc']
+        #dev_partition_evaluation_result,\
+        test_partition_evaluation_result = load_trained_model_predict.run_loading_and_testing( model_args, data_args, training_args)
+        #accuracy_dev_partition = dev_partition_evaluation_result['eval_acc']['in_domain_acc']
         fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
         accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
-        logger.info(f"value of accuracy_dev_partition={accuracy_dev_partition}")
+        #logger.info(f"value of accuracy_dev_partition={accuracy_dev_partition}")
         logger.info(f"value of fnc_score_test_partition={fnc_score_test_partition}")
         logger.info(f"value of accuracy_test_partition={accuracy_test_partition}")
         # check if the training meets minimum accuracy. note that in laptop we run on a toy data set of size 16 and
@@ -172,7 +160,7 @@ def test_run_glue():
         assert training_args.fever_cross_domain_fncscore_on_toy_data_17_datapoints != 1.0
 
 
-        assert accuracy_dev_partition == training_args.fever_in_domain_accuracy_on_toy_data_17_datapoints
+        #assert accuracy_dev_partition == training_args.fever_in_domain_accuracy_on_toy_data_17_datapoints
         assert accuracy_test_partition == training_args.fever_cross_domain_accuracy_on_toy_data_17_datapoints
         assert fnc_score_test_partition == training_args.fever_cross_domain_fncscore_on_toy_data_17_datapoints
 
