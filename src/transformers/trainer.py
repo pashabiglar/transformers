@@ -263,7 +263,7 @@ class StudentTeacherTrainer:
         predictions_softmax=sf(torch.FloatTensor(predictions_logits))
         if self.is_world_master():
             with open(file_to_write_predictions, "w") as writer:
-                logger.info("***** (Going to write Test results to disk {} *****")
+                logger.info(f"***** (Going to write Test results to disk at {file_to_write_predictions} *****")
                 writer.write("index\t gold\tprediction_logits\t prediction_label\tplain_text\n")
                 for index,(gold, pred_sf, pred_argmax, plain) in enumerate(zip(gold_labels, predictions_softmax,predictions_argmaxes, plain_text)):
                     gold_string = test_dataset.get_labels()[gold]
@@ -1491,10 +1491,10 @@ class StudentTeacherTrainer:
 
         if self.args.past_index >= 0:
             self._past = None
-        plain_text=None
+        plain_text_full=[]
         for inputs in tqdm(dataloader, desc=description):
-            plain_text = self.delex_tokenizer.batch_decode(inputs['input_ids'])
-
+            plain_text_batch = self.delex_tokenizer.batch_decode(inputs['input_ids'])
+            plain_text_full.extend(plain_text_batch)
             loss, logits, labels = self.prediction_step(model, inputs, prediction_loss_only)
             if loss is not None:
                 eval_losses.append(loss)
@@ -1548,8 +1548,10 @@ class StudentTeacherTrainer:
         for key in list(metrics.keys()):
             if not key.startswith("eval_"):
                 metrics[f"eval_{key}"] = metrics.pop(key)
-        assert plain_text is not None
-        return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics),plain_text
+        assert plain_text_full is not None
+        assert len(plain_text_full)== len(dataloader.dataset.features)
+
+        return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics),plain_text_full
 
 
 
@@ -2351,7 +2353,7 @@ class Trainer:
         predictions = np.argmax(predictions, axis=1)
         if self.is_world_master():
             with open(file_to_write_predictions, "w") as writer:
-                logger.info("***** (Going to write Test results to disk {} *****")
+                logger.info(f"***** (Going to write Test results to disk {file_to_write_predictions} *****")
                 writer.write("index\t gold\tprediction\tplain_text\n")
                 for index,(gold, pred, plain) in enumerate(zip(gold_labels,predictions,plain_text)):
                     gold_string = test_dataset.get_labels()[gold]

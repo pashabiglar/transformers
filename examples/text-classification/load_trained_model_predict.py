@@ -323,8 +323,8 @@ def run_training(model_args, data_args, training_args):
             test_compute_metrics=test_compute_metrics
         )
 
-    #model_path="/Users/mordor/research/huggingface/mithun_scripts/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"
-    model_path = "/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"
+    model_path="/Users/mordor/research/huggingface/mithun_scripts/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"
+    #model_path = "/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"
     assert model_student is not None
     model_student.load_state_dict(torch.load(model_path))
     model_student.eval()
