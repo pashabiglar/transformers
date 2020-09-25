@@ -196,64 +196,13 @@ def run_training(model_args, data_args, training_args):
 
         # Get datasets
 
-        # ParallelDataDataset is to be used in a student teacher model/architecture.
-        # In this model teacher sees the lex data and student sees the delexicalized version of the same data
-        # The one to one mapping is taken care of inside the ParallelDataDataset
-    if (training_args.do_train_1student_1teacher == True):
-        # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
-        assert training_args.task_type == "combined"
-        assert tokenizer_lex is not None
-        assert tokenizer_delex is not None
-        train_dataset = (
-            ParallelDataDataset(args=data_args, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex,
-                                data_type_1="lex", data_type_2="delex",
-                                cache_dir=model_args.cache_dir) if training_args.do_train else None
-        )
-    else:
-        if (training_args.task_type == "lex"):
-            train_dataset = (
-                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="train",
-                            cache_dir=model_args.cache_dir)
-                if training_args.do_train
-                else None
-            )
-        else:
-            if (training_args.task_type == "delex"):
-                train_dataset = (
-                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="train",
-                                cache_dir=model_args.cache_dir)
-                    if training_args.do_train
-                    else None
-                )
+
 
         # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
         # combined model_teacher performs in a delexicalized dataset. This will serve as a verification point
         # to confirm the accuracy (we got 92.91% for fever delx in domain) if something goes wrong in the prediction phase below
 
-    if (training_args.do_train_1student_1teacher == True):
-        # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
-        eval_dataset = (
-            GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
-                        cache_dir=model_args.cache_dir)
-            if training_args.do_eval
-            else None
-        )
-    else:
-        if (training_args.task_type == "lex"):
-            eval_dataset = (
-                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="dev",
-                            cache_dir=model_args.cache_dir)
-                if training_args.do_eval
-                else None
-            )
-        else:
-            if (training_args.task_type == "delex"):
-                eval_dataset = (
-                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
-                                cache_dir=model_args.cache_dir)
-                    if training_args.do_eval
-                    else None
-                )
+
 
     if (training_args.do_train_1student_1teacher == True):
         # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
@@ -304,9 +253,9 @@ def run_training(model_args, data_args, training_args):
             tokenizer_lex,
             models={"teacher": model_teacher, "student": model_student},
             args=training_args,
-            train_datasets={"combined": train_dataset},
+            train_datasets={"combined": None},
             test_dataset=test_dataset,
-            eval_dataset=eval_dataset,
+            eval_dataset=None,
             eval_compute_metrics=dev_compute_metrics,
             test_compute_metrics=test_compute_metrics
         )
@@ -316,15 +265,15 @@ def run_training(model_args, data_args, training_args):
             tokenizer_lex,
             model=model,
             args=training_args,
-            train_dataset=train_dataset,
-            eval_dataset=eval_dataset,
+            train_dataset=None,
+            eval_dataset=None,
             test_dataset=test_dataset,
             eval_compute_metrics=dev_compute_metrics,
             test_compute_metrics=test_compute_metrics
         )
 
-    model_path="/Users/mordor/research/huggingface/mithun_scripts/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"
-    #model_path = "/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"
+    #model_path="/Users/mordor/research/huggingface/mithun_scripts/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"
+    model_path = "/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"
     assert model_student is not None
     model_student.load_state_dict(torch.load(model_path))
     model_student.eval()
