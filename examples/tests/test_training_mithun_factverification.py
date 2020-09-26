@@ -12,7 +12,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#to debug this file go to Run edit configurations, add python test, select pytest, then select this file
+
+
+#how to run this file: if from command line, uncomment the line ./run_tests.sh inside mithun_scripts/run_all.sh and
+# from command line do ` bash run_all.sh --machine_to_run_on laptop `
+#if from IDE like pycharm, run config test_examples_mithun_factverification
+#to create  a new debug config in pycharm:go to Run edit configurations, add python test, select pytest, then select this file
 
 from unittest import TestCase
 import configparser
