@@ -4,6 +4,7 @@
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
 #PBS -N load_model_test
+
 ### Specify the group name
 #PBS -W group_list=msurdeanu
 ### Used if job requires partial node only
@@ -42,7 +43,7 @@ pip install transformers
 
 cd /home/u11/mithunpaul/xdisk/huggingface_bert_expt1/code/mithun_scripts
 
-bash run_all.sh --epochs_to_run 1 --machine_to_run_on hpc #options include [laptop, hpc,clara]
+bash run_all.sh --epochs_to_run 25 --machine_to_run_on hpc --use_toy_data false #options include [laptop, hpc,clara]
 #stub to use in laptop
 #bash run_all.sh --epochs_to_run 2 --machine_to_run_on laptop --use_toy_data true
 
