@@ -144,9 +144,8 @@ def test_run_loading_model():
         stream_handler = logging.StreamHandler(sys.stdout)
         logger.addHandler(stream_handler)
 
-        #dev_partition_evaluation_result,\
-        test_partition_evaluation_result = load_trained_model_predict.run_loading_and_testing( model_args, data_args, training_args)
-        #accuracy_dev_partition = dev_partition_evaluation_result['eval_acc']['in_domain_acc']
+        dev_partition_evaluation_result,test_partition_evaluation_result = load_trained_model_predict.run_loading_and_testing( model_args, data_args, training_args)
+        accuracy_dev_partition = dev_partition_evaluation_result['eval_acc']['in_domain_acc']
         fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
         accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
         #logger.info(f"value of accuracy_dev_partition={accuracy_dev_partition}")
@@ -160,7 +159,7 @@ def test_run_loading_model():
         assert training_args.fever_cross_domain_fncscore_on_toy_data_17_datapoints != 1.0
 
 
-        #assert accuracy_dev_partition == training_args.fever_in_domain_accuracy_on_toy_data_17_datapoints
+        assert accuracy_dev_partition == training_args.fever_in_domain_accuracy_on_toy_data_17_datapoints
         assert accuracy_test_partition == training_args.fever_cross_domain_accuracy_on_toy_data_17_datapoints
         assert fnc_score_test_partition == training_args.fever_cross_domain_fncscore_on_toy_data_17_datapoints
 

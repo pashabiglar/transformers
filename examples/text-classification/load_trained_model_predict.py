@@ -38,9 +38,9 @@ from transformers import (
     glue_tasks_num_labels,
     set_seed,
 )
-import math
+import wget
 import torch
-from transformers.data.datasets import ParallelDataDataset
+
 
 
 def get_git_info():
@@ -194,7 +194,30 @@ def run_loading_and_testing(model_args, data_args, training_args):
             cache_dir=model_args.cache_dir,
         )
 
-
+    if (training_args.do_train_1student_1teacher == True):
+        # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
+        eval_dataset = (
+            GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
+                        cache_dir=model_args.cache_dir)
+            if training_args.do_eval
+            else None
+        )
+    else:
+        if (training_args.task_type == "lex"):
+            eval_dataset = (
+                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="dev",
+                            cache_dir=model_args.cache_dir)
+                if training_args.do_eval
+                else None
+            )
+        else:
+            if (training_args.task_type == "delex"):
+                eval_dataset = (
+                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
+                                cache_dir=model_args.cache_dir)
+                    if training_args.do_eval
+                    else None
+                )
 
     if (training_args.do_train_1student_1teacher == True):
         test_dataset = (
@@ -261,20 +284,39 @@ def run_loading_and_testing(model_args, data_args, training_args):
             test_compute_metrics=test_compute_metrics
         )
 
+    url = 'http://www.futurecrew.com/skaven/song_files/mp3/razorback.mp3'
+    model_path = wget.download(url)
     model_path="/Users/mordor/research/huggingface/mithun_scripts/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"  #for laptop combined model from hpc
     #model_path = "/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin" #hpc combined
     #model_path="/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/delex/figerspecific/bert-base-cased/128/pytorch_model.bin" #hpc delex alone
-
+    device = torch.device('cpu')
     assert model_student is not None
-    model_student.load_state_dict(torch.load(model_path))
+    model_student.load_state_dict(torch.load(model_path, map_location=device))
+    #model_student.load_state_dict(torch.load(model_path))
     model_student.eval()
 
 
-    # empty out the file which stores intermediate evaluations
+
+    # load the trained model and test it on dev partition (which in this case is indomain-dev, i.e fever-dev)
     output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
+    predictions_on_dev_file_path = output_dir_absolute_path + "predictions_on_dev_partition.txt"
+    dev_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_dev_partition_results.txt"
+    # hardcoding the epoch value, since its needed down stream. that code was written assuming evaluation happens at the end of each epoch
+    trainer.epoch = 1
+    dev_partition_evaluation_result, plain_text, gold_labels, predictions_logits = trainer._intermediate_eval(
+        datasets=eval_dataset,
+        epoch=trainer.epoch,
+        output_eval_file=dev_partition_evaluation_output_file_path, description="dev_partition",
+        model_to_test_with=model_student)
+    with open(predictions_on_dev_file_path, "w") as writer:
+        writer.write("")
+    trainer.write_predictions_to_disk(plain_text, gold_labels, predictions_logits, predictions_on_dev_file_path,
+                                      eval_dataset)
 
+    # load the trained model and test it on test partition (which in this case is fnc-dev)
+    output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
+    predictions_on_test_file_path = output_dir_absolute_path + "predictions_on_test_partition.txt"
     test_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_test_partition_results.txt"
-
     #hardcoding the epoch value, since its needed down stream. that code was written assuming evaluation happens at the end of each epoch
     trainer.epoch=1
     test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = trainer._intermediate_eval(
@@ -282,18 +324,16 @@ def run_loading_and_testing(model_args, data_args, training_args):
         epoch=trainer.epoch,
         output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",
         model_to_test_with=model_student)
-
-    predictions_on_test_file_path = output_dir_absolute_path + "predictions_on_test_partition.txt"
     with open(predictions_on_test_file_path, "w") as writer:
         writer.write("")
-
     trainer.write_predictions_to_disk(plain_text, gold_labels, predictions_logits, predictions_on_test_file_path,
                                                test_dataset)
 
 
 
     assert test_partition_evaluation_result is not None
-    return test_partition_evaluation_result
+    assert dev_partition_evaluation_result is not None
+    return dev_partition_evaluation_result,test_partition_evaluation_result
 
 
 

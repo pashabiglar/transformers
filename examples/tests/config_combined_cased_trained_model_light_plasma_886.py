@@ -23,6 +23,6 @@ subtask_type="figerspecific"
 machine_to_run_on="laptop"
 toy_data_dir_path="/Users/mordor/research/huggingface/src/transformers/data/datasets/fever/fevercrossdomain/combined/figerspecific/toydata/"
 #what are the scores that you should assert against. i.e the ones we got when we ran the toy data alone
-fever_in_domain_accuracy_on_toy_data_17_datapoints=0.375
-fever_cross_domain_accuracy_on_toy_data_17_datapoints=0.0625
-fever_cross_domain_fncscore_on_toy_data_17_datapoints=0.275
+fever_in_domain_accuracy_on_toy_data_17_datapoints=0.9375
+fever_cross_domain_accuracy_on_toy_data_17_datapoints=0.875
+fever_cross_domain_fncscore_on_toy_data_17_datapoints=0.9
