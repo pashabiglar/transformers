@@ -205,6 +205,8 @@ class StudentTeacherTrainer:
         """
         self.lex_teacher_model = models.get("teacher").to(args.device)
         self.delex_student_model = models.get("student").to(args.device)
+        self.stand_alone_student = models.get("stand_alone_student").to(args.device)
+
         self.eval_dataset = eval_dataset
         self.lex_tokenizer=tokenizer_lex
         self.delex_tokenizer = tokenizer_delex
@@ -257,6 +259,7 @@ class StudentTeacherTrainer:
                 ),
                 FutureWarning,
             )
+
     def write_predictions_to_disk(self, plain_text, gold_labels, predictions_logits, file_to_write_predictions, test_dataset):
         predictions_argmaxes = np.argmax(predictions_logits, axis=1)
         sf=torch.nn.Softmax(dim=1)
@@ -461,6 +464,16 @@ class StudentTeacherTrainer:
                 "params": [p for n, p in self.delex_student_model.named_parameters() if any(nd in n for nd in no_decay)],
                 "weight_decay": 0.0,
             },
+            {
+                "params": [p for n, p in self.stand_alone_student.named_parameters() if
+                           not any(nd in n for nd in no_decay)],
+                "weight_decay": self.args.weight_decay,
+            },
+            {
+                "params": [p for n, p in self.stand_alone_student.named_parameters() if
+                           any(nd in n for nd in no_decay)],
+                "weight_decay": 0.0,
+            },
         ]
         optimizer = AdamW(optimizer_grouped_parameters, lr=self.args.learning_rate, eps=self.args.adam_epsilon)
         scheduler = get_linear_schedule_with_warmup(
@@ -522,6 +535,11 @@ class StudentTeacherTrainer:
             wandb.watch(
                 self.delex_student_model, log=os.getenv("WANDB_WATCH", "gradients"), log_freq=max(100, self.args.logging_steps)
             )
+            wandb.watch(
+                self.stand_alone_student, log=os.getenv("WANDB_WATCH", "gradients"),
+                log_freq=max(100, self.args.logging_steps)
+            )
+
 
     def num_examples(self, dataloader: DataLoader) -> int:
         """
@@ -752,8 +770,9 @@ class StudentTeacherTrainer:
 
         model_teacher = self.lex_teacher_model
         model_student = self.delex_student_model
+        model_stand_alone_student = self.stand_alone_student
         weight_consistency_loss = 1
-        weight_classification_loss = 0.01
+        weight_classification_loss = 0.05
         optimizer = None
         scheduler = None
 
@@ -805,6 +824,7 @@ class StudentTeacherTrainer:
                 raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
             model_teacher, optimizer = amp.initialize(model_teacher, optimizer, opt_level=self.args.fp16_opt_level)
             model_student, optimizer = amp.initialize(model_student, optimizer, opt_level=self.args.fp16_opt_level)
+            model_stand_alone_student, optimizer = amp.initialize(model_stand_alone_student, optimizer, opt_level=self.args.fp16_opt_level)
 
         # multi-gpu training (should be after apex fp16 initialization)
         if self.args.n_gpu > 1:
@@ -815,6 +835,7 @@ class StudentTeacherTrainer:
 
             model_teacher = torch.nn.DataParallel(model_teacher)
             model_student = torch.nn.DataParallel(model_student)
+            model_stand_alone_student = torch.nn.DataParallel(model_stand_alone_student)
 
         # Distributed training (should be after apex fp16 initialization)
         if self.args.local_rank != -1:
@@ -830,6 +851,13 @@ class StudentTeacherTrainer:
             device_ids=[self.args.local_rank],
             output_device=self.args.local_rank,
             find_unused_parameters=True,
+            )
+        if self.args.local_rank != -1:
+            model_stand_alone_student = torch.nn.parallel.DistributedDataParallel(
+                model_stand_alone_student,
+                device_ids=[self.args.local_rank],
+                output_device=self.args.local_rank,
+                find_unused_parameters=True,
             )
 
         if self.tb_writer is not None:
@@ -880,6 +908,7 @@ class StudentTeacherTrainer:
         logging_loss = 0.0
         model_teacher.zero_grad()
         model_student.zero_grad()
+        model_stand_alone_student.zero_grad()
         train_iterator = trange(
             epochs_trained, int(num_train_epochs), desc="Epoch", disable=not self.is_local_master()
         )
@@ -943,8 +972,10 @@ class StudentTeacherTrainer:
                 tr_loss_lex,outputs_lex = self.get_classification_loss(model_teacher, input_lex, optimizer)
                 tr_loss_delex,outputs_delex = self.get_classification_loss(model_student, input_delex, optimizer)
 
+
                 if(flag_run_both):
                     combined_classification_loss=tr_loss_lex+tr_loss_delex
+                    classification_loss_delex =   tr_loss_delex
                 else:
                     if(flag_run_teacher_alone):
                         combined_classification_loss = tr_loss_lex
@@ -971,9 +1002,12 @@ class StudentTeacherTrainer:
                     logger.info("self.args.fp16 is true")
                     with amp.scale_loss(combined_loss, optimizer) as scaled_loss:
                         scaled_loss.backward()
+                    with amp.scale_loss(combined_loss, optimizer) as scaled_loss:
+                        scaled_loss.backward()
                 else:
                     logger.debug("self.args.fp16 is false")
                     combined_loss.backward()
+                    classification_loss_delex.backward()
                     logger.debug("just got done with combined_loss.backward()")
 
                 tr_loss_lex_float+=tr_loss_lex.item()
@@ -992,6 +1026,7 @@ class StudentTeacherTrainer:
                         if (flag_run_both):
                             torch.nn.utils.clip_grad_norm_(model_student.parameters(), self.args.max_grad_norm)
                             torch.nn.utils.clip_grad_norm_(model_teacher.parameters(), self.args.max_grad_norm)
+                            torch.nn.utils.clip_grad_norm_(model_stand_alone_student.parameters(), self.args.max_grad_norm)
                         else:
                             if (flag_run_teacher_alone):
                                 torch.nn.utils.clip_grad_norm_(model_teacher.parameters(), self.args.max_grad_norm)
@@ -1010,6 +1045,7 @@ class StudentTeacherTrainer:
                     if (flag_run_both):
                         model_teacher.zero_grad()
                         model_student.zero_grad()
+                        model_stand_alone_student.zero_grad()
                     else:
                         if (flag_run_teacher_alone):
                             model_teacher.zero_grad()
@@ -1050,9 +1086,11 @@ class StudentTeacherTrainer:
                             if hasattr(model_teacher, "module"):
                                 assert model_teacher.module is self.lex_teacher_model.module
                                 assert model_student.module is self.delex_student_model.module
+                                assert model_stand_alone_student.module is self.model_stand_alone_student.module
                             else:
                                 assert model_teacher is self.lex_teacher_model
                                 assert model_student is self.delex_student_model
+                                assert model_stand_alone_student is self.model_stand_alone_student
 
                             self.model=model_teacher
                             output_dir = os.path.join(self.args.output_dir,
@@ -1065,6 +1103,12 @@ class StudentTeacherTrainer:
                                                       f"model_student_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
                             assert self.model is not None
                             self.save_model( output_dir)
+
+                            self.model = model_stand_alone_student
+                            output_dir = os.path.join(self.args.output_dir,
+                                                      f"model_stand_alone_student_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
+                            assert self.model is not None
+                            self.save_model(output_dir)
                         else:
                             if (flag_run_teacher_alone):
                                 if hasattr(model_teacher, "module"):
@@ -1143,6 +1187,7 @@ class StudentTeacherTrainer:
                             f"{epoch} beats the bestfncscore so far i.e ={best_fnc_score}. going to prediction"
                             f"on test partition and save that and model to disk")
                 #if the accuracy or fnc_score_test_partition beats the highest so far, write predictions to disk
+
                 self.write_predictions_to_disk(plain_text, gold_labels, predictions_logits, predictions_on_test_file_path,
                                                self.test_dataset)
 
