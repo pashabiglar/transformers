@@ -263,7 +263,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
         trainer = StudentTeacherTrainer(
             tokenizer_delex,
             tokenizer_lex,
-            models={"teacher": model_teacher, "student": model_student},
+            models={"teacher": model_teacher, "student": model_student, "stand_alone_student": model_student},
             args=training_args,
             train_datasets={"combined": None},
             test_dataset=test_dataset,
@@ -285,13 +285,13 @@ def run_loading_and_testing(model_args, data_args, training_args):
         )
 
     url = 'https://osf.io/twbmu/download'
-
+    model_path = wget.download(url)
     #model_path="/Users/mordor/research/huggingface/mithun_scripts/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"  #for laptop combined model from hpc
     #model_path = "/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin" #hpc combined
     #model_path="/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/delex/figerspecific/bert-base-cased/128/pytorch_model.bin" #hpc delex alone
     device = torch.device('cpu')
     assert model_student is not None
-    model_student.load_state_dict(torch.load( model_path = wget.download(url), map_location=device))
+    model_student.load_state_dict(torch.load( model_path, map_location=device))
     #model_student.load_state_dict(torch.load(model_path))
     model_student.eval()
 

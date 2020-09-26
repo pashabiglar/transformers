@@ -205,7 +205,7 @@ class StudentTeacherTrainer:
         """
         self.lex_teacher_model = models.get("teacher").to(args.device)
         self.delex_student_model = models.get("student").to(args.device)
-        self.stand_alone_student = models.get("stand_alone_student").to(args.device)
+
 
         self.eval_dataset = eval_dataset
         self.lex_tokenizer=tokenizer_lex
@@ -464,16 +464,7 @@ class StudentTeacherTrainer:
                 "params": [p for n, p in self.delex_student_model.named_parameters() if any(nd in n for nd in no_decay)],
                 "weight_decay": 0.0,
             },
-            {
-                "params": [p for n, p in self.stand_alone_student.named_parameters() if
-                           not any(nd in n for nd in no_decay)],
-                "weight_decay": self.args.weight_decay,
-            },
-            {
-                "params": [p for n, p in self.stand_alone_student.named_parameters() if
-                           any(nd in n for nd in no_decay)],
-                "weight_decay": 0.0,
-            },
+
         ]
         optimizer = AdamW(optimizer_grouped_parameters, lr=self.args.learning_rate, eps=self.args.adam_epsilon)
         scheduler = get_linear_schedule_with_warmup(
@@ -535,10 +526,7 @@ class StudentTeacherTrainer:
             wandb.watch(
                 self.delex_student_model, log=os.getenv("WANDB_WATCH", "gradients"), log_freq=max(100, self.args.logging_steps)
             )
-            wandb.watch(
-                self.stand_alone_student, log=os.getenv("WANDB_WATCH", "gradients"),
-                log_freq=max(100, self.args.logging_steps)
-            )
+
 
 
     def num_examples(self, dataloader: DataLoader) -> int:
