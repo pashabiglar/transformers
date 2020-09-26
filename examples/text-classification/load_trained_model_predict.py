@@ -284,14 +284,14 @@ def run_loading_and_testing(model_args, data_args, training_args):
             test_compute_metrics=test_compute_metrics
         )
 
-    url = 'http://www.futurecrew.com/skaven/song_files/mp3/razorback.mp3'
-    model_path = wget.download(url)
-    model_path="/Users/mordor/research/huggingface/mithun_scripts/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"  #for laptop combined model from hpc
+    url = 'https://osf.io/twbmu/download'
+
+    #model_path="/Users/mordor/research/huggingface/mithun_scripts/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"  #for laptop combined model from hpc
     #model_path = "/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin" #hpc combined
     #model_path="/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/delex/figerspecific/bert-base-cased/128/pytorch_model.bin" #hpc delex alone
     device = torch.device('cpu')
     assert model_student is not None
-    model_student.load_state_dict(torch.load(model_path, map_location=device))
+    model_student.load_state_dict(torch.load( model_path = wget.download(url), map_location=device))
     #model_student.load_state_dict(torch.load(model_path))
     model_student.eval()
 
