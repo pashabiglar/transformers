@@ -1,3 +1,4 @@
+wget
 tensorboard
 scikit-learn
 seqeval
@@ -16,5 +17,5 @@ nlp
 tensorflow
 pytest
 transformers
-wget
+
 
