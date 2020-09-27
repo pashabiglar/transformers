@@ -284,7 +284,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
             test_compute_metrics=test_compute_metrics
         )
 
-    url = 'https://osf.io/twbmu/download'
+    #url = 'https://osf.io/twbmu/download' #best combined trained model
+    url = 'https://osf.io/ktjv8/download' #best lex trained model
+
     model_path = wget.download(url)
     #model_path="/Users/mordor/research/huggingface/mithun_scripts/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"  #for laptop combined model from hpc
     #model_path = "/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin" #hpc combined
