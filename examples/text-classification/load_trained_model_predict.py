@@ -263,7 +263,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
         trainer = StudentTeacherTrainer(
             tokenizer_delex,
             tokenizer_lex,
-            models={"teacher": model_teacher, "student": model_student, "stand_alone_student": model_student},
+            models={"teacher": model_teacher, "student": model_student},
             args=training_args,
             train_datasets={"combined": None},
             test_dataset=test_dataset,
@@ -288,15 +288,15 @@ def run_loading_and_testing(model_args, data_args, training_args):
     url = 'https://osf.io/ktjv8/download' #best lex trained model
 
     model_path = wget.download(url)
-    #model_path="/Users/mordor/research/huggingface/mithun_scripts/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"  #for laptop combined model from hpc
-    #model_path = "/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin" #hpc combined
-    #model_path="/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/delex/figerspecific/bert-base-cased/128/pytorch_model.bin" #hpc delex alone
     device = torch.device('cpu')
-    assert model_student is not None
-    model_student.load_state_dict(torch.load( model_path, map_location=device))
-    #model_student.load_state_dict(torch.load(model_path))
-    model_student.eval()
 
+    if training_args.do_train_1student_1teacher:
+        model=model_student
+
+    assert model is not None
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    # model.load_state_dict(torch.load(model_path))
+    model.eval()
 
 
     # load the trained model and test it on dev partition (which in this case is indomain-dev, i.e fever-dev)
@@ -309,7 +309,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
         datasets=eval_dataset,
         epoch=trainer.epoch,
         output_eval_file=dev_partition_evaluation_output_file_path, description="dev_partition",
-        model_to_test_with=model_student)
+        model_to_test_with=model)
     with open(predictions_on_dev_file_path, "w") as writer:
         writer.write("")
     trainer.write_predictions_to_disk(plain_text, gold_labels, predictions_logits, predictions_on_dev_file_path,
@@ -325,7 +325,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
         datasets=test_dataset,
         epoch=trainer.epoch,
         output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",
-        model_to_test_with=model_student)
+        model_to_test_with=model)
     with open(predictions_on_test_file_path, "w") as writer:
         writer.write("")
     trainer.write_predictions_to_disk(plain_text, gold_labels, predictions_logits, predictions_on_test_file_path,
