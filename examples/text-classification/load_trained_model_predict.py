@@ -285,7 +285,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
         )
 
     #url = 'https://osf.io/twbmu/download' #best combined trained model
-    url = 'https://osf.io/ktjv8/download' #best lex trained model
+    #url = 'https://osf.io/ktjv8/download' #link to best lex trained model- note that this is not the best trained model. as of sep 27th 2020, i cant find that model. need to update this link
+    url = 'https://osf.io/9grnu/download'  # link to best delex trained model- note that this is not the best trained model. as of sep 27th 2020, i cant find that model. need to update this link
 
     model_path = wget.download(url)
     device = torch.device('cpu')
