@@ -52,7 +52,7 @@ from transformers import (
 )
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
 import git
-CONFIG_FILE_TO_TEST_WITH="config_delex_cased.py"
+CONFIG_FILE_TO_TEST_WITH="config_run_delex_from_inside_combined_cased.py"
 
 SRC_DIRS = [
     os.path.join(os.path.dirname(__file__), dirname)

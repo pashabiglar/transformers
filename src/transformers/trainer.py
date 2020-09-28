@@ -2371,17 +2371,22 @@ class Trainer:
         # Todo: the assumption here is that the testing/testcase will be run for 1 epoch only.  Ideally have to return the best dev and test partition scores and should work for any epoch
         return dev_partition_evaluation_result,test_partition_evaluation_result
 
-    def write_predictions_to_disk(self,plain_text,gold_labels,predictions, file_to_write_predictions, test_dataset):
-        #predictions = self.predict(test_dataset,model).predictions
-        predictions = np.argmax(predictions, axis=1)
+
+    def write_predictions_to_disk(self, plain_text, gold_labels, predictions_logits, file_to_write_predictions,
+                                  test_dataset):
+        predictions_argmaxes = np.argmax(predictions_logits, axis=1)
+        sf = torch.nn.Softmax(dim=1)
+        predictions_softmax = sf(torch.FloatTensor(predictions_logits))
         if self.is_world_master():
             with open(file_to_write_predictions, "w") as writer:
-                logger.info(f"***** (Going to write Test results to disk {file_to_write_predictions} *****")
-                writer.write("index\t gold\tprediction\tplain_text\n")
-                for index,(gold, pred, plain) in enumerate(zip(gold_labels,predictions,plain_text)):
+                logger.info(f"***** (Going to write Test results to disk at {file_to_write_predictions} *****")
+                writer.write("index\t gold\tprediction_logits\t prediction_label\tplain_text\n")
+                for index, (gold, pred_sf, pred_argmax, plain) in enumerate(
+                        zip(gold_labels, predictions_softmax, predictions_argmaxes, plain_text)):
                     gold_string = test_dataset.get_labels()[gold]
-                    pred_string = test_dataset.get_labels()[pred]
-                    writer.write("%d\t%s\t%s\t%s\n" % (index, gold_string, pred_string,plain))
+                    pred_string = test_dataset.get_labels()[pred_argmax]
+                    writer.write(
+                        "%d\t%s\t%s\t%s\t%s\n" % (index, gold_string, str(pred_sf.tolist()), pred_string, plain))
 
     def log(self, logs: Dict[str, float], iterator: Optional[tqdm] = None) -> None:
         """
