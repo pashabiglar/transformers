@@ -52,7 +52,7 @@ from transformers import (
 )
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
 import git
-
+CONFIG_FILE_TO_TEST_WITH="config_run_delex_training_from_inside_combined_cased.py"
 
 SRC_DIRS = [
     os.path.join(os.path.dirname(__file__), dirname)
@@ -107,7 +107,7 @@ logger = logging.getLogger(__name__)
 
 def read_and_merge_config_entries():
     config = configparser.ConfigParser()
-    config.read('config_combined_cased.py')
+    config.read(CONFIG_FILE_TO_TEST_WITH)
     assert not len(config.sections())==0
     combined_configs=[]
     for each_section in config.sections():

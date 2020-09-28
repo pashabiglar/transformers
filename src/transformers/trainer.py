@@ -768,8 +768,8 @@ class StudentTeacherTrainer:
         # flag_run_both=True. Other two flags are to test by loading each of these models independently from within
         #the same trainer class
         flag_run_teacher_alone = False
-        flag_run_student_alone = False
-        flag_run_both = True
+        flag_run_student_alone = True
+        flag_run_both = False
 
 
 
@@ -2308,7 +2308,7 @@ class Trainer:
                     epoch_iterator.close()
                     break
 
-            dev_partition_evaluation_result = self._intermediate_eval(datasets=self.eval_dataset,
+            dev_partition_evaluation_result,plain_text,gold_labels,predictions = self._intermediate_eval(datasets=self.eval_dataset,
                                                                       epoch=epoch,
                                                                       output_eval_file=dev_partition_evaluation_output_file_path,
                                                                       description="dev_partition",
@@ -2323,8 +2323,7 @@ class Trainer:
             fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
             accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
             self.write_predictions_to_disk(plain_text, gold_labels, predictions, predictions_on_test_file_path,self.test_dataset)
-            import sys
-            sys.exit(1)
+
 
             if fnc_score_test_partition > best_fnc_score:
                 best_fnc_score = fnc_score_test_partition
@@ -2333,7 +2332,8 @@ class Trainer:
                             f"{epoch} beats the bestfncscore so far i.e ={best_fnc_score}. going to prediction"
                             f"on test partition and save that and model to disk")
                 # if the accuracy or fnc_score_test_partition beats the highest so far, write predictions to disk
-                self.write_predictions_to_disk(plain_text,gold_labels,predictions, predictions_on_test_file_path)
+                self.write_predictions_to_disk(plain_text, gold_labels, predictions, predictions_on_test_file_path,
+                                               self.test_dataset)
 
                 # Save model checkpoint
                 output_dir = os.path.join(self.args.output_dir)
@@ -2371,17 +2371,22 @@ class Trainer:
         # Todo: the assumption here is that the testing/testcase will be run for 1 epoch only.  Ideally have to return the best dev and test partition scores and should work for any epoch
         return dev_partition_evaluation_result,test_partition_evaluation_result
 
-    def write_predictions_to_disk(self,plain_text,gold_labels,predictions, file_to_write_predictions, test_dataset):
-        #predictions = self.predict(test_dataset,model).predictions
-        predictions = np.argmax(predictions, axis=1)
+
+    def write_predictions_to_disk(self, plain_text, gold_labels, predictions_logits, file_to_write_predictions,
+                                  test_dataset):
+        predictions_argmaxes = np.argmax(predictions_logits, axis=1)
+        sf = torch.nn.Softmax(dim=1)
+        predictions_softmax = sf(torch.FloatTensor(predictions_logits))
         if self.is_world_master():
             with open(file_to_write_predictions, "w") as writer:
-                logger.info(f"***** (Going to write Test results to disk {file_to_write_predictions} *****")
-                writer.write("index\t gold\tprediction\tplain_text\n")
-                for index,(gold, pred, plain) in enumerate(zip(gold_labels,predictions,plain_text)):
+                logger.info(f"***** (Going to write Test results to disk at {file_to_write_predictions} *****")
+                writer.write("index\t gold\tprediction_logits\t prediction_label\tplain_text\n")
+                for index, (gold, pred_sf, pred_argmax, plain) in enumerate(
+                        zip(gold_labels, predictions_softmax, predictions_argmaxes, plain_text)):
                     gold_string = test_dataset.get_labels()[gold]
-                    pred_string = test_dataset.get_labels()[pred]
-                    writer.write("%d\t%s\t%s\t%s\n" % (index, gold_string, pred_string,plain))
+                    pred_string = test_dataset.get_labels()[pred_argmax]
+                    writer.write(
+                        "%d\t%s\t%s\t%s\t%s\n" % (index, gold_string, str(pred_sf.tolist()), pred_string, plain))
 
     def log(self, logs: Dict[str, float], iterator: Optional[tqdm] = None) -> None:
         """

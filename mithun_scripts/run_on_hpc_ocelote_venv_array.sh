@@ -3,14 +3,13 @@
 #PBS -q standard
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
-#PBS -N load_model_test
-
+#PBS -N train_delex
 ### Specify the group name
 #PBS -W group_list=msurdeanu
 ### Used if job requires partial node only
 #PBS -l place=pack:shared
 ### Walltime is how long your job will run
-#PBS -l walltime=00:30:00
+#PBS -l walltime=15:30:00
 ### Joins standard error and standd out
 #PBS -j oe
 
