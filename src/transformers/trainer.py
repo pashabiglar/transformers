@@ -2308,7 +2308,7 @@ class Trainer:
                     epoch_iterator.close()
                     break
 
-            dev_partition_evaluation_result = self._intermediate_eval(datasets=self.eval_dataset,
+            dev_partition_evaluation_result,plain_text,gold_labels,predictions = self._intermediate_eval(datasets=self.eval_dataset,
                                                                       epoch=epoch,
                                                                       output_eval_file=dev_partition_evaluation_output_file_path,
                                                                       description="dev_partition",
@@ -2323,8 +2323,7 @@ class Trainer:
             fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
             accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
             self.write_predictions_to_disk(plain_text, gold_labels, predictions, predictions_on_test_file_path,self.test_dataset)
-            import sys
-            sys.exit(1)
+
 
             if fnc_score_test_partition > best_fnc_score:
                 best_fnc_score = fnc_score_test_partition
@@ -2333,7 +2332,8 @@ class Trainer:
                             f"{epoch} beats the bestfncscore so far i.e ={best_fnc_score}. going to prediction"
                             f"on test partition and save that and model to disk")
                 # if the accuracy or fnc_score_test_partition beats the highest so far, write predictions to disk
-                self.write_predictions_to_disk(plain_text,gold_labels,predictions, predictions_on_test_file_path)
+                self.write_predictions_to_disk(plain_text, gold_labels, predictions, predictions_on_test_file_path,
+                                               self.test_dataset)
 
                 # Save model checkpoint
                 output_dir = os.path.join(self.args.output_dir)

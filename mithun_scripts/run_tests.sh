@@ -40,13 +40,13 @@ echo $PYTHONPATH
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         cd ../examples/tests/
-        #pytest -s test_training_mithun_factverification.py
+        pytest -s test_training_mithun_factverification.py
         pytest -s test_loading_mithun_factverification.py
 
 
 else
         cd ../examples/tests/
-        #pytest -s test_training_mithun_factverification.py
-        pytest -s test_loading_mithun_factverification.py
+        pytest -s test_training_mithun_factverification.py
+        #pytest -s test_loading_mithun_factverification.py
 
 fi
