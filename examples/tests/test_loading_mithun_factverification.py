@@ -40,7 +40,7 @@ from transformers import (
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
 import git
 
-CONFIG_FILE_TO_TEST_WITH="config_combined_cased_trained_model_light_plasma_886.py"
+CONFIG_FILE_TO_TEST_WITH="config_delex_cased.py"
 SRC_DIRS = [
     os.path.join(os.path.dirname(__file__), dirname)
     for dirname in ["text-generation", "../text-classification", "language-modeling", "question-answering"]

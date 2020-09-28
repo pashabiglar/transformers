@@ -284,56 +284,60 @@ def run_loading_and_testing(model_args, data_args, training_args):
             test_compute_metrics=test_compute_metrics
         )
 
-    url = 'http://www.futurecrew.com/skaven/song_files/mp3/razorback.mp3'
+    #url = 'https://osf.io/twbmu/download' #best combined trained model
+    #url = 'https://osf.io/ktjv8/download' #link to best lex trained model- note that this is not the best trained model. as of sep 27th 2020, i cant find that model. need to update this link
+    url = 'https://osf.io/9grnu/download'  # link to best delex trained model- note that this is not the best trained model. as of sep 27th 2020, i cant find that model. need to update this link
+
     model_path = wget.download(url)
-    model_path="/Users/mordor/research/huggingface/mithun_scripts/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin"  #for laptop combined model from hpc
-    #model_path = "/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model.bin" #hpc combined
-    #model_path="/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output/fever/fevercrossdomain/delex/figerspecific/bert-base-cased/128/pytorch_model.bin" #hpc delex alone
     device = torch.device('cpu')
-    assert model_student is not None
-    model_student.load_state_dict(torch.load(model_path, map_location=device))
-    #model_student.load_state_dict(torch.load(model_path))
-    model_student.eval()
+
+    if training_args.do_train_1student_1teacher:
+        model=model_student
+
+    assert model is not None
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    # model.load_state_dict(torch.load(model_path))
+    model.eval()
 
 
-
-    # load the trained model and test it on dev partition (which in this case is indomain-dev, i.e fever-dev)
-    output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
-    predictions_on_dev_file_path = output_dir_absolute_path + "predictions_on_dev_partition.txt"
-    dev_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_dev_partition_results.txt"
-    # hardcoding the epoch value, since its needed down stream. that code was written assuming evaluation happens at the end of each epoch
-    trainer.epoch = 1
-    dev_partition_evaluation_result, plain_text, gold_labels, predictions_logits = trainer._intermediate_eval(
-        datasets=eval_dataset,
-        epoch=trainer.epoch,
-        output_eval_file=dev_partition_evaluation_output_file_path, description="dev_partition",
-        model_to_test_with=model_student)
-    with open(predictions_on_dev_file_path, "w") as writer:
-        writer.write("")
-    trainer.write_predictions_to_disk(plain_text, gold_labels, predictions_logits, predictions_on_dev_file_path,
-                                      eval_dataset)
+    # # load the trained model and test it on dev partition (which in this case is indomain-dev, i.e fever-dev)
+    # output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
+    # predictions_on_dev_file_path = output_dir_absolute_path + "predictions_on_dev_partition.txt"
+    # dev_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_dev_partition_results.txt"
+    # # hardcoding the epoch value, since its needed down stream. that code was written assuming evaluation happens at the end of each epoch
+    # trainer.epoch = 1
+    # dev_partition_evaluation_result, plain_text, gold_labels, predictions_logits = trainer._intermediate_eval(
+    #     datasets=eval_dataset,
+    #     epoch=trainer.epoch,
+    #     output_eval_file=dev_partition_evaluation_output_file_path, description="dev_partition",
+    #     model_to_test_with=model)
+    # with open(predictions_on_dev_file_path, "w") as writer:
+    #     writer.write("")
+    # trainer.write_predictions_to_disk(plain_text, gold_labels, predictions_logits, predictions_on_dev_file_path,
+    #                                   eval_dataset)
 
     # load the trained model and test it on test partition (which in this case is fnc-dev)
     output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
     predictions_on_test_file_path = output_dir_absolute_path + "predictions_on_test_partition.txt"
     test_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_test_partition_results.txt"
+
     #hardcoding the epoch value, since its needed down stream. that code was written assuming evaluation happens at the end of each epoch
     trainer.epoch=1
     test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = trainer._intermediate_eval(
         datasets=test_dataset,
         epoch=trainer.epoch,
         output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",
-        model_to_test_with=model_student)
+        model_to_test_with=model)
     with open(predictions_on_test_file_path, "w") as writer:
         writer.write("")
     trainer.write_predictions_to_disk(plain_text, gold_labels, predictions_logits, predictions_on_test_file_path,
                                                test_dataset)
+    logger.info(f"test partition prediction details written to {test_partition_evaluation_output_file_path}")
 
 
-
-    assert test_partition_evaluation_result is not None
-    assert dev_partition_evaluation_result is not None
-    return dev_partition_evaluation_result,test_partition_evaluation_result
+    # assert test_partition_evaluation_result is not None
+    # assert dev_partition_evaluation_result is not None
+    # return dev_partition_evaluation_result,test_partition_evaluation_result
 
 
 

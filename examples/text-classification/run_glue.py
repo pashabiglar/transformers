@@ -310,7 +310,7 @@ def run_training(model_args, data_args, training_args):
 
             tokenizer_delex,
             tokenizer_lex,
-            models={"teacher": model_teacher, "student": model_student, "stand_alone_student":model_student_not_combined},
+            models={"teacher": model_teacher, "student": model_student},
             args=training_args,
             train_datasets={"combined": train_dataset},
             test_dataset=test_dataset,

@@ -40,6 +40,7 @@ cd /home/u11/mithunpaul/xdisk/huggingface_bert_expt1/code/examples
 
 pip install -r requirements.txt
 pip install transformers
+pip install wget
 
 cd /home/u11/mithunpaul/xdisk/huggingface_bert_expt1/code/mithun_scripts
 
