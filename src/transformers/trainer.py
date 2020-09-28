@@ -2622,9 +2622,10 @@ class Trainer:
 
             if self.args.past_index >= 0:
                 self._past = None
-
+            plain_text_full = []
             for inputs in tqdm(dataloader, desc=description):
-                plain_text_delex = self.delex_tokenizer.batch_decode(inputs['input_ids'])
+                plain_text_batch = self.delex_tokenizer.batch_decode(inputs['input_ids'])
+                plain_text_full.extend(plain_text_batch)
                 loss, logits, labels = self.prediction_step(model, inputs, prediction_loss_only)
                 if loss is not None:
                     eval_losses.append(loss)
@@ -2678,7 +2679,9 @@ class Trainer:
             for key in list(metrics.keys()):
                 if not key.startswith("eval_"):
                     metrics[f"eval_{key}"] = metrics.pop(key)
+            assert plain_text_full is not None
+            assert len(plain_text_full) == len(dataloader.dataset.features)
 
-            return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics),plain_text_delex
+            return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics), plain_text_full
 
 
