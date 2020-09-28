@@ -20,7 +20,7 @@ import os
 import re
 from dataclasses import dataclass
 from typing import Callable, Dict, List, Optional, Set, Tuple, Union
-
+import git
 import torch
 from torch import Tensor, device, dtype, nn
 from torch.nn import CrossEntropyLoss
@@ -33,6 +33,7 @@ from .file_utils import (
     TF2_WEIGHTS_NAME,
     TF_WEIGHTS_NAME,
     WEIGHTS_NAME,
+    WEIGHTS_NAME_STUB,
     ModelOutput,
     cached_path,
     hf_bucket_url,
@@ -529,6 +530,20 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, GenerationMixin):
         # Tie weights if needed
         self.tie_weights()
 
+    def get_git_info(self):
+        repo = git.Repo(search_parent_directories=True)
+
+        repo_sha = str(repo.head.object.hexsha),
+        repo_short_sha = str(repo.git.rev_parse(repo_sha, short=6))
+
+        repo_infos = {
+            "repo_id": str(repo),
+            "repo_sha": str(repo.head.object.hexsha),
+            "repo_branch": str(repo.active_branch),
+            "repo_short_sha": repo_short_sha
+        }
+        return repo_infos
+
     def prune_heads(self, heads_to_prune: Dict[int, List[int]]):
         """
         Prunes heads of the base model.
@@ -567,7 +582,13 @@ class PreTrainedModel(nn.Module, ModuleUtilsMixin, GenerationMixin):
         model_to_save.config.architectures = [model_to_save.__class__.__name__]
 
         # If we save using the predefined names, we can load using `from_pretrained`
-        output_model_file = os.path.join(save_directory, WEIGHTS_NAME)
+
+        git_details = self.get_git_info()
+
+        model_file_name = WEIGHTS_NAME_STUB+"_"+git_details['repo_short_sha'] + ".bin"
+
+
+        output_model_file = os.path.join(save_directory, model_file_name)
 
         if getattr(self.config, "xla_device", False):
             import torch_xla.core.xla_model as xm
