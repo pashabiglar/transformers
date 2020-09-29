@@ -27,6 +27,11 @@ def score_submission(gold_labels, test_labels):
 
     return score, cm
 
+def convert_labels_from_string_to_index(label_list):
+
+    return [LABELS.index(label) for label in label_list]
+
+
 
 def print_confusion_matrix(cm):
     lines = []
@@ -46,6 +51,12 @@ def print_confusion_matrix(cm):
         lines.append("-"*line_len)
     print('\n'.join(lines))
 
+def simple_accuracy(preds, gold):
+    total_right=0
+    for p,g in zip(preds,gold):
+        if(p == g):
+            total_right+=1
+    return (total_right*100)/len(preds)
 
 def report_score(actual,predicted):
     score,cm = score_submission(actual,predicted)
@@ -56,7 +67,7 @@ def report_score(actual,predicted):
     return score*100/best_score
 
 #read tsv predictions from sandeeps tensorflow code
-test_prediction_logits=pd.read_csv("predictions/predictions_combined_light_plasma_886_epoch2.txt",sep="\t",header=None)
+test_prediction_logits=pd.read_csv("predictions/predictions_on_test_partition_using_delex_trained_model_de10f_54.04accuracy.txt",sep="\t",header=None)
 test_gold=pd.read_csv("predictions/fnc_dev_gold.tsv",sep="\t",header=None)
 
 
@@ -73,23 +84,17 @@ for (pred,actual_row) in zip(test_prediction_logits.values,test_gold.values):
     if(index==1):
         continue
     #label_index=(np.argmax((pred).tolist()))
-    label_string=pred[1]
+    label_string=pred[3]
     pred_labels.append(label_string)
     gold_labels.append(actual_row[1])
 
-#assuming there is no corresponding prediction for 1st gold value/datapoint
-# for index,predictions_row in enumerate(lex_predictions.values):
-#     if index<25411:seed
-#         label_index=(np.argmax(predictions_row.tolist()))
-#         label_string=LABELS[label_index]
-#         lex_labels.append(label_string)
-#
-#         gold_label=(test_gold.values[index+1][1])
-#         gold_labels.append(gold_label)
-#     else:
-#         break
+
 
 print(len(pred_labels))
 
 assert len(pred_labels)==len(gold_labels)
 report_score(gold_labels,pred_labels)
+pred_labels_int=convert_labels_from_string_to_index(pred_labels)
+gold_labels_int=convert_labels_from_string_to_index(gold_labels)
+accuracy=simple_accuracy(pred_labels_int,gold_labels_int)
+print(f"accuracy={accuracy}")
