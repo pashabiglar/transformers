@@ -135,9 +135,9 @@ if test -f "$FILE";then
     echo "$FILE exists"
 else
 
-    #uncomment this if you want to feed dev and test. this is used when you want to check if lex model alone works fine from within student teacher
-    #wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/dev.tsv -O $FILE
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/figer_specific/dev.tsv -O $FILE
+    #uncomment this if you want to feed dev and test as lex. this is used when you want to check if lex model alone works fine from within student teacher
+    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/dev.tsv -O $FILE
+    #wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/figer_specific/dev.tsv -O $FILE
 fi
 
 
@@ -148,9 +148,9 @@ FILE="$DATA_DIR/test.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
-      #uncomment this if you want to feed dev and test. this is used when you want to check if lex model alone works fine from within student teacher
-      #wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/lex/dev.tsv -O $FILE
-      wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/figer_specific/dev.tsv   -O $FILE
+      #uncomment this if you want to feed dev and test as lex. this is used when you want to check if lex model alone works fine from within student teacher
+      wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/lex/dev.tsv -O $FILE
+      #wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/figer_specific/dev.tsv   -O $FILE
 
 
 fi

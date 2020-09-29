@@ -40,7 +40,7 @@ from transformers import (
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
 import git
 
-CONFIG_FILE_TO_TEST_WITH="config_delex_cased_for_loading_and_testing_a_delex_trained_model.py"
+CONFIG_FILE_TO_TEST_WITH="config_lex_cased_for_loading_and_testing_a_lex_trained_model.py"
 SRC_DIRS = [
     os.path.join(os.path.dirname(__file__), dirname)
     for dirname in ["text-generation", "../text-classification", "language-modeling", "question-answering"]
