@@ -267,7 +267,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
             args=training_args,
             train_datasets={"combined": None},
             test_dataset=test_dataset,
-            eval_dataset=None,
+            eval_dataset=eval_dataset,
             eval_compute_metrics=dev_compute_metrics,
             test_compute_metrics=test_compute_metrics
         )
@@ -278,7 +278,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
             model=model,
             args=training_args,
             train_dataset=None,
-            eval_dataset=None,
+            eval_dataset=eval_dataset,
             test_dataset=test_dataset,
             eval_compute_metrics=dev_compute_metrics,
             test_compute_metrics=test_compute_metrics
