@@ -1016,6 +1016,10 @@ class StudentTeacherTrainer:
                         trained_model = model_student
 
             assert trained_model is not None
+            # save model at the end of each epoch
+            output_dir = os.path.join(self.args.output_dir,
+                                      f"model_teacher_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
+            self.save_model(trained_model, output_dir)
 
             self._intermediate_eval(datasets=self.eval_dataset,
                                             epoch=epoch, output_eval_file=output_eval_file_path,
@@ -1024,8 +1028,7 @@ class StudentTeacherTrainer:
             self._intermediate_eval(datasets=self.test_dataset,
                                     epoch=epoch, output_eval_file=output_eval_file_path, description="test_partition",model_to_test_with=trained_model)
 
-            #save model at the end of each epoch
-            self.save_model(trained_model, output_dir)
+
             logger.info(
                 f"********************************end of epoch {epoch+1}************************************************************************")
             if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
