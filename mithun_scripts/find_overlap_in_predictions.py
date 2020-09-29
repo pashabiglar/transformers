@@ -64,14 +64,16 @@ def report_score(actual,predicted):
 
 
 
-lex_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_combined_trained_model_acc6921_2a528.txt", sep="\t", header=None)
-delex_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_delex_trained_model_de10f_54.04accuracy.txt", sep="\t", header=None)
+model1_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_combined_trained_model_acc6921_2a528.txt", sep="\t", header=None)
+model2_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_delex_trained_model_de10f_54.04accuracy.txt", sep="\t", header=None)
+model3_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_lex_cdaccuracy6908.txt", sep="\t", header=None)
 test_gold=pd.read_csv("predictions/fnc_dev_gold.tsv",sep="\t",header=None)
+""
 
 # are the lengths different?
-assert len(test_gold)==len(lex_predictions)
-assert len(test_gold)==len(delex_predictions)
-assert len(lex_predictions)==len(delex_predictions)
+assert len(test_gold)==len(model1_predictions)
+assert len(test_gold)==len(model2_predictions)
+assert len(model1_predictions) == len(model2_predictions)
 
 lex_labels=[]
 delex_labels=[]
@@ -79,7 +81,7 @@ gold_labels=[]
 
 
 #strip out labels from rest of the junk
-for (lex,delex,actual_row) in zip(lex_predictions.values,delex_predictions.values,test_gold.values):
+for (lex,delex,actual_row) in zip(model1_predictions.values, model2_predictions.values, test_gold.values):
     label_string=lex[3]
     lex_labels.append(label_string)
     label_string = delex[3]

@@ -168,7 +168,7 @@ def two_model_voting(model1_predicted_labels, model2_predicted_labels, model1_so
 
 
 
-def three_model_voting(model1_predicted_labels, model2_predicted_labels,model3_predicted_labels, model1_softmaxes, model2_softmaxes,model3_softmaxes):
+def three_model_voting_two_model_disagree_use_lex(model1_predicted_labels, model2_predicted_labels, model3_predicted_labels, model1_softmaxes, model2_softmaxes, model3_softmaxes):
     assert len(model1_predicted_labels) == len(model2_predicted_labels)
     assert len(model1_softmaxes) == len(model2_softmaxes)
     assert len(model1_softmaxes) == len(model3_softmaxes)
@@ -226,7 +226,7 @@ def simple_accuracy(preds, gold):
 
 
 #predictions_post_voting=two_model_voting(model1_predicted_labels_string, model2_predicted_labels_string, model1_sf, model2_sf,gold_labels)
-predictions_post_voting=three_model_voting(model1_predicted_labels_string, model2_predicted_labels_string,model3_predicted_labels_string, model1_sf, model2_sf,model3_sf)
+predictions_post_voting=three_model_voting_two_model_disagree_use_lex(model1_predicted_labels_string, model2_predicted_labels_string, model3_predicted_labels_string, model1_sf, model2_sf, model3_sf)
 assert len(predictions_post_voting)==len(gold_labels)
 report_score(gold_labels,predictions_post_voting)
 pred_labels_int=convert_labels_from_string_to_index(predictions_post_voting)
