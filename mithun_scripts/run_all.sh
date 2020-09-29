@@ -26,8 +26,8 @@ fi
 
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_merge_master_with_studentteacher_branch/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_merge_master_with_studentteacher_branch/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_expt1/data"
 else
         export DATA_DIR_BASE="/Users/mordor/research/huggingface/src/transformers/data/datasets"
         export OUTPUT_DIR_BASE="/Users/mordor/research/huggingface/mithun_scripts/output"
