@@ -1,3 +1,25 @@
+#In this code we go through predictions of 3 models and do a voting between 3 best.
+'''
+If(all 3 models agree) {
+	use the predicted label
+
+}
+
+If (2 out of 3 models agree)
+
+{
+
+	use the predicted label
+
+}
+
+else {
+
+	pick the label predicted with the highest confidence (after softmax)
+
+}
+
+'''
 #Adapted from https://github.com/FakeNewsChallenge/fnc-1/blob/master/scorer.py
 #Original credit - @bgalbraith
 import pandas as pd
