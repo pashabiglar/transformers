@@ -90,8 +90,8 @@ fnc_score_delex=report_score(gold_labels,delex_labels)
 
 
 
-#find how many mismatches between lex and delex
-#basically: find how many did lex predict right, that delex guy missed- so at the end of the day we will have something to learn from lex or not.
+#find how many mismatches between mod1 and mod2
+#basically: find how many did mod1 predict right, that mod2 guy missed- so at the end of the day we will have something to learn from mod1 or not.
 
 mismatches=0
 learnables=0
@@ -125,7 +125,7 @@ print(f"fnc_score_delex ={(fnc_score_delex)}")
 print(f"fnc_score_lex ={(fnc_score_lex)}")
 print(f"gold_labels_count ={len(gold_labels)}")
 
-print(f"overall mismatches_count between lex and delex={mismatches}")
+print(f"overall mismatches_count between mod1 and mod2={mismatches}")
 
 ######## everything in percentages wrt total data
 print(f"mismatches_percentages ={mismatches_percentages}")
@@ -135,7 +135,7 @@ print(f"percentage accuracy_delex={accuracy_delex}")
 
 print(f"**************details needed for venn diagram")
 print(f"count correct_both ={correct_both}")
-print(f"count only lex got right ={correct_lex-correct_both}")
-print(f"count only delex got right ={correct_delex-correct_both}")
-print(f"count where lex predicted correctly but delex didnt={learnables}")
+print(f"count only mod1 got right ={correct_lex-correct_both}")
+print(f"count only mod2 got right ={correct_delex-correct_both}")
+print(f"count where mod1 predicted correctly but mod2 didnt={learnables}")
 

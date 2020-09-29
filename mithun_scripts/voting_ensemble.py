@@ -80,84 +80,83 @@ def report_score(actual,predicted):
 
 
 
-lex_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_combined_trained_model_acc6921_2a528.txt", sep="\t", header=None)
-delex_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_delex_trained_model_de10f_54.04accuracy.txt", sep="\t", header=None)
-test_gold=pd.read_csv("predictions/fnc_dev_gold.tsv",sep="\t",header=None)
+model1_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_combined_trained_model_acc6921_2a528.txt", sep="\t", header=None)
+model2_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_delex_trained_model_de10f_54.04accuracy.txt", sep="\t", header=None)
+model3_predictions=pd.read_csv("predictions/fnc_dev_gold.tsv", sep="\t", header=None)
 
 # are the lengths different?
-assert len(test_gold)==len(lex_predictions)
-assert len(test_gold)==len(delex_predictions)
-assert len(lex_predictions)==len(delex_predictions)
+assert len(model3_predictions) == len(model1_predictions)
+assert len(model3_predictions) == len(model2_predictions)
+assert len(model1_predictions) == len(model2_predictions)
 
-lex_labels=[]
-delex_labels=[]
+model1_predicted_labels_string=[]
+model2_predicted_labels_string=[]
 gold_labels=[]
-
+model1_sf=[]
+model2_sf=[]
 
 #strip out labels from rest of the junk
-for (lex,delex,actual_row) in zip(lex_predictions.values,delex_predictions.values,test_gold.values):
-    label_string=lex[3]
-    lex_labels.append(label_string)
-    label_string = delex[3]
-    delex_labels.append(label_string)
-    gold_labels.append(actual_row[1])
+for (mod1, mod2, mod3) in zip(model1_predictions.values, model2_predictions.values, model3_predictions.values):
+    label_string=mod1[3]
+    model1_predicted_labels_string.append(label_string)
+    label_string = mod2[3]
+    model2_predicted_labels_string.append(label_string)
+    gold_labels.append(mod3[1])
+    model1_sf.append(mod1[2])
+    model2_sf.append(mod2[2])
 
 
-assert len(lex_labels)==len(delex_labels)==len(gold_labels)
+assert len(model1_predicted_labels_string) == len(model2_predicted_labels_string) == len(gold_labels)
+assert len(model1_sf) == len(model2_sf) == len(gold_labels)
+assert not model1_sf[0] ==model2_sf[0]
 
 
-
-fnc_score_lex=report_score(gold_labels,lex_labels)
-fnc_score_delex=report_score(gold_labels,delex_labels)
-
-
-
-#find how many mismatches between lex and delex
-#basically: find how many did lex predict right, that delex guy missed- so at the end of the day we will have something to learn from lex or not.
-
-mismatches=0
-learnables=0
-correct_lex=0
-correct_delex=0
-correct_both=0
-for index,(pred_lex, pred_delex,gold) in enumerate(zip(lex_labels,delex_labels,gold_labels)):
-    if not (pred_lex==pred_delex):
-        mismatches=mismatches+1
-    if pred_lex == gold and pred_delex == gold:
-        correct_both+=1
-
-    if pred_lex==gold:
-        correct_lex+=1
-        if not (pred_lex == pred_delex):
-            learnables +=1
-    if pred_delex == gold:
-        correct_delex+=1
+#for some reason the softmaxes became a string
+def convert_sf_string_to_lists(sf):
+    list_as_floats=[]
+    for x in sf.split(","):
+        y=x.strip("[]")
+        list_as_floats.append(float(y))
+    return list_as_floats
 
 
 
-mismatches_percentages=float(mismatches * 100 / len(gold_labels))
-percent_learnables=float(learnables)*100/float(len(gold_labels))
-accuracy_lex= float(correct_lex) * 100 / float(len(gold_labels))
-accuracy_delex= float(correct_delex) * 100 / float(len(gold_labels))
+def two_model_voting(model1_predicted_labels, model2_predicted_labels, model1_softmaxes, model2_softmaxes):
+    assert len(model1_predicted_labels) == len(model2_predicted_labels)
+    assert len(model1_softmaxes) == len(model2_softmaxes)
+
+    predictions_post_voting=[]
+    for index,(pred_model1, pred_model2,sf1,sf2) in enumerate(zip(model1_predicted_labels, model2_predicted_labels, model1_softmaxes, model2_softmaxes)):
+        if (pred_model1==pred_model2):
+            predictions_post_voting.append(pred_model1)
+        else:
+            #if the labels dont match, find who has higher confidence score
+            sf1_list=convert_sf_string_to_lists(sf1)
+            sf2_list = convert_sf_string_to_lists(sf2)
+            highest_confidence_model1=max(sf1_list)
+            highest_confidence_model2 = max(sf2_list)
+            if highest_confidence_model1>highest_confidence_model2:
+                predictions_post_voting.append(pred_model1)
+            else:
+                predictions_post_voting.append(pred_model2)
+
+    return predictions_post_voting
 
 
-print(f"correct_lex count={correct_lex}")
-print(f"correct_delex count={correct_delex}")
-print(f"fnc_score_delex ={(fnc_score_delex)}")
-print(f"fnc_score_lex ={(fnc_score_lex)}")
-print(f"gold_labels_count ={len(gold_labels)}")
+def convert_labels_from_string_to_index(label_list):
+    return [LABELS.index(label) for label in label_list]
 
-print(f"overall mismatches_count between lex and delex={mismatches}")
 
-######## everything in percentages wrt total data
-print(f"mismatches_percentages ={mismatches_percentages}")
-print(f"percent_learnables={percent_learnables}")
-print(f"percentage accuracy_lex={accuracy_lex}")
-print(f"percentage accuracy_delex={accuracy_delex}")
+def simple_accuracy(preds, gold):
+    total_right=0
+    for p,g in zip(preds,gold):
+        if(p == g):
+            total_right+=1
+    return (total_right*100)/len(preds)
 
-print(f"**************details needed for venn diagram")
-print(f"count correct_both ={correct_both}")
-print(f"count only lex got right ={correct_lex-correct_both}")
-print(f"count only delex got right ={correct_delex-correct_both}")
-print(f"count where lex predicted correctly but delex didnt={learnables}")
-
+predictions_post_voting=two_model_voting(model1_predicted_labels_string, model2_predicted_labels_string, model1_sf, model2_sf)
+fnc_score_lex=report_score(gold_labels, predictions_post_voting)
+pred_labels_int=convert_labels_from_string_to_index(predictions_post_voting)
+gold_labels_int=convert_labels_from_string_to_index(gold_labels)
+accuracy=simple_accuracy(pred_labels_int, gold_labels_int)
+print(f"accuracy={accuracy}")
