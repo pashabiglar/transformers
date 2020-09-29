@@ -3,6 +3,12 @@
 import pandas as pd
 import numpy as np
 
+#Import libraries
+from matplotlib_venn import venn2, venn2_circles, venn2_unweighted
+from matplotlib_venn import venn3, venn3_circles
+from matplotlib import pyplot as plt
+#matplotlib inline
+
 LABELS = ['disagree', 'agree', 'discuss', 'unrelated']
 LABELS_RELATED = ['unrelated','related']
 RELATED = LABELS[0:3]
@@ -132,10 +138,15 @@ print(f"mismatches_percentages ={mismatches_percentages}")
 print(f"percent_learnables={percent_learnables}")
 print(f"percentage accuracy_lex={accuracy_lex}")
 print(f"percentage accuracy_delex={accuracy_delex}")
+print(f"out of {len(gold_labels)} count where model1 predicted correctly but model2 didnt={learnables}")
 
 print(f"**************details needed for venn diagram")
-print(f"count correct_both ={correct_both}")
-print(f"count only mod1 got right ={correct_lex-correct_both}")
-print(f"count only mod2 got right ={correct_delex-correct_both}")
-print(f"count where mod1 predicted correctly but mod2 didnt={learnables}")
+print(f"out of {len(gold_labels)} how many both got right? {correct_both}")
+print(f"out of {len(gold_labels)} how many did only model1 (student teacher trained model) get right ={correct_lex-correct_both}")
+print(f"out of {len(gold_labels)} how many did only model2 get right ={correct_delex-correct_both}")
+
+plt.figure(figsize=(4,4))
+venn2(subsets = (2036, 660,4240), set_labels = ('student teacher trained model ', 'stand alone delex trained model'),set_colors=('red', 'blue'), alpha = 0.7)
+plt.title("Overlap in cross domain predictions between \n student-teacher trained delex model and stand alone delex model")
+plt.show()
 
