@@ -285,7 +285,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
         )
 
     #url = 'https://osf.io/twbmu/download' #best combined trained model-this model gave 59.31 cross domain fnc score and 69.21for cross domain accuracy
-    url = 'https://osf.io/q6apm/download' #link to best lex trained model- this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
+    #url = 'https://osf.io/q6apm/download' #link to best lex trained model- this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
+    url = 'https://osf.io/mpkqr/download' #at 14500 steps when fncscore was 6334. github sha 8513a40753
+
     #url = 'https://osf.io/uspm4/download'  # link to best delex trained model-this gave 55.69 in cross domain fnc score and 54.04 for cross domain accuracy
     # refer:https://tinyurl.com/y5dyshnh for further details regarding accuracies
 
