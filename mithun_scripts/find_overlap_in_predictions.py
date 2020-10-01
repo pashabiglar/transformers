@@ -64,7 +64,7 @@ def report_score(actual,predicted):
 
 
 
-model1_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_lex_cdaccuracy6908.txt", sep="\t", header=None)
+model1_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_lex_wandbgraphNameQueithaze806_eoch2_accuracy6750_fncscore6458.txt", sep="\t", header=None)
 model2_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_delex_trained_model_de10f_54.04accuracy.txt", sep="\t", header=None)
 model3_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_combined_trained_model_acc6921_2a528.txt", sep="\t", header=None)
 test_gold=pd.read_csv("predictions/fnc_dev_gold.tsv",sep="\t",header=None)
