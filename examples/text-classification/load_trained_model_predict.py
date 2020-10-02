@@ -286,7 +286,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     #url = 'https://osf.io/twbmu/download' #best combined trained model
     #url = 'https://osf.io/ktjv8/download' #link to best mod1 trained model- note that this is not the best trained model. as of sep 27th 2020, i cant find that model. need to update this link
-    url = 'https://osf.io/uspm4/download'  # link to best mod2 trained model-
+    url = 'https://osf.io/34rvs/download'  # link to best mod2 trained model-
 
     model_path = wget.download(url)
     device = torch.device('cpu')
