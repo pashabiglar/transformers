@@ -917,7 +917,7 @@ class PreTrainedTokenizer(SpecialTokensMixin):
         resume_download = kwargs.pop("resume_download", False)
         proxies = kwargs.pop("proxies", None)
         local_files_only = kwargs.pop("local_files_only", False)
-        tokenizer_type = kwargs.pop("tokenizer_type", "lex")
+        tokenizer_type = kwargs.pop("tokenizer_type", "mod1")
 
         s3_models = list(cls.max_model_input_sizes.keys())
         vocab_files = {}
@@ -926,10 +926,10 @@ class PreTrainedTokenizer(SpecialTokensMixin):
             # Get the vocabulary from AWS S3 bucket
             for file_id, map_list in cls.pretrained_vocab_files_map.items():
 
-                #updated from uofa fact verification team, august 2020: if the tasktype is delex, use a custom vocabulary
-                #which supports overlap aware delexicalized tokens eg:  bert-cased-delex
-                if(tokenizer_type)=="delex":
-                    pretrained_model_name_or_path=pretrained_model_name_or_path+"-delex"
+                #updated from uofa fact verification team, august 2020: if the tasktype is mod2, use a custom vocabulary
+                #which supports overlap aware delexicalized tokens eg:  bert-cased-mod2
+                if(tokenizer_type)=="mod2":
+                    pretrained_model_name_or_path=pretrained_model_name_or_path+"-mod2"
                 vocab_files[file_id] = map_list[pretrained_model_name_or_path]
             if (
                 cls.pretrained_init_configuration

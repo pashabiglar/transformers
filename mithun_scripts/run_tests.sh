@@ -10,16 +10,16 @@ echo "value of epochs in runglue.sh is $EPOCHS"
 
 
 echo "TASK_TYPE is $TASK_TYPE"
-if [ "$TASK_TYPE" = "delex" ] ; then
+if [ "$TASK_TYPE" = "mod2" ] ; then
  echo $DATA_DIR
- echo "task type is delex"
+ echo "task type is mod2"
 
 fi
 
 echo "TASK_TYPE is $TASK_TYPE"
-if [ "$TASK_TYPE" = "lex" ] ; then
+if [ "$TASK_TYPE" = "mod1" ] ; then
  echo $DATA_DIR
- echo "task type is lex"
+ echo "task type is mod1"
 fi
 
 if [ "$TASK_TYPE" = "combined" ] ; then

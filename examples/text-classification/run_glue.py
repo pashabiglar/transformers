@@ -166,7 +166,7 @@ def run_training(model_args, data_args, training_args):
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
         force_download=True,
-        tokenizer_type="delex"
+        tokenizer_type="mod2"
     )
 
     if (training_args.do_train_1student_1teacher == True):
@@ -199,29 +199,29 @@ def run_training(model_args, data_args, training_args):
     # Get datasets
 
     # ParallelDataDataset is to be used in a student teacher model/architecture.
-    # In this model teacher sees the lex data and student sees the delexicalized version of the same data
+    # In this model teacher sees the mod1 data and student sees the delexicalized version of the same data
     # The one to one mapping is taken care of inside the ParallelDataDataset
     if (training_args.do_train_1student_1teacher == True):
-        # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
+        # the task type must be combined, not mod1 or mod2. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
         assert training_args.task_type == "combined"
         assert tokenizer_lex is not None
         assert tokenizer_delex is not None
         train_dataset = (
-            ParallelDataDataset(args=data_args, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex, data_type_1="lex", data_type_2="delex",
+            ParallelDataDataset(args=data_args, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex, data_type_1="mod1", data_type_2="mod2",
                                 cache_dir=model_args.cache_dir) if training_args.do_train else None
         )
     else:
-        if(training_args.task_type=="lex"):
+        if(training_args.task_type=="mod1"):
             train_dataset = (
-            GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="train",
+            GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="mod1", mode="train",
                         cache_dir=model_args.cache_dir)
             if training_args.do_train
             else None
             )
         else:
-            if (training_args.task_type == "delex"):
+            if (training_args.task_type == "mod2"):
                 train_dataset = (
-                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="train",
+                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="train",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_train
                     else None
@@ -231,31 +231,31 @@ def run_training(model_args, data_args, training_args):
 
 
 
-    # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
+    # in the student teacher mode we will keep the dev as in-domain dev mod2 partition. The goal here is to find how the
     # combined model_teacher performs in a delexicalized dataset. This will serve as a verification point
     #to confirm the accuracy (we got 92.91% for fever delx in domain) if something goes wrong in the prediction phase below
 
 
     if (training_args.do_train_1student_1teacher == True):
-        # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
+        # the task type must be combined, not mod1 or mod2. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
         eval_dataset = (
-            GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
+            GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="dev",
                         cache_dir=model_args.cache_dir)
             if training_args.do_eval
             else None
         )
     else:
-        if (training_args.task_type == "lex"):
+        if (training_args.task_type == "mod1"):
             eval_dataset = (
-                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="dev",
+                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="mod1", mode="dev",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_eval
                 else None
             )
         else:
-            if (training_args.task_type == "delex"):
+            if (training_args.task_type == "mod2"):
                 eval_dataset = (
-                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
+                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="dev",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_eval
                     else None
@@ -266,27 +266,27 @@ def run_training(model_args, data_args, training_args):
 
 
     if (training_args.do_train_1student_1teacher == True):
-        # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
-        # in the student teacher mode the evaluation always happens in the delex cross domain dev data. here we are loading it as the test partition so that we can keep track of
+        # the task type must be combined, not mod1 or mod2. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
+        # in the student teacher mode the evaluation always happens in the mod2 cross domain dev data. here we are loading it as the test partition so that we can keep track of
         # progress across epochs
         test_dataset = (
-            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test", cache_dir=model_args.cache_dir)
+            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="test", cache_dir=model_args.cache_dir)
             if training_args.do_predict
             else None
         )
     else:
-        if (training_args.task_type == "lex"):
+        if (training_args.task_type == "mod1"):
             test_dataset = (
-                GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="lex", mode="test",
+                GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="mod1", mode="test",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_predict
                 else None
             )
 
         else:
-            if (training_args.task_type == "delex"):
+            if (training_args.task_type == "mod2"):
                 test_dataset = (
-                    GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
+                    GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="test",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_predict
                     else None
