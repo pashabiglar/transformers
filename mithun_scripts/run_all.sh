@@ -96,7 +96,7 @@ rm -rf $DATA_DIR
 echo "done with data download  TOY_DATA_DIR_PATH now is $TOY_DATA_DIR_PATH"
 
 
-#
+
 #use a smaller toy data to test on laptop
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
         DATA_DIR=$TOY_DATA_DIR_PATH
@@ -124,7 +124,8 @@ echo "value of args is $args"
 
 
 
-#./run_tests.sh
-./run_glue.sh
-#./load_model_test.sh
+#run_loading_tests.sh
+#run_training_tests.sh
+#./run_glue.sh
+./load_model_test.sh
 
