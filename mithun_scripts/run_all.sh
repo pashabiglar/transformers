@@ -57,6 +57,7 @@ echo "EPOCHS=$EPOCHS"
 
 export DATASET="fever"
 export basedir="$DATA_DIR_BASE/$DATASET"
+
 export TASK_TYPE="combined" #options for task type include mod1,mod2,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both mod1 and mod2 folders
 export SUB_TASK_TYPE="figerspecific" #options for TASK_SUB_TYPE (usually used only for TASK_TYPEs :[mod2,combined])  include [oa, figerspecific, figerabstract, oass, simplener]
 export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
@@ -96,7 +97,7 @@ rm -rf $DATA_DIR
 echo "done with data download  TOY_DATA_DIR_PATH now is $TOY_DATA_DIR_PATH"
 
 
-#
+
 #use a smaller toy data to test on laptop
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
         DATA_DIR=$TOY_DATA_DIR_PATH
@@ -124,7 +125,8 @@ echo "value of args is $args"
 
 
 
-#./run_tests.sh
-./run_glue.sh
-#./load_model_test.sh
+#run_loading_tests.sh
+#run_training_tests.sh
+#./run_glue.sh
+./load_model_test.sh
 

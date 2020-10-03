@@ -8,17 +8,18 @@
 
 echo "value of epochs in runglue.sh is $EPOCHS"
 
+
 echo "TASK_TYPE is $TASK_TYPE"
-if [ "$TASK_TYPE" = "mod2" ] ; then
+if [ "$TASK_TYPE" = "delex" ] ; then
  echo $DATA_DIR
- echo "task type is mod2"
+ echo "task type is delex"
 
 fi
 
 echo "TASK_TYPE is $TASK_TYPE"
-if [ "$TASK_TYPE" = "mod1" ] ; then
+if [ "$TASK_TYPE" = "lex" ] ; then
  echo $DATA_DIR
- echo "task type is mod1"
+ echo "task type is lex"
 fi
 
 if [ "$TASK_TYPE" = "combined" ] ; then
@@ -32,13 +33,19 @@ echo "data_dir is $DATA_DIR"
 
 echo $args
 
+
+
 mkdir -p OUTPUT_DIR
+echo $PYTHONPATH
 
-env CUDA_VISIBLE_DEVICES=0
-export CUDA_VISIBLE_DEVICES=0
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
-       python3 ../examples/text-classification/load_trained_model_predict.py $args
-else
-       python3 ../examples/text-classification/load_trained_model_predict.py $args
-fi
+        cd ../examples/tests/
+        pytest -s test_loading_mithun_factverification.py
 
+
+else
+        cd ../examples/tests/
+        pytest -s test_loading_mithun_factverification.py
+
+
+fi

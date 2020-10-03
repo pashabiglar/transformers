@@ -267,7 +267,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
             args=training_args,
             train_datasets={"combined": None},
             test_dataset=test_dataset,
-            eval_dataset=None,
+            eval_dataset=eval_dataset,
             eval_compute_metrics=dev_compute_metrics,
             test_compute_metrics=test_compute_metrics
         )
@@ -278,15 +278,21 @@ def run_loading_and_testing(model_args, data_args, training_args):
             model=model,
             args=training_args,
             train_dataset=None,
-            eval_dataset=None,
+            eval_dataset=eval_dataset,
             test_dataset=test_dataset,
             eval_compute_metrics=dev_compute_metrics,
             test_compute_metrics=test_compute_metrics
         )
 
-    #url = 'https://osf.io/twbmu/download' #best combined trained model
-    #url = 'https://osf.io/ktjv8/download' #link to best mod1 trained model- note that this is not the best trained model. as of sep 27th 2020, i cant find that model. need to update this link
-    url = 'https://osf.io/uspm4/download'  # link to best mod2 trained model-
+    #url = 'https://osf.io/twbmu/download' #best combined trained model-this model gave 59.31 cross domain fnc score and 69.21for cross domain accuracy
+    #url = 'https://osf.io/84sdz/download' #link to one of the three best trained lex trained models- quiet-haze-806. this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
+    url = 'https://osf.io/q6apm/download'  # link to best lex trained model- quiet-haze-806. this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
+    # url = 'https://osf.io/84sdz/download'  # link to best lex trained model- quiet-haze-806. this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
+
+
+    #url = 'https://osf.io/uspm4/download'  # link to best delex trained model-this gave 55.69 in cross domain fnc score and 54.04 for cross domain accuracy
+    # refer:https://tinyurl.com/y5dyshnh for further details regarding accuracies
+
 
     model_path = wget.download(url)
     device = torch.device('cpu')
@@ -300,7 +306,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
     model.eval()
 
 
-    # load the trained model and test it on dev partition (which in this case is indomain-dev, i.e fever-dev)
+    #load the trained model and test it on dev partition (which in this case is indomain-dev, i.e fever-dev)
+
     output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
     predictions_on_dev_file_path = output_dir_absolute_path + "predictions_on_dev_partition.txt"
     dev_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_dev_partition_results.txt"
