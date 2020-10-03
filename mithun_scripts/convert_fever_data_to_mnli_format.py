@@ -4,7 +4,7 @@ import os
 import argparse
 
 
-#--file_path "../src/transformers/data/datasets/fever/feverindomain/lex/train.tsv"
+#--file_path "../src/transformers/data/datasets/fever/feverindomain/mod1/train.tsv"
 
 def create_parser():
     parser = argparse.ArgumentParser(description='convert to mnli')

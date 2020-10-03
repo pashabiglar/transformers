@@ -24,9 +24,9 @@ def compare_dataloaders(dataset1, dataset2):
     # else:
     #     print("Esta madre. Models are different")
 
-basedir="output/fever/fevercrossdomain/lex/figerspecific/bert-base-cased/128/"
+basedir="output/fever/fevercrossdomain/mod1/figerspecific/bert-base-cased/128/"
 
-#/home/u11/mithunpaul/xdisk/huggingface_bert_fix_parallelism_per_epoch_issue/output/fever/fevercrossdomain/lex/figerspecific/bert-base-cased/128/2/trained_model_at_end_of_epoch0_of_total_2.0epochs.pth
+#/home/u11/mithunpaul/xdisk/huggingface_bert_fix_parallelism_per_epoch_issue/output/fever/fevercrossdomain/mod1/figerspecific/bert-base-cased/128/2/trained_model_at_end_of_epoch0_of_total_2.0epochs.pth
 
 
 dataloader_path1=os.path.join(basedir,"1/training_data_at_epoch0_of_total_1epochs.pt")

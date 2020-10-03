@@ -167,7 +167,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
         force_download=True,
-        tokenizer_type="delex"
+        tokenizer_type="mod2"
     )
 
 
@@ -195,25 +195,25 @@ def run_loading_and_testing(model_args, data_args, training_args):
         )
 
     if (training_args.do_train_1student_1teacher == True):
-        # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
+        # the task type must be combined, not mod1 or mod2. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
         eval_dataset = (
-            GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
+            GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="dev",
                         cache_dir=model_args.cache_dir)
             if training_args.do_eval
             else None
         )
     else:
-        if (training_args.task_type == "lex"):
+        if (training_args.task_type == "mod1"):
             eval_dataset = (
-                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="dev",
+                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="mod1", mode="dev",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_eval
                 else None
             )
         else:
-            if (training_args.task_type == "delex"):
+            if (training_args.task_type == "mod2"):
                 eval_dataset = (
-                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
+                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="dev",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_eval
                     else None
@@ -221,24 +221,24 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     if (training_args.do_train_1student_1teacher == True):
         test_dataset = (
-            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
+            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="test",
                         cache_dir=model_args.cache_dir)
             if training_args.do_predict
             else None
         )
     else:
-        if (training_args.task_type == "lex"):
+        if (training_args.task_type == "mod1"):
             test_dataset = (
-                GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="lex", mode="test",
+                GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="mod1", mode="test",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_predict
                 else None
             )
 
         else:
-            if (training_args.task_type == "delex"):
+            if (training_args.task_type == "mod2"):
                 test_dataset = (
-                    GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
+                    GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="test",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_predict
                     else None
@@ -292,6 +292,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     #url = 'https://osf.io/uspm4/download'  # link to best delex trained model-this gave 55.69 in cross domain fnc score and 54.04 for cross domain accuracy
     # refer:https://tinyurl.com/y5dyshnh for further details regarding accuracies
+
 
     model_path = wget.download(url)
     device = torch.device('cpu')

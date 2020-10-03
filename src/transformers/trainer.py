@@ -216,7 +216,7 @@ class StudentTeacherTrainer:
         self.test_compute_metrics = test_compute_metrics
         self.eval_compute_metrics = eval_compute_metrics
         self.compute_metrics = None
-        #even though we train two models using student teacher architecture we weill only use the student model to do evaluation on fnc-dev delex dataset
+        #even though we train two models using student teacher architecture we weill only use the student model to do evaluation on fnc-dev mod2 dataset
         self.model=None
         self.args = args
         self.default_data_collator = default_data_collator

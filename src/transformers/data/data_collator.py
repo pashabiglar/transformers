@@ -70,7 +70,7 @@ def collate_batch_parallel_datasets(features: List[InputDataClass]) -> Dict[str,
         # So we will look at the first element as a proxy for what attributes exist
         # on the whole batch.
 
-        #for reading lex and delex versions as a single tuple
+        #for reading mod1 and mod2 versions as a single tuple
         first = features[0][0]
         #first = features[0]
 
@@ -80,7 +80,7 @@ def collate_batch_parallel_datasets(features: List[InputDataClass]) -> Dict[str,
         if hasattr(first, "label") and first.label is not None:
             if type(first.label) is int:
                 #labels = torch.tensor([f.label for f in features], dtype=torch.long)
-                #for reading lex and delex versions as a single tuple
+                #for reading mod1 and mod2 versions as a single tuple
                 labels_lex=[]
                 labels_delex=[]
                 for f in features:
