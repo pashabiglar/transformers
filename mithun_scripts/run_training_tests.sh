@@ -45,6 +45,7 @@ if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
 
 
 else
+        wandb off
         cd ../examples/tests/
         pytest -s test_training_mithun_factverification.py
 
