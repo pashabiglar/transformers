@@ -82,9 +82,9 @@ def report_score(actual,predicted):
 #dtypes = [np.int64, 'str', 'object', 'str','str']
 dtypes={'a': np.float64, 'b': np.int32, 'c': 'Int64','d': 'Int64','e': 'Int64'}
 
-combined_model_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_lex_wandbgraphNameQueithaze806_eoch2_accuracy6750_fncscore6458.txt", sep="\t", dtype=dtypes)
-delex_model_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_epoch1_model_out_of_helpfulvortex1002.txt", sep="\t", dtype=dtypes)
-lex_model_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_lex_cdaccuracy6908_wandbGraphSweetWater1001.txt", sep="\t", dtype=dtypes)
+combined_model_predictions=pd.read_csv("predictions/predictions_on_test_partition_0f4e32.txt", sep="\t", dtype=dtypes)
+delex_model_predictions=pd.read_csv("predictions/predictions_on_test_partition_374278.txt", sep="\t", dtype=dtypes)
+lex_model_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_combined_trained_model_acc6921_2a528.txt", sep="\t", dtype=dtypes)
 gold=pd.read_csv("predictions/fnc_dev_gold.tsv", sep="\t")
 
 
@@ -241,10 +241,11 @@ def three_model_voting_any_two_models_agree(model1_predicted_labels, model2_pred
                     if (pred_student_teacher == pred_delex_stand_alone):
                         predictions_post_voting.append(pred_delex_stand_alone)
                     else:
-                        # if all 3 labels dont match, pick -----
-                        #predictions_post_voting.append(pred_lex_stand_alone)
-                        # predictions_post_voting.append(pred_student_teacher)
-                        # continue
+                        # if all 3 labels dont match, pick ______________
+                        #predictions_post_voting.append(pred_student_teacher)
+                        #predictions_post_voting.append(pred_delex_stand_alone)
+                        # predictions_post_voting.append(pred_lex_stand_alone)
+                        #continue
 
                         #if all 3 labels dont match, find who has higher confidence score
                         how_many_times_do_all_3_models_disagree_with_each_other+=1
@@ -327,9 +328,9 @@ def simple_accuracy(preds, gold):
     return (total_right*100)/len(preds)
 
 
-#predictions_post_voting=two_model_voting(model1_predicted_labels_string, model2_predicted_labels_string, model1_sf, model2_sf,gold_labels)
+predictions_post_voting=two_model_voting(model1_predicted_labels_string, model2_predicted_labels_string, model1_sf, model2_sf,gold_labels)
 #predictions_post_voting=three_model_voting_two_model_agrees_but_one_is_lex(model1_predicted_labels_string, model2_predicted_labels_string, model3_predicted_labels_string,model1_sf, model2_sf, model3_sf)
-predictions_post_voting=three_model_voting_any_two_models_agree(model1_predicted_labels_string, model2_predicted_labels_string, model3_predicted_labels_string, gold_labels,model1_sf, model2_sf, model3_sf)
+#predictions_post_voting=three_model_voting_any_two_models_agree(model1_predicted_labels_string, model2_predicted_labels_string, model3_predicted_labels_string, gold_labels,model1_sf, model2_sf, model3_sf)
 #predictions_post_voting=three_model_voting_cieling(model1_predicted_labels_string, model2_predicted_labels_string, model3_predicted_labels_string, gold_labels,model1_sf, model2_sf, model3_sf)
 
 assert len(predictions_post_voting)==len(gold_labels)
