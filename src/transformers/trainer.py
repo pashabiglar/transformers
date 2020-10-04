@@ -738,6 +738,12 @@ class StudentTeacherTrainer:
             labels = labels.detach()
         return (loss, logits.detach(), labels)
 
+    def update_ema_variables(self,model, ema_model, alpha, global_step):
+        # Use the true average until the exponential average is more correct
+        alpha = min(1 - 1 / (global_step + 1), alpha)
+        for ema_param, param in zip(ema_model.parameters(), model.parameters()):
+            ema_param.data.mul_(alpha).add_(1 - alpha, param.data)
+
     def get_git_info(self):
         repo = git.Repo(search_parent_directories=True)
 

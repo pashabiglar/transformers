@@ -176,6 +176,10 @@ def run_training(model_args, data_args, training_args):
         config=config,
         cache_dir=model_args.cache_dir,
         )
+
+        for param in model_teacher.bert.parameters():
+            param.requires_grad = False
+
         model_student = AutoModelForSequenceClassification.from_pretrained(
         model_args.model_name_or_path,
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
