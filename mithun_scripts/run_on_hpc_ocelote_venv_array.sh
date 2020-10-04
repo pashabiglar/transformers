@@ -41,7 +41,7 @@ pip install -r requirements.txt
 pip install transformers
 pip install wget
 
-cd /home/u11/mithunpaul/xdisk/huggingface_bert_tuning_student_teacher/code/mithun_scripts
+cd /home/u11/mithunpaul/xdisk/huggingface_bert_tuning_student_teacher_lr0pt025/code/mithun_scripts
 
 bash run_all.sh --epochs_to_run 25 --machine_to_run_on hpc --use_toy_data false #options include [laptop, hpc,clara]
 #stub to use in laptop
