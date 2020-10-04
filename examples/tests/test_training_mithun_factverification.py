@@ -52,7 +52,7 @@ from transformers import (
 )
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
 import git
-CONFIG_FILE_TO_TEST_WITH="config_combined_cased.py"
+CONFIG_FILE_TO_TEST_WITH="config_combined_cased_v2.py"
 
 SRC_DIRS = [
     os.path.join(os.path.dirname(__file__), dirname)
