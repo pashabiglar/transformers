@@ -760,7 +760,7 @@ class StudentTeacherTrainer:
         model_student = self.delex_student_model
 
         weight_consistency_loss = 1
-        weight_classification_loss = 0.05
+        weight_classification_loss = 0.025
 
         optimizer = None
         scheduler = None
