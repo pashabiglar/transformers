@@ -126,7 +126,7 @@ echo "value of args is $args"
 
 
 #run_loading_tests.sh
-./run_training_tests.sh
-#./run_glue.sh
+#./run_training_tests.sh
+./run_glue.sh
 #./load_model_test.sh
 
