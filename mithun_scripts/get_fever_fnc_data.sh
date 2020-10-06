@@ -161,6 +161,57 @@ fi
 fi
 
 
+####################################for cross domain student teacher, there will be two training files.-one for mod1 and another for mod2
+
+
+if [ "$TASK_TYPE" = "combined" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUB_TASK_TYPE" = "figerabstract" ]; then
+    echo "found task type to be combined, taskname to be feverCrossDomain and subtasktype to be figerabstract"
+
+#note, train1.tsv will be the lexicalized version of the file(so the link below almost always never changes) while train2.tsv is the delexicalized, which can change
+#based on the type of delexicalization algorithm used. eg:figerabstract
+echo $DATA_DIR
+mkdir -p $DATA_DIR
+
+FILE="$DATA_DIR/train1.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/train.tsv     -O $FILE
+fi
+
+
+FILE="$DATA_DIR/train2.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+      wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/figer-abstract/train.tsv -O $FILE
+fi
+
+FILE="$DATA_DIR/dev.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+
+    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/figer-abstract/dev.tsv -O $FILE
+
+fi
+
+
+#note that we are  replacing the test partition with cross domain dev partition(in this case it thus becomes the in-domain dev
+# partition of fnc dataset).
+
+FILE="$DATA_DIR/test.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+
+      wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/figer-abstract/dev.tsv -O $FILE
+
+
+fi
+
+fi
+
 ####################################for cross domain student teacher, when mod2 files are delexicalized with oa
 
 

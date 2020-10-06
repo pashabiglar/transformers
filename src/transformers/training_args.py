@@ -268,6 +268,8 @@ class TrainingArguments:
     fever_cross_domain_fncscore_on_toy_data_17_datapoints: float = field(default=1.0, metadata={
         "help": "For testing. accuracy when the code was run earlier on a toy data of size 17 data points"})
 
+    hidden_dropout_prob: float = field(default=0.1, metadata={
+        "help": "changing the default dropout in bert config. refer src/transformers/configuration_bert.py"})
 
     def __iter__(self):
         ''' Returns the Iterator object '''
