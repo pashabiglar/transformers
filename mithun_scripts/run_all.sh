@@ -39,8 +39,8 @@ fi
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
 
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_student_teacher_dropout0pt01_lr0pt0875/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_student_teacher_dropout0pt01_lr0pt0875/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_student_teacher_figerabstract/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_student_teacher_figerabstract/data"
 else
         wandb off
         export DATA_DIR_BASE="/Users/mordor/research/huggingface/src/transformers/data/datasets"
@@ -97,11 +97,11 @@ rm -rf $DATA_DIR
 echo "done with data download  TOY_DATA_DIR_PATH now is $TOY_DATA_DIR_PATH"
 
 
-
-#use a smaller toy data to test on laptop
-if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
-        DATA_DIR=$TOY_DATA_DIR_PATH
-fi
+#
+##use a smaller toy data to test on laptop
+#if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
+#        DATA_DIR=$TOY_DATA_DIR_PATH
+#fi
 
 
 #use a smaller toy data to test
