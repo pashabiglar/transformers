@@ -270,7 +270,7 @@ class TrainingArguments:
 
     hidden_dropout_prob: float = field(default=0.1, metadata={
         "help": "dropout for ffnn layers of bert. . refer src/transformers/configuration_bert.py"})
-    attention_dropout: float = field(default=0.01, metadata={
+    attention_dropout: float = field(default=0.5, metadata={
         "help": "you can use this to change the dropout probability of attention layers in bert. refer src/transformers/configuration_bert.py"})
 
 
