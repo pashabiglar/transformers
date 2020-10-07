@@ -39,8 +39,8 @@ fi
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
 
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_student_teacher_dropout0pt01_lr0pt0875/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_student_teacher_dropout0pt01_lr0pt0875/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_seq_length/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_seq_length/data"
 else
         wandb off
         export DATA_DIR_BASE="/Users/mordor/research/huggingface/src/transformers/data/datasets"
@@ -59,7 +59,7 @@ echo "EPOCHS=$EPOCHS"
 export DATASET="fever"
 export basedir="$DATA_DIR_BASE/$DATASET"
 export TASK_TYPE="combined" #options for task type include mod1,mod2,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both mod1 and mod2 folders
-export SUB_TASK_TYPE="figerabstract" #options for TASK_SUB_TYPE (usually used only for TASK_TYPEs :[mod2,combined])  include [oa, figerspecific, figerabstract, oass, simplener]
+export SUB_TASK_TYPE="figerspecific" #options for TASK_SUB_TYPE (usually used only for TASK_TYPEs :[mod2,combined])  include [oa, figerspecific, figerabstract, oass, simplener]
 export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
 export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE"
 
@@ -69,7 +69,7 @@ export TOY_DATA_DIR_PATH="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TAS
 
 
 export BERT_MODEL_NAME="bert-base-cased" #options include things like [bert-base-uncased,bert-base-cased] etc. refer src/transformers/tokenization_bert.py for more.
-export MAX_SEQ_LENGTH="128"
+export MAX_SEQ_LENGTH="512"
 export OUTPUT_DIR="$OUTPUT_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE/$BERT_MODEL_NAME/$MAX_SEQ_LENGTH/"
 echo $OUTPUT_DIR
 
@@ -121,7 +121,7 @@ export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME     
 --weight_decay 0.01 --adam_epsilon 1e-6  --evaluate_during_training \
 --task_type $TASK_TYPE --subtask_type $SUB_TASK_TYPE --machine_to_run_on $MACHINE_TO_RUN_ON --toy_data_dir_path $TOY_DATA_DIR_PATH "
 
-echo "value of args is $args"
+
 
 
 
