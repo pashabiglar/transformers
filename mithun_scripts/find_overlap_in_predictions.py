@@ -63,10 +63,10 @@ def report_score(actual,predicted):
 
 
 
-
-model1_predictions=pd.read_csv("predictions/predictions_on_test_partition_combined_wandbGraphNameStoicVoice1012_githubSha0f4e32_accuracy7404_fncs6262.txt", sep="\t", header=None)
-model2_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_lex_wandbgraphNameQueithaze806_eoch2_accuracy6750_fncscore6458.txt", sep="\t", header=None)
-model3_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_combined_trained_model_acc6921_2a528.txt", sep="\t", header=None)
+#expected order of models is lex, delex, combined- rather, atleast that is what they are called below
+model1_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_lex_cdaccuracy6908_wandbGraphSweetWater1001.txt", sep="\t", header=None)
+model2_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_combined_trained_model_acc6921_2a528.txt", sep="\t", header=None)
+model3_predictions=pd.read_csv("predictions/predictions_on_test_partition_5291a1.txt", sep="\t", header=None)
 test_gold=pd.read_csv("predictions/fnc_dev_gold.tsv",sep="\t",header=None)
 ""
 
@@ -163,8 +163,9 @@ def find_two_label_overlap():
 
     #(Ab, aB, AB)
     plt.figure(figsize=(4,4))
-    venn2(subsets = (correct_model1-correct_both, correct_model2-correct_both,correct_both), set_labels = ('studentTeacher_wandbGraphNameStoicVoice1012_accuracy7404_fncs6262 ', 'lex_wandbgraphNameQueithaze806_accuracy6750_fncscore6458 '),set_colors=('red', 'blue'), alpha = 0.7)
-    plt.title("Overlap in cross domain predictions between \n 1 student teacher delex model and \n 1 lex alone trained \n  model  ")
+    venn2(subsets = (correct_model1-correct_both, correct_model2-correct_both,correct_both), set_labels = ('lex ', 'figerabstract '),set_colors=('red', 'blue'), alpha = 0.7)
+    plt.title("Prediction overlaps  \n lex   and "
+              " delex figerabstract student teacher    ")
     plt.show()
 
 
@@ -244,12 +245,12 @@ def print_outputs():
 
 def draw_plots_3sets(Abc, aBc, ABc, abC, AbC, aBC, ABC):
     plt.figure(figsize=(4, 4))
-    venn3(subsets=(Abc, aBc, ABc, abC, AbC, aBC, ABC), set_labels=('Lex', 'Delex', 'Student_teacher_trained'),
+    venn3(subsets=(Abc, aBc, ABc, abC, AbC, aBC, ABC), set_labels=('Lex', 'figer_specific', 'figer_abstract'),
           set_colors=('red', 'blue',"yellow"), alpha=0.7)
 
 
     plt.title(
-        "Overlap in cross domain predictions between \n lex, delex and student-teacher trained delex model")
+        "Overlap in cross domain predictions between \n lex, figer specific stu-teacher and figer abstract stu-teacher ")
     plt.show()
 
 def verify_total_count(Abc, aBc, ABc, abC, AbC, aBC, ABC,no_body_got_right):
@@ -257,11 +258,11 @@ def verify_total_count(Abc, aBc, ABc, abC, AbC, aBC, ABC,no_body_got_right):
     total=Abc+aBc+abC-ABc-aBC-AbC+ABC
     assert total+no_body_got_right==len(gold_labels)
 
-get_separate_lists_of_each_column_for_2_model_ensemble()
-find_two_label_overlap()
+# get_separate_lists_of_each_column_for_2_model_ensemble()
+# find_two_label_overlap()
 
-# get_separate_lists_of_each_column_for_3_model_ensemble()
-# assert len(model1_labels)==len(delex_labels)==len(combined_labels)==len(gold_labels)
-# Abc, aBc, ABc, abC, AbC, aBC, ABC,no_body_got_right=find_3_model_overlap()
-# verify_total_count(Abc, aBc, ABc, abC, AbC, aBC, ABC,no_body_got_right)
-# draw_plots_3sets(Abc, aBc, ABc, abC, AbC, aBC, ABC,)
+get_separate_lists_of_each_column_for_3_model_ensemble()
+assert len(model1_labels)==len(delex_labels)==len(combined_labels)==len(gold_labels)
+Abc, aBc, ABc, abC, AbC, aBC, ABC,no_body_got_right=find_3_model_overlap()
+verify_total_count(Abc, aBc, ABc, abC, AbC, aBC, ABC,no_body_got_right)
+draw_plots_3sets(Abc, aBc, ABc, abC, AbC, aBC, ABC,)

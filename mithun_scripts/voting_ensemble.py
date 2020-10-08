@@ -82,17 +82,18 @@ def report_score(actual,predicted):
 #dtypes = [np.int64, 'str', 'object', 'str','str']
 dtypes={'a': np.float64, 'b': np.int32, 'c': 'Int64','d': 'Int64','e': 'Int64'}
 
-combined_model_predictions=pd.read_csv("predictions/predictions_on_test_partition_combined_wandbGraphNameStoicVoice1012_githubSha0f4e32_accuracy7404_fncs6262.txt", sep="\t", dtype=dtypes)
-delex_model_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_lex_wandbgraphNameQueithaze806_eoch2_accuracy6750_fncscore6458.txt", sep="\t", dtype=dtypes)
-lex_model_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_combined_trained_model_acc6921_2a528.txt", sep="\t", dtype=dtypes)
+
+model1_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_combined_trained_model_acc6921_2a528.txt", sep="\t", dtype=dtypes)
+model2_predictions=pd.read_csv("predictions/predictions_on_test_partition_5291a1.txt", sep="\t", dtype=dtypes)
+model3_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_lex_cdaccuracy6908_wandbGraphSweetWater1001.txt", sep="\t", dtype=dtypes)
 gold=pd.read_csv("predictions/fnc_dev_gold.tsv", sep="\t")
 
 
 # are the lengths different?
-assert len(gold) == len(combined_model_predictions)
-assert len(gold) == len(delex_model_predictions)
-assert len(combined_model_predictions) == len(delex_model_predictions)
-assert len(combined_model_predictions) == len(lex_model_predictions)
+assert len(gold) == len(model1_predictions)
+assert len(gold) == len(model2_predictions)
+assert len(model1_predictions) == len(model2_predictions)
+assert len(model1_predictions) == len(model3_predictions)
 
 model1_predicted_labels_string=[]
 model2_predicted_labels_string=[]
@@ -104,7 +105,7 @@ model3_sf=[]
 
 #get labels and softmaxes into its own lists
 #column order in raw data: index	 gold	prediction_logits	 prediction_label	plain_text
-for (mod1, mod2, mod3) in zip(combined_model_predictions.values, delex_model_predictions.values, lex_model_predictions.values):
+for (mod1, mod2, mod3) in zip(model1_predictions.values, model2_predictions.values, model3_predictions.values):
     model1_predicted_labels_string.append(mod1[3])
     model2_predicted_labels_string.append(mod2[3])
     model3_predicted_labels_string.append(mod3[3])
