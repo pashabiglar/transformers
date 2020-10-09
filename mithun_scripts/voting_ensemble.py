@@ -83,8 +83,8 @@ def report_score(actual,predicted):
 dtypes={'a': np.float64, 'b': np.int32, 'c': 'Int64','d': 'Int64','e': 'Int64'}
 
 
-model1_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_combined_trained_model_acc6921_2a528.txt", sep="\t", dtype=dtypes)
-model2_predictions=pd.read_csv("predictions/predictions_on_test_partition_5291a1.txt", sep="\t", dtype=dtypes)
+model1_predictions=pd.read_csv("predictions/predictions_on_test_partition_5291a1_figerabstract.txt", sep="\t", dtype=dtypes)
+model2_predictions=pd.read_csv("predictions/predictions_on_test_partition_7b2f40_legendary_voice_best_figerspecific_7474acc_6344fncs.txt", sep="\t", dtype=dtypes)
 model3_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_lex_cdaccuracy6908_wandbGraphSweetWater1001.txt", sep="\t", dtype=dtypes)
 gold=pd.read_csv("predictions/fnc_dev_gold.tsv", sep="\t")
 
@@ -149,16 +149,16 @@ def two_model_voting(model1_predicted_labels, model2_predicted_labels, model1_so
 
         else:
             #if the labels dont match, find who has higher confidence scorediffer_counter
-            differ_counter+=1
-            predictions_post_voting.append(pred_model2)
-            # sf1_list=convert_sf_string_to_lists(sf1)
-            # sf2_list = convert_sf_string_to_lists(sf2)
-            # highest_confidence_model1=max(sf1_list)
-            # highest_confidence_model2 = max(sf2_list)
-            # if highest_confidence_model1>highest_confidence_model2:
-            #     predictions_post_voting.append(pred_model1)
-            # else:
-            #     predictions_post_voting.append(pred_model2)
+            # differ_counter+=1
+            # predictions_post_voting.append(pred_model1)
+            sf1_list=convert_sf_string_to_lists(sf1)
+            sf2_list = convert_sf_string_to_lists(sf2)
+            highest_confidence_model1=max(sf1_list)
+            highest_confidence_model2 = max(sf2_list)
+            if highest_confidence_model1>highest_confidence_model2:
+                predictions_post_voting.append(pred_model1)
+            else:
+                predictions_post_voting.append(pred_model2)
 
     print(f"differcounter={differ_counter}")
     print(f"both_match_counter={both_match_counter}")

@@ -1,7 +1,7 @@
 #Adapted from https://github.com/FakeNewsChallenge/fnc-1/blob/master/scorer.py
 #Original credit - @bgalbraith
 import pandas as pd
-import numpy as np
+import csv
 
 #Import libraries
 from matplotlib_venn import venn2, venn2_circles, venn2_unweighted
@@ -64,9 +64,9 @@ def report_score(actual,predicted):
 
 
 #expected order of models is lex, delex, combined- rather, atleast that is what they are called below
-model1_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_lex_cdaccuracy6908_wandbGraphSweetWater1001.txt", sep="\t", header=None)
-model2_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_combined_trained_model_acc6921_2a528.txt", sep="\t", header=None)
-model3_predictions=pd.read_csv("predictions/predictions_on_test_partition_5291a1.txt", sep="\t", header=None)
+model1_predictions=pd.read_csv("predictions/predictions_on_test_partition_5291a1_figerabstract.txt", sep="\t", header=None)
+model2_predictions=pd.read_csv("predictions/predictions_on_test_partition_7b2f40_legendary_voice_best_figerspecific_7474acc_6344fncs.txt", sep="\t", header=None)
+model3_predictions=pd.read_csv("predictions/predictions_on_test_partition_5291a1_figerabstract.txt", sep="\t", header=None)
 test_gold=pd.read_csv("predictions/fnc_dev_gold.tsv",sep="\t",header=None)
 ""
 
@@ -79,16 +79,7 @@ model1_labels=[]
 delex_labels=[]
 combined_labels=[]
 gold_labels=[]
-#
-# # strip out labels from rest of the junk
-# for (lex, delex, actual_row) in zip(model1_predictions.values, model2_predictions.values, model3_predictions.values,test_gold.values):
-#     label_string = lex[3]
-#     model1_labels.append(label_string)
-#     label_string = delex[3]
-#     delex_labels.append(label_string)
-#     gold_labels.append(actual_row[1])
-#
-# assert len(model1_labels) == len(delex_labels) == len(gold_labels)
+
 
 
 def find_two_label_overlap():
@@ -108,8 +99,10 @@ def find_two_label_overlap():
     correct_model2=0
     correct_both=0
     count_both_missed_gold=0
-    did_hit_gold=False
     total_count=0
+
+
+
 
     for index,(preds_model1, preds_model2,gold) in enumerate(zip(model1_labels, delex_labels, gold_labels)):
         total_count+=1
@@ -117,16 +110,15 @@ def find_two_label_overlap():
             mismatches=mismatches+1
         if preds_model1 == gold and preds_model2 == gold:
             correct_both+=1
-            did_hit_gold=True
+
 
         if preds_model1==gold:
             correct_model1+=1
-            did_hit_gold=True
             if not (preds_model1 == preds_model2):
+
                 learnables +=1
         if preds_model2 == gold:
             correct_model2+=1
-            did_hit_gold = True
 
         if not ((preds_model1 == gold) or (preds_model2==gold)):
             count_both_missed_gold+=1
@@ -168,6 +160,12 @@ def find_two_label_overlap():
               " delex figerabstract student teacher    ")
     plt.show()
 
+def writer(data,file_path):
+    with open(file_path,"w") as filepath:
+        mnli_writer=csv.writer(filepath,delimiter="\t")
+        for row in enumerate(data):
+            mnli_writer.writerow(row)
+    filepath.close()
 
 
 #get labels and softmaxes into its own lists
@@ -188,6 +186,13 @@ def get_separate_lists_of_each_column_for_2_model_ensemble():
         delex_labels.append(mod2[3])
         gold_labels.append(gold[1])
 
+def find_model1_minus_model2():
+    ones_that_model1_got_right_and_model2_didnt = []
+    for (mod1, mod2, gold) in zip(model1_predictions.values, model2_predictions.values, test_gold.values):
+            model1_labels.append(mod1[3])
+            if  (mod1[3]==gold[1]) and (not mod1[3]==mod2[3]):
+                ones_that_model1_got_right_and_model2_didnt.append(mod1)
+    return ones_that_model1_got_right_and_model2_didnt
 
 def find_3_model_overlap():
     # (Abc, aBc, ABc, abC, AbC, aBC, ABC)
@@ -258,11 +263,13 @@ def verify_total_count(Abc, aBc, ABc, abC, AbC, aBC, ABC,no_body_got_right):
     total=Abc+aBc+abC-ABc-aBC-AbC+ABC
     assert total+no_body_got_right==len(gold_labels)
 
-# get_separate_lists_of_each_column_for_2_model_ensemble()
-# find_two_label_overlap()
+ones_that_model1_got_right_and_model2_didnt=find_model1_minus_model2()
+writer(ones_that_model1_got_right_and_model2_didnt,[])
+get_separate_lists_of_each_column_for_2_model_ensemble()
+find_two_label_overlap()
 
-get_separate_lists_of_each_column_for_3_model_ensemble()
-assert len(model1_labels)==len(delex_labels)==len(combined_labels)==len(gold_labels)
-Abc, aBc, ABc, abC, AbC, aBC, ABC,no_body_got_right=find_3_model_overlap()
-verify_total_count(Abc, aBc, ABc, abC, AbC, aBC, ABC,no_body_got_right)
-draw_plots_3sets(Abc, aBc, ABc, abC, AbC, aBC, ABC,)
+# get_separate_lists_of_each_column_for_3_model_ensemble()
+# assert len(model1_labels)==len(delex_labels)==len(combined_labels)==len(gold_labels)
+# Abc, aBc, ABc, abC, AbC, aBC, ABC,no_body_got_right=find_3_model_overlap()
+# verify_total_count(Abc, aBc, ABc, abC, AbC, aBC, ABC,no_body_got_right)
+# draw_plots_3sets(Abc, aBc, ABc, abC, AbC, aBC, ABC,)
