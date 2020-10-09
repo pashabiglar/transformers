@@ -88,11 +88,11 @@ echo ". going to download data"
 
 #get data only if its 1st epoch
 
-rm -rf $DATA_DIR
-./get_fever_fnc_data.sh
-./convert_to_mnli_format.sh
-#create a small part of data as toy data. this will be used to run regresssion tests before the actual run starts
-./reduce_size.sh  --data_path $TOY_DATA_DIR_PATH
+#rm -rf $DATA_DIR
+#./get_fever_fnc_data.sh
+#./convert_to_mnli_format.sh
+##create a small part of data as toy data. this will be used to run regresssion tests before the actual run starts
+#./reduce_size.sh  --data_path $TOY_DATA_DIR_PATH
 
 echo "done with data download  TOY_DATA_DIR_PATH now is $TOY_DATA_DIR_PATH"
 
