@@ -136,9 +136,9 @@ if test -f "$FILE";then
     echo "$FILE exists"
 else
 
-    #uncomment this if you want to feed dev and test as lex. this is used when you want to test if lex model alone works fine from within student teacher
-    #wget https://osf.io/azf6t/download -O $FILE
-    wget https://osf.io/r5pz3/download -O $FILE
+    #uncomment this if you want to feed lexicalized version of the dataset (fever-dev) as  dev partition. this is useful when you want to sanity check  how a lexicalized model is performing
+    wget https://osf.io/azf6t/download -O $FILE
+    #wget https://osf.io/r5pz3/download -O $FILE
 
 fi
 
@@ -150,11 +150,12 @@ if test -f "$FILE";then
 echo "$FILE exists"
 else
 
-      # if you want to feed dev and test as lex. this is used when you want to check if lex model alone works fine from within student teacher
-      #wget https://osf.io/qs4u6/download -O $FILE
+      # if you want to use the lexicalized version of the dataset (fnc-dev) as the test partition.
+      # this is useful when you want to sanity check  how a lexicalized model is performing
+      wget https://osf.io/qs4u6/download -O $FILE
 
       # fnc-dev delexicalized using figerspecific
-      wget https://osf.io/jx32m/download   -O $FILE
+      #wget https://osf.io/jx32m/download   -O $FILE
 
       # fnc-test delexicalized using figerspecific
       #wget https://osf.io/jentp/download   -O $FILE
