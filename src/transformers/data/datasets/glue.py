@@ -141,6 +141,10 @@ class GlueDataset(Dataset):
                 if limit_length is not None:
                     examples = examples[:limit_length]
                 logger.info(f"going to get into function glue_convert_examples_to_features")
+                for x in examples:
+                    if len(x.text_a.split(" "))>500:
+                        logger.info(f"found a data point which has more than 500 tokens. and its evidence is{x.text_a}")
+
                 self.features = glue_convert_examples_to_features(
                     examples,
                     tokenizer,
