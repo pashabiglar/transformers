@@ -39,8 +39,8 @@ fi
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
 
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_attention_dropout0pt5/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_attention_dropout0pt5/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_delex_from_inside_student_teacher_seed3082/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_delex_from_inside_student_teacher_seed3082/data"
 else
         wandb off
         export DATA_DIR_BASE="/Users/mordor/research/huggingface/src/transformers/data/datasets"
@@ -86,7 +86,6 @@ echo ". going to download data"
 
 
 
-#get data only if its 1st epoch
 
 rm -rf $DATA_DIR
 ./get_fever_fnc_data.sh

@@ -3,7 +3,8 @@
 #PBS -q standard
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
-#PBS -N tune_dropout
+#PBS -N ensemble_voting
+
 ### Specify the group name
 #PBS -W group_list=msurdeanu
 ### Used if job requires partial node only
@@ -35,13 +36,13 @@ export CUDA_VISIBLE_DEVICES=0
 pip install --upgrade pip
 
    
-cd /home/u11/mithunpaul/xdisk/huggingface_bert_tuning_attention_dropout0pt5/code/examples
+cd /home/u11/mithunpaul/xdisk/huggingface_bert_tuning_delex_from_inside_student_teacher_seed3082/code/examples
 
 pip install -r requirements.txt
 pip install transformers
 pip install wget
 
-cd /home/u11/mithunpaul/xdisk/huggingface_bert_tuning_attention_dropout0pt5/code/mithun_scripts
+cd /home/u11/mithunpaul/xdisk/huggingface_bert_tuning_delex_from_inside_student_teacher_seed3082/code/mithun_scripts
 
 bash run_all.sh --epochs_to_run 25 --machine_to_run_on hpc --use_toy_data false #options include [laptop, hpc,clara]
 #stub to use in laptop
