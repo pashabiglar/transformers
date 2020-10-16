@@ -30,7 +30,7 @@ python3 -m venv my_virtual_env
 #this is the only line you need if you already have a virtual_env set up
 source my_virtual_env/bin/activate
 
-export PYTHONPATH="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_delex_from_inside_student_teacher_seed3082/code/src"
+export PYTHONPATH="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_attention_dropout0pt5/code/src"
 export CUDA_VISIBLE_DEVICES=0
 
 pip install --upgrade pip

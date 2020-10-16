@@ -156,6 +156,8 @@ def run_training(model_args, data_args, training_args):
     )
     #manually overriding the default dropout of 0.1- just for tuning purposes
     config.hidden_dropout_prob=training_args.hidden_dropout_prob
+    config.attention_dropout = training_args.attention_dropout
+
     tokenizer_lex = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
