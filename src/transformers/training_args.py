@@ -215,7 +215,7 @@ class TrainingArguments:
         },
     )
     no_cuda: bool = field(default=False, metadata={"help": "Do not use CUDA even when it is available"})
-    seed: int = field(default=42, metadata={"help": "random seed for initialization"})
+    seed: int = field(default=3082, metadata={"help": "random seed for initialization"})
 
     fp16: bool = field(
         default=False,
@@ -269,7 +269,10 @@ class TrainingArguments:
         "help": "For testing. accuracy when the code was run earlier on a toy data of size 17 data points"})
 
     hidden_dropout_prob: float = field(default=0.1, metadata={
-        "help": "changing the default dropout in bert config. refer src/transformers/configuration_bert.py"})
+        "help": "dropout for ffnn layers of bert. . refer src/transformers/configuration_bert.py"})
+    attention_dropout: float = field(default=0.5, metadata={
+        "help": "you can use this to change the dropout probability of attention layers in bert. refer src/transformers/configuration_bert.py"})
+
 
     def __iter__(self):
         ''' Returns the Iterator object '''
