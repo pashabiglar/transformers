@@ -289,9 +289,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #url = 'https://osf.io/ht9gb/download'  # combined trained model- githubsha 21dabe wandb_celestial_sun1042 best_cd_acc_fnc_score_71.89_61.12
 
 
-    #url = 'https://osf.io/84sdz/download' #link to one of the three best trained lex trained models- quiet-haze-806. this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
+    url = 'https://osf.io/84sdz/download' #link to one of the three best trained lex trained models- quiet-haze-806. this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
     #url = 'https://osf.io/q6apm/download'  # link to best lex trained model- quiet-haze-806. this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
-    url="https://osf.io/7mtzq/download" #link to one of the three best trained lex trained models- sweet-water-1001. 69.08 best accuracy
+    #url="https://osf.io/7mtzq/download" #link to one of the three best trained lex trained models- sweet-water-1001. 69.08 best accuracy
 
     #url = 'https://osf.io/uspm4/download'  # link to best delex trained model-this gave 55.69 in cross domain fnc score and 54.04 for cross domain accuracy
     # refer:https://tinyurl.com/y5dyshnh for further details regarding accuracies
