@@ -39,8 +39,9 @@ fi
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
 
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_seq_length/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_seq_length/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_student_teacher_figerabstract/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_student_teacher_figerabstract/data"
+
 else
         wandb off
         export DATA_DIR_BASE="/Users/mordor/research/huggingface/src/transformers/data/datasets"
@@ -86,10 +87,10 @@ echo ". going to download data"
 
 
 
-#get data only if its 1st epoch
 
 rm -rf $DATA_DIR
 ./get_fever_fnc_data.sh
+
 ./convert_to_mnli_format.sh
 #create a small part of data as toy data. this will be used to run regresssion tests before the actual run starts
 ./reduce_size.sh  --data_path $TOY_DATA_DIR_PATH
@@ -97,11 +98,11 @@ rm -rf $DATA_DIR
 echo "done with data download  TOY_DATA_DIR_PATH now is $TOY_DATA_DIR_PATH"
 
 
-
-#use a smaller toy data to test on laptop
-if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
-        DATA_DIR=$TOY_DATA_DIR_PATH
-fi
+#
+##use a smaller toy data to test on laptop
+#if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
+#        DATA_DIR=$TOY_DATA_DIR_PATH
+#fi
 
 
 #use a smaller toy data to test
