@@ -32,7 +32,7 @@ from .trainer_utils import (
 )
 from .training_args import TrainingArguments
 
-
+import git
 if is_apex_available():
     from apex import amp
 
@@ -738,6 +738,20 @@ class StudentTeacherTrainer:
             labels = labels.detach()
         return (loss, logits.detach(), labels)
 
+    def get_git_info(self):
+        repo = git.Repo(search_parent_directories=True)
+
+        repo_sha=str(repo.head.object.hexsha),
+        repo_short_sha= str(repo.git.rev_parse(repo_sha, short=6))
+
+        repo_infos = {
+            "repo_id": str(repo),
+            "repo_sha": str(repo.head.object.hexsha),
+            "repo_branch": str(repo.active_branch),
+            "repo_short_sha" :repo_short_sha
+        }
+        return repo_infos
+
     def train_1teacher_1student(self,model_path: Optional[str] = None):
         """
         Main training entry point.
@@ -760,15 +774,16 @@ class StudentTeacherTrainer:
         model_student = self.delex_student_model
 
         weight_consistency_loss = 1
-        weight_classification_loss = 0.05
+        weight_classification_loss = 0.0875
+
         optimizer = None
         scheduler = None
 
         #these flags are used for testing purposes. IDeally when running in student teacher mode this should be
         # flag_run_both=True. Other two flags are to test by loading each of these models independently from within
         #the same trainer class
-        flag_run_teacher_alone = True
-        flag_run_student_alone = False
+        flag_run_teacher_alone = False
+        flag_run_student_alone = True
         flag_run_both = False
 
 
@@ -895,22 +910,24 @@ class StudentTeacherTrainer:
             epochs_trained, int(num_train_epochs), desc="Epoch", disable=not self.is_local_master()
         )
 
-        #empty out the file which stores intermediate evaluations
 
+        git_details = self.get_git_info()
+
+        #empty out the file which stores intermediate evaluations
         output_dir_absolute_path=os.path.join(os.getcwd(),self.args.output_dir)
-        dev_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_dev_partition_results.txt"
+        dev_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_dev_partition_results_"+git_details['repo_short_sha']+".txt"
         # empty out the
         with open(dev_partition_evaluation_output_file_path, "w") as writer:
             writer.write("")
 
-        test_partition_evaluation_output_file_path =  output_dir_absolute_path+ "intermediate_evaluation_on_test_partition_results.txt"
+        test_partition_evaluation_output_file_path =  output_dir_absolute_path+ "intermediate_evaluation_on_test_partition_results_"+git_details['repo_short_sha']+".txt"
         # empty out the
         with open(test_partition_evaluation_output_file_path, "w") as writer:
             writer.write("")
 
 
         # empty out the file which stores intermediate evaluations
-        predictions_on_test_file_path = output_dir_absolute_path + "predictions_on_test_partition.txt"
+        predictions_on_test_file_path = output_dir_absolute_path + "predictions_on_test_partition_"+git_details['repo_short_sha']+".txt"
         with open(predictions_on_test_file_path, "w") as writer:
             writer.write("")
 

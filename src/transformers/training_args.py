@@ -180,7 +180,7 @@ class TrainingArguments:
         metadata={"help": "Number of updates steps to accumulate before performing a backward/update pass."},
     )
 
-    learning_rate: float = field(default=5e-8, metadata={"help": "The initial learning rate for Adam."})
+    learning_rate: float = field(default=1e-5, metadata={"help": "The initial learning rate for Adam."})
     weight_decay: float = field(default=0.0, metadata={"help": "Weight decay if we apply some."})
     adam_epsilon: float = field(default=1e-8, metadata={"help": "Epsilon for Adam optimizer."})
     max_grad_norm: float = field(default=1.0, metadata={"help": "Max gradient norm."})
@@ -215,7 +215,7 @@ class TrainingArguments:
         },
     )
     no_cuda: bool = field(default=False, metadata={"help": "Do not use CUDA even when it is available"})
-    seed: int = field(default=42, metadata={"help": "random seed for initialization"})
+    seed: int = field(default=3082, metadata={"help": "random seed for initialization"})
 
     fp16: bool = field(
         default=False,
@@ -268,6 +268,8 @@ class TrainingArguments:
     fever_cross_domain_fncscore_on_toy_data_17_datapoints: float = field(default=1.0, metadata={
         "help": "For testing. accuracy when the code was run earlier on a toy data of size 17 data points"})
 
+    hidden_dropout_prob: float = field(default=0.1, metadata={
+        "help": "changing the default dropout in bert config. refer src/transformers/configuration_bert.py"})
 
     def __iter__(self):
         ''' Returns the Iterator object '''

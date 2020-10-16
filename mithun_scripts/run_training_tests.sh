@@ -10,16 +10,16 @@ echo "value of epochs in runglue.sh is $EPOCHS"
 
 
 echo "TASK_TYPE is $TASK_TYPE"
-if [ "$TASK_TYPE" = "mod2" ] ; then
+if [ "$TASK_TYPE" = "delex" ] ; then
  echo $DATA_DIR
- echo "task type is mod2"
+ echo "task type is delex"
 
 fi
 
 echo "TASK_TYPE is $TASK_TYPE"
-if [ "$TASK_TYPE" = "mod1" ] ; then
+if [ "$TASK_TYPE" = "lex" ] ; then
  echo $DATA_DIR
- echo "task type is mod1"
+ echo "task type is lex"
 fi
 
 if [ "$TASK_TYPE" = "combined" ] ; then
@@ -45,6 +45,7 @@ if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
 
 
 else
+        wandb off
         cd ../examples/tests/
         pytest -s test_training_mithun_factverification.py
 
