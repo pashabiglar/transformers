@@ -119,7 +119,8 @@ FILE="$DATA_DIR/train1.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/train.tsv     -O $FILE
+
+    wget https://osf.io/r6mdz/download -O $FILE
 fi
 
 
@@ -127,7 +128,7 @@ FILE="$DATA_DIR/train2.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-      wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/figer_specific/train.tsv -O $FILE
+      wget https://osf.io/8shu4/download -O $FILE
 fi
 
 FILE="$DATA_DIR/dev.tsv"
@@ -135,15 +136,14 @@ if test -f "$FILE";then
     echo "$FILE exists"
 else
 
-    #uncomment this if you want to feed dev and test as lex. this is used when you want to check if lex model alone works fine from within student teacher
-    #wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/dev.tsv -O $FILE
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/figer_specific/dev.tsv -O $FILE
+    #uncomment this if you want to feed dev and test as lex. this is used when you want to test if lex model alone works fine from within student teacher
+    #wget https://osf.io/azf6t/download -O $FILE
+    wget https://osf.io/r5pz3/download -O $FILE
 
 fi
 
 
-#note that we are  replacing the test partition with cross domain dev partition(in this case it thus becomes the in-domain dev
-# partition of fnc dataset).
+#note that we are  replacing the test partition with cross domain dev partition(in this case. it thus becomes the in-domain dev partition of fnc dataset).
 
 FILE="$DATA_DIR/test.tsv"
 if test -f "$FILE";then
@@ -151,8 +151,8 @@ echo "$FILE exists"
 else
 
       #uncomment this if you want to feed dev and test as lex. this is used when you want to check if lex model alone works fine from within student teacher
-      #wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/lex/dev.tsv -O $FILE
-      wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/figer_specific/dev.tsv   -O $FILE
+      #wget https://osf.io/qs4u6/download -O $FILE
+      wget https://osf.io/jx32m/download   -O $FILE
 
 
 

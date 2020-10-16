@@ -783,8 +783,8 @@ class StudentTeacherTrainer:
         # flag_run_both=True. Other two flags are to test by loading each of these models independently from within
         #the same trainer class
         flag_run_teacher_alone = False
-        flag_run_student_alone = False
-        flag_run_both = True
+        flag_run_student_alone = True
+        flag_run_both = False
 
 
 
