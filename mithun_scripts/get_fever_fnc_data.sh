@@ -150,9 +150,14 @@ if test -f "$FILE";then
 echo "$FILE exists"
 else
 
-      #uncomment this if you want to feed dev and test as lex. this is used when you want to check if lex model alone works fine from within student teacher
+      # if you want to feed dev and test as lex. this is used when you want to check if lex model alone works fine from within student teacher
       #wget https://osf.io/qs4u6/download -O $FILE
+
+      # fnc-dev delexicalized using figerspecific
       wget https://osf.io/jx32m/download   -O $FILE
+
+      # fnc-test delexicalized using figerspecific
+      #wget https://osf.io/jentp/download   -O $FILE
 
 
 

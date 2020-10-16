@@ -167,7 +167,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
         force_download=True,
-        tokenizer_type="mod2"
+        tokenizer_type="delex"
     )
 
 
@@ -195,9 +195,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
         )
 
     if (training_args.do_train_1student_1teacher == True):
-        # the task type must be combined, not mod1 or mod2. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
+        # the task type must be delex, . also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
         eval_dataset = (
-            GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="dev",
+            GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
                         cache_dir=model_args.cache_dir)
             if training_args.do_eval
             else None
@@ -284,9 +284,10 @@ def run_loading_and_testing(model_args, data_args, training_args):
             test_compute_metrics=test_compute_metrics
         )
 
-    #url = 'https://osf.io/twbmu/download' #best combined trained model-this model gave 59.31 cross domain fnc score and 69.21for cross domain accuracy
+    #url = 'https://osf.io/twbmu/download' # combined trained model-this model gave 59.31 cross domain fnc score and 69.21for cross domain accuracy
+    url = 'https://osf.io/vnyad//download' # combined trained model-this model gave 61.52  cross domain fnc score and  74.4 for cross domain accuracy- wandb graph name legendary-voice-1016
     #url = 'https://osf.io/84sdz/download' #link to one of the three best trained lex trained models- quiet-haze-806. this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
-    url = 'https://osf.io/q6apm/download'  # link to best lex trained model- quiet-haze-806. this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
+    #url = 'https://osf.io/q6apm/download'  # link to best lex trained model- quiet-haze-806. this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
     # url = 'https://osf.io/84sdz/download'  # link to best lex trained model- quiet-haze-806. this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
 
 
