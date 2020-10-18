@@ -293,8 +293,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #url = 'https://osf.io/q6apm/download'  # link to one of the best lex trained model- trained_model_lex_wandbGraphNameQuietHaze806_accuracy67point5_fncscore64point5_atepoch2.bin...this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
     #url = 'https://osf.io/a2emd/download' #trained_model_lex_sweet_water_1001_trained_model_afterepoch1_accuracy6907_fncscore6254.bin
     #url = 'https://osf.io/4ag8q/download' #trained_model_lex_helpful_vortex_1002_trained_model_afterepoch1_accuracy70point21percent..bin
+    url = 'https://osf.io/ehwx6/download'
+    #
 
-    url = 'https://osf.io/96czs/download' #an experimental version of model lex trained sweet water 1001 since am not able to find the right model..atleast not at the right epoch.bin
 
 
     #url = 'https://osf.io/uspm4/download'  # link to best delex trained model-this gave 55.69 in cross domain fnc score and 54.04 for cross domain accuracy
