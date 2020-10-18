@@ -72,7 +72,7 @@ def report_score(actual,predicted):
     return score*100/best_score
 
 #read tsv predictions from sandeeps tensorflow code
-test_prediction_logits=pd.read_csv("predictions/predictions_on_test_partition_5291a1.txt",sep="\t",header=None)
+test_prediction_logits=pd.read_csv("predictions/predictions_on_test_partition_combined_wandbGraphNameBumblingShape1011_githubSha374278_accuracy72_fncs60.txt",sep="\t",header=None)
 test_gold=pd.read_csv("predictions/fnc_dev_gold.tsv",sep="\t",header=None)
 
 
