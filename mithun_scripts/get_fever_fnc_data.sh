@@ -152,7 +152,7 @@ else
 
       # if you want to use the lexicalized version of the dataset (fnc-dev) as the test partition.
       # this is useful when you want to sanity check  how a lexicalized model is performing
-      wget https://osf.io/qs4u6/download -O $FILE
+      #wget https://osf.io/qs4u6/download -O $FILE
 
       # fnc-dev delexicalized using figerspecific
       #wget https://osf.io/jx32m/download   -O $FILE
@@ -162,7 +162,7 @@ else
 
 
         # fnc-test lexicalized/plaintext
-      #wget https://osf.io/r5uvd/download -O $FILE
+      wget https://osf.io/r5uvd/download -O $FILE
 
 
 
