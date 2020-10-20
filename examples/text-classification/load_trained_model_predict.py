@@ -287,7 +287,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #best student teacher trained (aka combined) models
     #url = 'https://osf.io/twbmu/download' # light-plasma combined trained model-this model gave 59.31 cross domain fnc score and 69.21for cross domain accuracy
     #url = 'https://osf.io/vnyad//download' # legendary-voice-1016 combined trained model-this model gave 61.52  cross domain fnc score and  74.4 for cross domain accuracy- wandb graph name legendary-voice-1016
-    url = 'https://osf.io/ht9gb/download'  # celestial-sun-1042 combined trained model- githubsha 21dabe wandb_celestial_sun1042 best_cd_acc_fnc_score_71.89_61.12
+    #url = 'https://osf.io/ht9gb/download'  # celestial-sun-1042 combined trained model- githubsha 21dabe wandb_celestial_sun1042 best_cd_acc_fnc_score_71.89_61.12
 
 
     #best  models when trained on fever lexicalized data
@@ -301,7 +301,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
     # refer:https://tinyurl.com/y5dyshnh for further details regarding accuracies
 
 
-    model_path = wget.download(url)
+    #model_path = wget.download(url)
+    model_path="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_delex_from_inside_student_teacher_seed84853/output/fever/fevercrossdomain/combined/figerspecific/pytorch_model_21dabe.bin"
     device = torch.device('cpu')
 
     if training_args.do_train_1student_1teacher:
