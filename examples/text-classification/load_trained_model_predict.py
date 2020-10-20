@@ -284,14 +284,15 @@ def run_loading_and_testing(model_args, data_args, training_args):
             test_compute_metrics=test_compute_metrics
         )
 
-    #url = 'https://osf.io/twbmu/download' # combined trained model-this model gave 59.31 cross domain fnc score and 69.21for cross domain accuracy
-    #url = 'https://osf.io/vnyad//download' # combined trained model-this model gave 61.52  cross domain fnc score and  74.4 for cross domain accuracy- wandb graph name legendary-voice-1016
-    #url = 'https://osf.io/ht9gb/download'  # combined trained model- githubsha 21dabe wandb_celestial_sun1042 best_cd_acc_fnc_score_71.89_61.12
+    #best student teacher trained (aka combined) models
+    #url = 'https://osf.io/twbmu/download' # light-plasma combined trained model-this model gave 59.31 cross domain fnc score and 69.21for cross domain accuracy
+    #url = 'https://osf.io/vnyad//download' # legendary-voice-1016 combined trained model-this model gave 61.52  cross domain fnc score and  74.4 for cross domain accuracy- wandb graph name legendary-voice-1016
+    url = 'https://osf.io/ht9gb/download'  # celestial-sun-1042 combined trained model- githubsha 21dabe wandb_celestial_sun1042 best_cd_acc_fnc_score_71.89_61.12
 
 
-
+    #best  models when trained on fever lexicalized data
     #url = 'https://osf.io/q6apm/download'  # link to one of the best lex trained model- trained_model_lex_wandbGraphNameQuietHaze806_accuracy67point5_fncscore64point5_atepoch2.bin...this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
-    url = 'https://osf.io/fus25/download' #trained_model_lex_sweet_water_1001_trained_model_afterepoch1_accuracy6907_fncscore6254.bin
+    # url = 'https://osf.io/fus25/download' #trained_model_lex_sweet_water_1001_trained_model_afterepoch1_accuracy6907_fncscore6254.bin
     #url = 'https://osf.io/fp89k/download' #trained_model_lex_helpful_vortex_1002_trained_model_afterepoch1_accuracy70point21percent..bin
 
 
