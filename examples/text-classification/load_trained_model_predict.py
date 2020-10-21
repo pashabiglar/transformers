@@ -302,7 +302,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
 
     #model_path = wget.download(url)
-    model_path="/home/u11/mithunpaul/xdisk/run_training_again_sweet_water_1001/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model_234bd3.bin"
+    model_path="/home/u11/mithunpaul/xdisk//huggingface_bert_tuning_delex_from_inside_student_teacher_seed84853/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model_c1864e.bin"
     device = torch.device('cpu')
 
     if training_args.do_train_1student_1teacher:
