@@ -22,10 +22,15 @@ steps for boostrap resampling on a pair of models:
 
 '''
 
+import matplotlib.pyplot as plt
+plt.style.use('seaborn-whitegrid')
+import numpy as np
+import scipy.stats as stats
 import pandas as pd
 import random
 
-
+NO_OF_RUNS=1000
+NO_OF_DATAPOINTS_PER_BATCH=300
 LABELS = ['disagree', 'agree', 'discuss', 'unrelated']
 
 delex_predictions=pd.read_csv("for_bootstrap/fnc_dev/predictions_on_fnc_dev_by_delex_trained_model_acc55point3.txt", sep="\t")
@@ -59,6 +64,26 @@ for (mod1, mod2, mod3) in zip(delex_predictions.values, lex_predictions.values, 
     model2_sf.append(mod2[2])
     model3_sf.append(mod3[2])
 
+def pvalue_101(mu, sigma, samp_size, samp_mean=0, deltam=0):
+    np.random.seed(1234)
+    s1 = np.random.normal(mu, sigma, samp_size)
+    if samp_mean > 0:
+        #print(len(s1[s1>samp_mean]))
+        outliers = float(len(s1[s1>samp_mean])*100)/float(len(s1))
+        print('Percentage of numbers larger than {} is {}%'.format(samp_mean, outliers))
+    if deltam == 0:
+        deltam = abs(mu-samp_mean)
+    if deltam > 0 :
+        outliers = (float(len(s1[s1>(mu+deltam)]))
+                    +float(len(s1[s1<(mu-deltam)])))*100.0/float(len(s1))
+        print('Percentage of numbers further than the population mean of {} by +/-{} is {}%'.format(mu, deltam, outliers))
+
+    fig, ax = plt.subplots(figsize=(8,8))
+    fig.suptitle('Normal Distribution: population_mean={}'.format(mu) )
+    plt.hist(s1)
+    plt.axvline(x=mu+deltam, color='red')
+    plt.axvline(x=mu-deltam, color='green')
+    plt.show()
 
 def convert_labels_from_string_to_index(label_list):
     return [LABELS.index(label) for label in label_list]
@@ -73,29 +98,53 @@ def simple_accuracy(preds, gold):
 total=len(student_teacher_model_predicted_labels_string)
 
 #set a seed for reproducability. comment this in final calculations
+np.random.seed(2342)
 random.seed(3)
 
-#pick 300 random numbers between 0 and len
-rand_list=[]
-for x in range (0,300):
-    n=random.randint(0,total)
-    rand_list.append(n)
+def per_distribution_bootstrap(distribution_to_test_with,gold):
+    list_of_all_accuracies_across_all_runs=[]
 
-assert len(rand_list)==300
+    list_of_all_indices=[*range(0,total)]
+    for x in range (0,NO_OF_RUNS):
+        # pick NO_OF_DATAPOINTS_PER_BATCH random elements between 0 and len -with replacement
+        rand_list=random.choices(list_of_all_indices,k=300)
+        assert len(rand_list)==NO_OF_DATAPOINTS_PER_BATCH
 
-# for each such element in the list, pick the corresponding data point and its corresponding gold label
-pred_rand_list=[]
-gold_rand_list=[]
-for x in rand_list:
-    assert student_teacher_model_predicted_labels_string[x] is not None
-    assert gold_labels[x] is not None
-    pred_rand_list.append(student_teacher_model_predicted_labels_string[x])
-    gold_rand_list.append(gold_labels[x])
+        # for each such element in the list, pick the corresponding data point and its corresponding gold label
+        pred_rand_list=[]
+        gold_rand_list=[]
+        for x in rand_list:
+            assert distribution_to_test_with[x] is not None
+            assert gold[x] is not None
+            pred_rand_list.append(distribution_to_test_with[x])
+            gold_rand_list.append(gold[x])
+        #now calculate accuracy for this batch of 300 data points
+        pred_labels_int=convert_labels_from_string_to_index(pred_rand_list)
+        gold_labels_int=convert_labels_from_string_to_index(gold_rand_list)
+        accuracy=simple_accuracy(pred_labels_int, gold_labels_int)
+        #print(f"accuracy={accuracy}")
+        list_of_all_accuracies_across_all_runs.append(accuracy)
+    return list_of_all_accuracies_across_all_runs
 
 
+def plot_given_xy(distribution1, distribution2, xaxis):
 
-pred_labels_int=convert_labels_from_string_to_index(pred_rand_list)
-gold_labels_int=convert_labels_from_string_to_index(gold_rand_list)
-accuracy=simple_accuracy(pred_labels_int, gold_labels_int)
-print(f"accuracy={accuracy}")
+    fig = plt.figure()
+    ax1 = fig.add_subplot(111)
+    ax1.scatter(distribution1,xaxis, s=10, c='b', marker="s", label='first')
+    ax1.scatter(distribution2, xaxis, s=10, c='r', marker="o", label='second')
+    #plt.plot(y, x, 'o', color='blue');
+    plt.show()
 
+
+accuracy_list_student_teacher= per_distribution_bootstrap(student_teacher_model_predicted_labels_string,gold_labels)
+accuracy_list_lex= per_distribution_bootstrap(lex_model_predicted_labels_string,gold_labels)
+
+
+assert len(accuracy_list_student_teacher)==len(accuracy_list_lex)==NO_OF_RUNS
+plot_given_xy(accuracy_list_student_teacher,accuracy_list_lex,np.arange(1, NO_OF_RUNS + 1))
+
+#
+# average=sum(accuracy_list)/len(accuracy_list)
+# print(f"average of given sample={average}")
+# pvalue_101(74.74,4.0,NO_OF_RUNS,average)
