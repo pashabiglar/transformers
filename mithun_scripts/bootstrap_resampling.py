@@ -33,6 +33,11 @@ NO_OF_RUNS=1000
 NO_OF_DATAPOINTS_PER_BATCH=700
 LABELS = ['disagree', 'agree', 'discuss', 'unrelated']
 
+#set a seed for reproducability. comment this in final calculations
+np.random.seed(34345)
+random.seed(334534)
+
+
 delex_predictions=pd.read_csv("for_bootstrap/fnc_dev/predictions_on_fnc_dev_by_delex_trained_model_acc55point3.txt", sep="\t")
 lex_predictions=pd.read_csv("for_bootstrap/fnc_dev/predictions_on_fnc_dev_by_lex_trained_model_acc70point21.txt", sep="\t")
 student_teacher_predictions=pd.read_csv("for_bootstrap/fnc_dev/predictions_on_fnc_dev_by_student_teacher_trained_model_acc74point74.txt", sep="\t")
@@ -97,9 +102,6 @@ def simple_accuracy(preds, gold):
 
 total=len(student_teacher_model_predicted_labels_string)
 
-#set a seed for reproducability. comment this in final calculations
-np.random.seed(34345)
-random.seed(334534)
 
 def per_distribution_bootstrap(distribution_to_test_with,gold):
     list_of_all_accuracies_across_all_runs=[]
@@ -128,10 +130,13 @@ def per_distribution_bootstrap(distribution_to_test_with,gold):
 
 
 def scatter_plot_given_two_distributions(distribution1, distribution2, xaxis):
+    plt.title('My title')
+    plt.xlabel('categories')
+    plt.ylabel('values')
     fig = plt.figure()
     ax1 = fig.add_subplot(111)
-    ax1.scatter(distribution1,xaxis, s=10, c='b', marker="s", label='first')
-    ax1.scatter(distribution2, xaxis, s=10, c='r', marker="o", label='second')
+    ax1.scatter(distribution1,xaxis,  c='b', marker="*", label='distribution')
+    ax1.scatter(distribution2, xaxis, c='r', marker="8", label='second')
     #plt.plot(y, x, 'o', color='blue');
     plt.show()
 
@@ -145,6 +150,15 @@ def find_which_system_is_better(list1,list2):
           f"i.e {count_x_higher*100/len(list1)} percentage ")
 
 
+pred_labels_studentteacher_int=convert_labels_from_string_to_index(student_teacher_model_predicted_labels_string)
+gold_labels_int=convert_labels_from_string_to_index(gold_labels)
+actual_accuracy_student_teacher=simple_accuracy(pred_labels_studentteacher_int, gold_labels_int)
+print(f"actual_accuracy_student_teacher={actual_accuracy_student_teacher}")
+
+pred_labels_lex_int=convert_labels_from_string_to_index(lex_model_predicted_labels_string)
+actual_accuracy_lex=simple_accuracy(pred_labels_lex_int, gold_labels_int)
+print(f"actual_accuracy_lex={actual_accuracy_lex}")
+
 accuracy_list_student_teacher= per_distribution_bootstrap(student_teacher_model_predicted_labels_string,gold_labels)
 accuracy_list_lex= per_distribution_bootstrap(lex_model_predicted_labels_string,gold_labels)
 find_which_system_is_better(accuracy_list_student_teacher,accuracy_list_lex)
@@ -153,7 +167,7 @@ find_which_system_is_better(accuracy_list_student_teacher,accuracy_list_lex)
 assert len(accuracy_list_student_teacher)==len(accuracy_list_lex)==NO_OF_RUNS
 
 scatter_plot_given_two_distributions(accuracy_list_student_teacher, accuracy_list_lex, np.arange(1, NO_OF_RUNS + 1))
-#
+
 # average=sum(accuracy_list)/len(accuracy_list)
 # print(f"average of given sample={average}")
 # pvalue_101(74.74,4.0,NO_OF_RUNS,average)

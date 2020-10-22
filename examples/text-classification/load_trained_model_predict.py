@@ -286,7 +286,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     #best student teacher trained (aka combined) models
     #url = 'https://osf.io/twbmu/download' # light-plasma combined trained model-this model gave 59.31 cross domain fnc score and 69.21for cross domain accuracy
-    #url = 'https://osf.io/vnyad//download' # legendary-voice-1016 combined trained model-this model gave 61.52  cross domain fnc score and  74.4 for cross domain accuracy- wandb graph name legendary-voice-1016
+    url = 'https://osf.io/vnyad//download' # legendary-voice-1016 combined trained model-this model gave 61.52  cross domain fnc score and  74.4 for cross domain accuracy- wandb graph name legendary-voice-1016
     #url = 'https://osf.io/ht9gb/download'  # celestial-sun-1042 combined trained model- githubsha 21dabe wandb_celestial_sun1042 best_cd_acc_fnc_score_71.89_61.12
 
 
@@ -301,8 +301,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
     # refer:https://tinyurl.com/y5dyshnh for further details regarding accuracies
 
 
-    #model_path = wget.download(url)
-    model_path="/home/u11/mithunpaul/xdisk/run_training_again_sweet_water_1001/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model_234bd3.bin"
+    model_path = wget.download(url)
+    #model_path="/home/u11/mithunpaul/xdisk/run_training_again_sweet_water_1001/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model_234bd3.bin"
     device = torch.device('cpu')
 
     if training_args.do_train_1student_1teacher:
@@ -317,7 +317,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #load the trained model and test it on dev partition (which in this case is indomain-dev, i.e fever-dev)
 
     output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
-    predictions_on_dev_file_path = output_dir_absolute_path + "predictions_on_dev_partition.txt"
+
+
+    predictions_on_dev_file_path = output_dir_absolute_path + "predictions_on_dev_partition"+ git_details['repo_short_sha'] + ".txt"
     dev_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_dev_partition_results.txt"
     # hardcoding the epoch value, since its needed down stream. that code was written assuming evaluation happens at the end of each epoch
     trainer.epoch = 1
@@ -333,7 +335,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     # load the trained model and test it on test partition (which in this case is fnc-dev)
     output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
-    predictions_on_test_file_path = output_dir_absolute_path + "predictions_on_test_partition.txt"
+
+    predictions_on_test_file_path = output_dir_absolute_path + "predictions_on_test_partition"+ git_details['repo_short_sha'] + ".txt"
     test_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_test_partition_results.txt"
 
     #hardcoding the epoch value, since its needed down stream. that code was written assuming evaluation happens at the end of each epoch
