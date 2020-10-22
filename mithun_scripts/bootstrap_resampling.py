@@ -30,7 +30,7 @@ import pandas as pd
 import random
 
 NO_OF_RUNS=1000
-NO_OF_DATAPOINTS_PER_BATCH=300
+NO_OF_DATAPOINTS_PER_BATCH=700
 LABELS = ['disagree', 'agree', 'discuss', 'unrelated']
 
 delex_predictions=pd.read_csv("for_bootstrap/fnc_dev/predictions_on_fnc_dev_by_delex_trained_model_acc55point3.txt", sep="\t")
@@ -98,8 +98,8 @@ def simple_accuracy(preds, gold):
 total=len(student_teacher_model_predicted_labels_string)
 
 #set a seed for reproducability. comment this in final calculations
-np.random.seed(2342)
-random.seed(3)
+np.random.seed(34345)
+random.seed(334534)
 
 def per_distribution_bootstrap(distribution_to_test_with,gold):
     list_of_all_accuracies_across_all_runs=[]
@@ -107,7 +107,7 @@ def per_distribution_bootstrap(distribution_to_test_with,gold):
     list_of_all_indices=[*range(0,total)]
     for x in range (0,NO_OF_RUNS):
         # pick NO_OF_DATAPOINTS_PER_BATCH random elements between 0 and len -with replacement
-        rand_list=random.choices(list_of_all_indices,k=300)
+        rand_list=random.choices(list_of_all_indices,k=NO_OF_DATAPOINTS_PER_BATCH)
         assert len(rand_list)==NO_OF_DATAPOINTS_PER_BATCH
 
         # for each such element in the list, pick the corresponding data point and its corresponding gold label
@@ -127,8 +127,7 @@ def per_distribution_bootstrap(distribution_to_test_with,gold):
     return list_of_all_accuracies_across_all_runs
 
 
-def plot_given_xy(distribution1, distribution2, xaxis):
-
+def scatter_plot_given_two_distributions(distribution1, distribution2, xaxis):
     fig = plt.figure()
     ax1 = fig.add_subplot(111)
     ax1.scatter(distribution1,xaxis, s=10, c='b', marker="s", label='first')
@@ -136,14 +135,24 @@ def plot_given_xy(distribution1, distribution2, xaxis):
     #plt.plot(y, x, 'o', color='blue');
     plt.show()
 
+def find_which_system_is_better(list1,list2):
+    assert len(list1)==len(list2)
+    count_x_higher=0
+    for index,(x,y) in enumerate(zip(list1,list2)):
+        if x>y:
+            count_x_higher+=1
+    print(f"out of total of {len(list1)} data points {count_x_higher} times list1 is higher than list 2. "
+          f"i.e {count_x_higher*100/len(list1)} percentage ")
+
 
 accuracy_list_student_teacher= per_distribution_bootstrap(student_teacher_model_predicted_labels_string,gold_labels)
 accuracy_list_lex= per_distribution_bootstrap(lex_model_predicted_labels_string,gold_labels)
+find_which_system_is_better(accuracy_list_student_teacher,accuracy_list_lex)
 
 
 assert len(accuracy_list_student_teacher)==len(accuracy_list_lex)==NO_OF_RUNS
-plot_given_xy(accuracy_list_student_teacher,accuracy_list_lex,np.arange(1, NO_OF_RUNS + 1))
 
+scatter_plot_given_two_distributions(accuracy_list_student_teacher, accuracy_list_lex, np.arange(1, NO_OF_RUNS + 1))
 #
 # average=sum(accuracy_list)/len(accuracy_list)
 # print(f"average of given sample={average}")
