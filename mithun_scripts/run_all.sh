@@ -39,9 +39,8 @@ fi
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
 
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_student_teacher_figerabstract/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_tuning_student_teacher_figerabstract/data"
-
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_expts_on_fnc_test/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_expts_on_fnc_test/data"
 else
         wandb off
         export DATA_DIR_BASE="/Users/mordor/research/huggingface/src/transformers/data/datasets"
@@ -110,7 +109,6 @@ echo "done with data download  TOY_DATA_DIR_PATH now is $TOY_DATA_DIR_PATH"
 if  [ "$USE_TOY_DATA" = true ]; then
         DATA_DIR=$TOY_DATA_DIR_PATH
         echo "found USE_TOY_DATA is true"
-
 fi
 
 
@@ -124,10 +122,14 @@ export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME     
 
 
 
-
-
-#run_loading_tests.sh
+#test cases
 #./run_training_tests.sh
-./run_glue.sh
-#./load_model_test.sh
+#./run_loading_tests.sh
+
+
+
+#actual code runs
+#./run_glue.sh
+./load_model_test.sh
+
 
