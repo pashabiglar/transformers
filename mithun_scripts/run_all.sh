@@ -69,7 +69,7 @@ export TOY_DATA_DIR_PATH="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TAS
 
 
 export BERT_MODEL_NAME="bert-base-cased" #options include things like [bert-base-uncased,bert-base-cased] etc. refer src/transformers/tokenization_bert.py for more.
-export MAX_SEQ_LENGTH="128"
+export MAX_SEQ_LENGTH="256"
 export OUTPUT_DIR="$OUTPUT_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE/$BERT_MODEL_NAME/$MAX_SEQ_LENGTH/"
 echo $OUTPUT_DIR
 
@@ -89,6 +89,7 @@ echo ". going to download data"
 
 rm -rf $DATA_DIR
 ./get_fever_fnc_data.sh
+
 ./convert_to_mnli_format.sh
 #create a small part of data as toy data. this will be used to run regresssion tests before the actual run starts
 ./reduce_size.sh  --data_path $TOY_DATA_DIR_PATH
@@ -96,11 +97,11 @@ rm -rf $DATA_DIR
 echo "done with data download  TOY_DATA_DIR_PATH now is $TOY_DATA_DIR_PATH"
 
 
-
-#use a smaller toy data to test on laptop
-if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
-        DATA_DIR=$TOY_DATA_DIR_PATH
-fi
+#
+##use a smaller toy data to test on laptop
+#if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
+#        DATA_DIR=$TOY_DATA_DIR_PATH
+#fi
 
 
 #use a smaller toy data to test
@@ -119,7 +120,7 @@ export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME     
 --weight_decay 0.01 --adam_epsilon 1e-6  --evaluate_during_training \
 --task_type $TASK_TYPE --subtask_type $SUB_TASK_TYPE --machine_to_run_on $MACHINE_TO_RUN_ON --toy_data_dir_path $TOY_DATA_DIR_PATH "
 
-echo "value of args is $args"
+
 
 #test cases
 #./run_training_tests.sh
