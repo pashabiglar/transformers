@@ -48,6 +48,7 @@ import torch
 
 def call_html():
   import IPython
+  from IPython.core.display import display
   display(IPython.core.display.HTML('''
         <script src="/static/components/requirejs/require.js"></script>
         <script>
@@ -190,8 +191,10 @@ def run_loading_and_testing(model_args, data_args, training_args):
     )
 
 
-    # Get datasets
+    #this is needed for visualization
+    config.output_attentions=True
 
+    # Get datasets
     if (training_args.do_train_1student_1teacher == True):
         model_teacher = AutoModelForSequenceClassification.from_pretrained(
             model_args.model_name_or_path,
@@ -204,6 +207,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
             from_tf=bool(".ckpt" in model_args.model_name_or_path),
             config=config,
             cache_dir=model_args.cache_dir,
+
         )
     else:
         model = AutoModelForSequenceClassification.from_pretrained(
@@ -309,7 +313,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #url = 'https://osf.io/ht9gb/download'  # celestial-sun-1042 combined trained model- githubsha 21dabe wandb_celestial_sun1042 best_cd_acc_fnc_score_71.89_61.12
 
 
-    #best  models when trained on fever lexicalized data
+    #best  models when trained on fever lexicalized data- if using this model, dont forget to use tokenizer_lex
     #url = 'https://osf.io/q6apm/download'  # link to one of the best lex trained model- trained_model_lex_wandbGraphNameQuietHaze806_accuracy67point5_fncscore64point5_atepoch2.bin...this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
     # url = 'https://osf.io/fus25/download' #trained_model_lex_sweet_water_1001_trained_model_afterepoch1_accuracy6907_fncscore6254.bin
     url = 'https://osf.io/fp89k/download' #trained_model_lex_helpful_vortex_1002_trained_model_afterepoch1_accuracy70point21percent..bin
