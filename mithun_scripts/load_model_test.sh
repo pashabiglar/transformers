@@ -39,6 +39,7 @@ export CUDA_VISIBLE_DEVICES=0
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
        python3 ../examples/text-classification/load_trained_model_predict.py $args
 else
-       python3 ../examples/text-classification/load_trained_model_predict.py $args
+       #python3 ../examples/text-classification/load_trained_model_predict.py $args
+       python3 ../examples/text-classification/load_trained_model_visualize.py $args
 fi
 

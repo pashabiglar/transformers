@@ -34,6 +34,11 @@ fi
 fi
 
 
+if [ $# -gt 7 ]; then
+if [ $7 == "--download_fresh_data" ]; then
+        export DOWNLOAD_FRESH_DATA=$8
+fi
+fi
 
 
 
@@ -69,7 +74,7 @@ export TOY_DATA_DIR_PATH="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TAS
 
 
 export BERT_MODEL_NAME="bert-base-cased" #options include things like [bert-base-uncased,bert-base-cased] etc. refer src/transformers/tokenization_bert.py for more.
-export MAX_SEQ_LENGTH="256"
+export MAX_SEQ_LENGTH="128"
 export OUTPUT_DIR="$OUTPUT_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE/$BERT_MODEL_NAME/$MAX_SEQ_LENGTH/"
 echo $OUTPUT_DIR
 
@@ -87,10 +92,14 @@ echo ". going to download data"
 
 
 
-rm -rf $DATA_DIR
-./get_fever_fnc_data.sh
+echo "$DOWNLOAD_FRESH_DATA"
+if [ $DOWNLOAD_FRESH_DATA == "true" ]; then
+    echo "found DOWNLOAD_FRESH_DATA is true "
+    rm -rf $DATA_DIR
+    ./get_fever_fnc_data.sh
+    ./convert_to_mnli_format.sh
+fi
 
-./convert_to_mnli_format.sh
 #create a small part of data as toy data. this will be used to run regresssion tests before the actual run starts
 ./reduce_size.sh  --data_path $TOY_DATA_DIR_PATH
 
