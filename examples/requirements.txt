@@ -16,6 +16,6 @@ pandas
 nlp
 tensorflow
 pytest
-transformers
+
 
 
