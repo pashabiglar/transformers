@@ -155,14 +155,14 @@ else
       #wget https://osf.io/qs4u6/download -O $FILE
 
       # fnc-dev delexicalized using figerspecific
-      #wget https://osf.io/jx32m/download   -O $FILE
+      wget https://osf.io/jx32m/download   -O $FILE
 
       # fnc-test delexicalized using figerspecific
       #wget https://osf.io/jentp/download   -O $FILE
 
 
         # fnc-test lexicalized/plaintext
-      wget https://osf.io/r5uvd/download -O $FILE
+      #wget https://osf.io/r5uvd/download -O $FILE
 
 
 
