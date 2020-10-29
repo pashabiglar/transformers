@@ -928,8 +928,8 @@ class PreTrainedTokenizer(SpecialTokensMixin):
 
                 #updated from uofa fact verification team, august 2020: if the tasktype is mod2, use a custom vocabulary
                 #which supports overlap aware delexicalized tokens eg:  bert-cased-mod2
-                if(tokenizer_type)=="mod2":
-                    pretrained_model_name_or_path=pretrained_model_name_or_path+"-mod2"
+                if(tokenizer_type)=="delex":
+                    pretrained_model_name_or_path=pretrained_model_name_or_path+"-delex"
                 vocab_files[file_id] = map_list[pretrained_model_name_or_path]
             if (
                 cls.pretrained_init_configuration

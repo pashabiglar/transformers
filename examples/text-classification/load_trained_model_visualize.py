@@ -210,7 +210,7 @@ class StudentTeacherTrainer:
         self.test_compute_metrics = test_compute_metrics
         self.eval_compute_metrics = eval_compute_metrics
         self.compute_metrics = None
-        # even though we train two models using student teacher architecture we weill only use the student model to do evaluation on fnc-dev mod2 dataset
+        # even though we train two models using student teacher architecture we weill only use the student model to do evaluation on fnc-dev delex dataset
         self.model = None
         self.args = args
         self.default_data_collator = default_data_collator
@@ -1735,17 +1735,17 @@ def run_loading_and_testing(model_args, data_args, training_args):
             else None
         )
     else:
-        if (training_args.task_type == "mod1"):
+        if (training_args.task_type == "lex"):
             eval_dataset = (
-                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="mod1", mode="dev",
+                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="dev",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_eval
                 else None
             )
         else:
-            if (training_args.task_type == "mod2"):
+            if (training_args.task_type == "delex"):
                 eval_dataset = (
-                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="dev",
+                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_eval
                     else None
@@ -1753,24 +1753,24 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     if (training_args.do_train_1student_1teacher == True):
         test_dataset = (
-            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="test",
+            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
                         cache_dir=model_args.cache_dir)
             if training_args.do_predict
             else None
         )
     else:
-        if (training_args.task_type == "mod1"):
+        if (training_args.task_type == "lex"):
             test_dataset = (
-                GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="mod1", mode="test",
+                GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="lex", mode="test",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_predict
                 else None
             )
 
         else:
-            if (training_args.task_type == "mod2"):
+            if (training_args.task_type == "delex"):
                 test_dataset = (
-                    GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="test",
+                    GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_predict
                     else None
