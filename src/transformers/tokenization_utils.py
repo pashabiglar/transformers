@@ -917,7 +917,7 @@ class PreTrainedTokenizer(SpecialTokensMixin):
         resume_download = kwargs.pop("resume_download", False)
         proxies = kwargs.pop("proxies", None)
         local_files_only = kwargs.pop("local_files_only", False)
-        tokenizer_type = kwargs.pop("tokenizer_type", "mod1")
+        tokenizer_type = kwargs.pop("tokenizer_type", "lex")
 
         s3_models = list(cls.max_model_input_sizes.keys())
         vocab_files = {}
