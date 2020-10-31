@@ -49,8 +49,8 @@ from tqdm.auto import tqdm, trange
 import os
 
 
-from bertviz import head_view
-os.chdir("/content/gdrive/My Drive/colab_fall2020/transformers2/transformers/src")
+from bertviz.bertviz import head_view
+#os.chdir("/content/gdrive/My Drive/colab_fall2020/transformers2/transformers/src")
 from transformers.data.data_collator import DataCollator, default_data_collator, collate_batch_parallel_datasets
 from transformers.file_utils import is_apex_available, is_torch_tpu_available
 from transformers.modeling_utils import PreTrainedModel
@@ -77,7 +77,7 @@ from transformers import (
     glue_tasks_num_labels,
     set_seed,
 )
-os.chdir("/content/gdrive/My Drive/colab_fall2020/transformers2/transformers/examples/text-classification")
+#os.chdir("/content/gdrive/My Drive/colab_fall2020/transformers2/transformers/examples/text-classification")
 import git
 
 
