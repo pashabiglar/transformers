@@ -1915,6 +1915,10 @@ def main():
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses(args=configs_split)
 
+    training_args.output_dir=training_args.output_dir.replace("%20"," ")
+    data_args.data_dir=data_args.data_dir.replace("%20"," ")
+    training_args.toy_data_dir_path=training_args.toy_data_dir_path.replace("%20"," ")
+
     if (
         os.path.exists(training_args.output_dir)
         and os.listdir(training_args.output_dir)
