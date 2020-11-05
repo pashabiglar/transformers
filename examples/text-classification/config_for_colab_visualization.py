@@ -1,5 +1,5 @@
 [BERT]
-model_name_or_path="bert-base-uncased"
+model_name_or_path="bert-base-cased"
 task_name="fevercrossdomain"
 do_train=True
 do_eval=True
