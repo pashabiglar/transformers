@@ -930,6 +930,9 @@ class PreTrainedTokenizer(SpecialTokensMixin):
                 #which supports overlap aware delexicalized tokens eg:  bert-cased-mod2
                 if(tokenizer_type)=="delex":
                     pretrained_model_name_or_path=pretrained_model_name_or_path+"-delex"
+                    import sys
+                    print("found that model name path needs to be added delex. going to exit")
+                    sys.exit()
                 vocab_files[file_id] = map_list[pretrained_model_name_or_path]
             if (
                 cls.pretrained_init_configuration
