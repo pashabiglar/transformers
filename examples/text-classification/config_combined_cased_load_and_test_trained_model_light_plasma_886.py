@@ -1,5 +1,5 @@
 [BERT]
-model_name_or_path="bert-base-cased"
+model_name_or_path="bert-base-cased-delex"
 task_name="fevercrossdomain"
 do_train=True
 do_eval=True
@@ -26,3 +26,4 @@ toy_data_dir_path="/Users/mordor/research/huggingface/src/transformers/data/data
 fever_in_domain_accuracy_on_toy_data_17_datapoints=0.9375
 fever_cross_domain_accuracy_on_toy_data_17_datapoints=0.875
 fever_cross_domain_fncscore_on_toy_data_17_datapoints=0.9
+overwrite_cache=True

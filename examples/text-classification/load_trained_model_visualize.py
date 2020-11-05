@@ -23,7 +23,7 @@ Original file is located at
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
-CONFIG_FILE_TO_TEST_WITH="config_for_colab_visualization.py"
+CONFIG_FILE_TO_TEST_WITH="config_combined_cased_load_and_test_trained_model_light_plasma_886.py"
 import configparser
 
 import logging
