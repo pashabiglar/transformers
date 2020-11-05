@@ -1,5 +1,5 @@
 import sys,os
-IPYNB_FILENAME = 'load_trained_model_visualize.ipynb'
+IPYNB_FILENAME = 'load_trained_model_visualize_student_teacher_delex.ipynb'
 CONFIG_FILENAME = 'x.config_ipynb'
 
 def main(argv):
