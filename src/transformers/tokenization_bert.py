@@ -36,7 +36,7 @@ PRETRAINED_VOCAB_FILES_MAP = {
     "vocab_file": {
         #for uofa's student teacher model we use a vocab file built on top of bert-base-uncased-vocab.txt, but has mappings for mod2 tokens like PERSON-C1
         "bert-base-uncased-delex": "https://osf.io/zjrdv/download",
-        "bert-base-cased-delex": "https://osf.io/v4n7d/download",
+        "bert-base-cased-delex": "https://osf.io/3ubnh/",
         "bert-base-uncased": "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-vocab.txt",
         "bert-base-cased": "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-cased-vocab.txt",
 
