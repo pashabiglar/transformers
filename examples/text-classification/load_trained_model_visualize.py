@@ -1688,6 +1688,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
         force_download=True,
+        do_lower_case=False
     )
 
     #when in student-teacher mode, you need two tokenizers, one for lexicalized data, and one for the delexicalized data
@@ -1696,7 +1697,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
         force_download=True,
-        tokenizer_type="delex"
+        tokenizer_type="delex",
+        do_lower_case=False
     )
 
 
