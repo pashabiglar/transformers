@@ -26,3 +26,4 @@ toy_data_dir_path="/content/gdrive/My%%20Drive/colab_fall2020/data/fever/fevercr
 fever_in_domain_accuracy_on_toy_data_17_datapoints=0.9375
 fever_cross_domain_accuracy_on_toy_data_17_datapoints=0.875
 fever_cross_domain_fncscore_on_toy_data_17_datapoints=0.9
+overwrite_cache=True
