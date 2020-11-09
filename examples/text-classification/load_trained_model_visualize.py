@@ -1855,7 +1855,11 @@ def run_loading_and_testing(model_args, data_args, training_args):
     # refer:https://tinyurl.com/y5dyshnh for further details regarding accuracies
 
     model =None
-    model_path = wget.download(url)    
+
+    #model_path = wget.download(url)
+    # use for laptop
+    model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/student_teacher_trained_model.bin"
+
     device = torch.device('cpu')
 
     if use_student_teacher==True:
@@ -1870,8 +1874,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     
 
     model.load_state_dict(torch.load(model_path, map_location=device))
-    #model.eval()
-    
+
     
 
     #if using the default model of bertviz
@@ -1899,6 +1902,15 @@ def run_loading_and_testing(model_args, data_args, training_args):
     inputs = tokenizer_to_use.encode_plus(sentence_a, sentence_b, return_tensors='pt', add_special_tokens=True)
     token_type_ids = inputs['token_type_ids']
     input_ids = inputs['input_ids']
+    '''
+    attention[layer][0][num_heads][seq_length][seq_length]
+    so to get the attention weight given by layer 2, head 3, to token 7 (of all the x tokens when both sequences were 
+    combined), when the home pointer is in token 5, you should do:
+    
+    attention[1][0][6][4] 
+    
+    '''
+
     attention = model(input_ids, token_type_ids=token_type_ids)[-1]
     input_id_list = input_ids[0].tolist()  # Batch index 0
     tokens = tokenizer_to_use.convert_ids_to_tokens(input_id_list)
