@@ -1807,17 +1807,31 @@ def run_loading_and_testing(model_args, data_args, training_args):
     def sort_weights(dict_layer_head_weights):
         return {k: v for k, v in sorted(dict_layer_head_weights.items(), key=lambda item: item[1],reverse=True)}
 
-    def find_aggregate_attention_per_token(attention,tokens,dataset_to_use,remove_stop_words=False, remove_cls_sep=False):
 
-        #create a dictionary to store overall attention of a given head and a layer. maybe can eventually store it in a matrix
+    def get_attention_given_dataset(dataloader,model,tokenizer,remove_stop_words=True, remove_cls_sep=True):
+        attention=claim_evidence_plain_text=None
 
-        #lets starts with 12th layer, 12th attention head
-
+        # create a dictionary to store overall attention of a given head and a layer. maybe can eventually store it in a matrix
+        # lets start with 12th layer, 12th attention head- eventually we wil need to create a 12x12 matrix of such dicts for 12 layers and 12 heads
         dict_layer12_head_12={}
 
-        for token in tokens:
-            dict_layer12_head_12.update({token:0})
 
+
+        for each_claim_evidence_pair in tqdm(dataloader, desc="getting attention per data point"):
+            token_type_ids = each_claim_evidence_pair.token_type_ids
+            input_ids = each_claim_evidence_pair.input_ids
+            assert len(token_type_ids)==len(input_ids)
+            input_ids_tensor = torch.tensor(np.reshape(input_ids,(1,len(input_ids))))
+            token_type_ids_tensor = torch.tensor(np.reshape(token_type_ids,(1,len(token_type_ids))))
+            attention = model(input_ids_tensor, token_type_ids=token_type_ids_tensor)[-1]
+            claim_evidence_plain_text = tokenizer.decode(input_ids)
+            find_aggregate_attention_per_token(attention, claim_evidence_plain_text.split(),dict_layer12_head_12)
+
+        assert attention is not None
+        assert claim_evidence_plain_text is not None
+        return sort_weights(dict_layer12_head_12)
+
+    def find_aggregate_attention_per_token(attention,tokens,dict_layer12_head_12):
         for layer_index,per_layer_attention in enumerate(attention):
             if(layer_index==11):
                 # lets starts with 12th layer, 12th attention head
@@ -1827,9 +1841,13 @@ def run_loading_and_testing(model_args, data_args, training_args):
                             for per_left_token_attention in per_head_attention:
                                 for weight,token in zip(per_left_token_attention.data.tolist(),tokens):
                                     current_attention_weight=dict_layer12_head_12.get(token,-1)
+                                    #if the token already exists, increase its attention weight. else set its attention weight for the first time
                                     if not current_attention_weight==-1:
                                         current_attention_weight+=weight
                                         dict_layer12_head_12[token]= current_attention_weight
+                                    else:
+                                        dict_layer12_head_12[token] = weight
+
 
         return dict_layer12_head_12
 
@@ -1861,8 +1879,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
         )
 
     tokenizer_to_use=None
-    use_lex=False
-    use_student_teacher=True
+    use_lex=True
+    use_student_teacher=False
     use_bert_viz_model=False
     #best student teacher trained (aka combined) models
     #url = 'https://osf.io/twbmu/download' # light-plasma combined trained model-this model gave 59.31 cross domain fnc score and 69.21for cross domain accuracy
@@ -1888,6 +1906,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #model_path = wget.download(url)
     # use for laptop
     model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/student_teacher_trained_model.bin"
+    if (use_lex == True):
+        model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/lex_trained_model.bin"
+
 
     device = torch.device('cpu')
 
@@ -1942,28 +1963,14 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     attention = model(input_ids, token_type_ids=token_type_ids)[-1]
     input_id_list = input_ids[0].tolist()  # Batch index 0
-    #tokens = tokenizer_to_use.convert_ids_to_tokens(input_id_list)
+    tokens = tokenizer_to_use.convert_ids_to_tokens(input_id_list)
     call_html()
-    attention, tokens = get_attention_given_dataset(test_dataset,model,tokenizer_to_use)
-
-    #sorted_dict=sort_weights(dict_layer12_head_12)
-
     head_view(attention, tokens)
 
-def get_attention_given_dataset(dataloader,model,tokenizer):
-    attention=claim_evidence_plain_text=None
+    dict_layer_head = get_attention_given_dataset(test_dataset,model,tokenizer_to_use,remove_stop_words=True, remove_cls_sep=True)
 
-    for each_claim_evidence_pair in tqdm(dataloader, desc="getting attention per data point"):
-        token_type_ids = each_claim_evidence_pair.token_type_ids
-        input_ids = each_claim_evidence_pair.input_ids
-        attention = model(input_ids, token_type_ids=token_type_ids)[-1]
-        claim_evidence_plain_text = tokenizer.batch_decode(each_claim_evidence_pair['input_ids'])
-        find_aggregate_attention_per_token(attention, claim_evidence_plain_text.split(), test_dataset,
-                                                                  remove_stop_words=True, remove_cls_sep=True)
 
-    assert attention is not None
-    assert claim_evidence_plain_text is not None
-    return attention,claim_evidence_plain_text.split()
+
 
 
 def main():
