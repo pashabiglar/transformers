@@ -1807,7 +1807,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     def sort_weights(dict_layer_head_weights):
         return {k: v for k, v in sorted(dict_layer_head_weights.items(), key=lambda item: item[1],reverse=True)}
 
-    def find_aggregate_attention_per_token(attention,tokens):
+    def find_aggregate_attention_per_token(attention,tokens,dataset_to_use,remove_stop_words=False, remove_cls_sep=False):
 
         #create a dictionary to store overall attention of a given head and a layer. maybe can eventually store it in a matrix
 
@@ -1932,7 +1932,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     token_type_ids = inputs['token_type_ids']
     input_ids = inputs['input_ids']
     '''
-    attention[layer][0][num_heads][seq_length][seq_length]
+    structure of attention=attention[layer][0][num_heads][seq_length][seq_length]
     so to get the attention weight given by layer 2, head 3, to token 7 (of all the x tokens when both sequences were 
     combined), when the home pointer is in token 5, you should do:
     
@@ -1942,14 +1942,29 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     attention = model(input_ids, token_type_ids=token_type_ids)[-1]
     input_id_list = input_ids[0].tolist()  # Batch index 0
-    tokens = tokenizer_to_use.convert_ids_to_tokens(input_id_list)
+    #tokens = tokenizer_to_use.convert_ids_to_tokens(input_id_list)
     call_html()
-    dict_layer12_head_12= find_aggregate_attention_per_token(attention, tokens)
-    sorted_dict=sort_weights(dict_layer12_head_12)
+    attention, tokens = get_attention_given_dataset(test_dataset,model,tokenizer_to_use)
+
+    #sorted_dict=sort_weights(dict_layer12_head_12)
 
     head_view(attention, tokens)
 
-    
+def get_attention_given_dataset(dataloader,model,tokenizer):
+    attention=claim_evidence_plain_text=None
+
+    for each_claim_evidence_pair in tqdm(dataloader, desc="getting attention per data point"):
+        token_type_ids = each_claim_evidence_pair.token_type_ids
+        input_ids = each_claim_evidence_pair.input_ids
+        attention = model(input_ids, token_type_ids=token_type_ids)[-1]
+        claim_evidence_plain_text = tokenizer.batch_decode(each_claim_evidence_pair['input_ids'])
+        find_aggregate_attention_per_token(attention, claim_evidence_plain_text.split(), test_dataset,
+                                                                  remove_stop_words=True, remove_cls_sep=True)
+
+    assert attention is not None
+    assert claim_evidence_plain_text is not None
+    return attention,claim_evidence_plain_text.split()
+
 
 def main():
     # See all possible arguments in src/transformers/training_args.py
