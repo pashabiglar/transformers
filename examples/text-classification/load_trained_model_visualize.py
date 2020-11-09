@@ -1804,6 +1804,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
     dev_compute_metrics = build_compute_metrics_fn("feverindomain")
     test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
 
+    def sort_weights(dict_layer_head_weights):
+        return {k: v for k, v in sorted(dict_layer_head_weights.items(), key=lambda item: item[1],reverse=True)}
+
     def find_aggregate_attention_per_token(attention,tokens):
 
         #create a dictionary to store overall attention of a given head and a layer. maybe can eventually store it in a matrix
@@ -1942,6 +1945,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
     tokens = tokenizer_to_use.convert_ids_to_tokens(input_id_list)
     call_html()
     dict_layer12_head_12= find_aggregate_attention_per_token(attention, tokens)
+    sorted_dict=sort_weights(dict_layer12_head_12)
+
     head_view(attention, tokens)
 
     
