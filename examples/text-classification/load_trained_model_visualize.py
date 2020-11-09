@@ -1804,6 +1804,32 @@ def run_loading_and_testing(model_args, data_args, training_args):
     dev_compute_metrics = build_compute_metrics_fn("feverindomain")
     test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
 
+    def find_aggregate_attention_per_token(attention,tokens):
+
+        #create a dictionary to store overall attention of a given head and a layer. maybe can eventually store it in a matrix
+
+        #lets starts with 12th layer, 12th attention head
+
+        dict_layer12_head_12={}
+
+        for token in tokens:
+            dict_layer12_head_12.update({token:0})
+
+        for layer_index,per_layer_attention in enumerate(attention):
+            if(layer_index==11):
+                # lets starts with 12th layer, 12th attention head
+                for heads in per_layer_attention:
+                    for head_index,per_head_attention in enumerate(heads):
+                        if(head_index==11):
+                            for per_left_token_attention in per_head_attention:
+                                for weight,token in zip(per_left_token_attention.data.tolist(),tokens):
+                                    current_attention_weight=dict_layer12_head_12.get(token,-1)
+                                    if not current_attention_weight==-1:
+                                        current_attention_weight+=weight
+                                        dict_layer12_head_12[token]= current_attention_weight
+
+        return dict_layer12_head_12
+
 
 
     if training_args.do_train_1student_1teacher:
@@ -1915,7 +1941,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
     input_id_list = input_ids[0].tolist()  # Batch index 0
     tokens = tokenizer_to_use.convert_ids_to_tokens(input_id_list)
     call_html()
+    dict_layer12_head_12= find_aggregate_attention_per_token(attention, tokens)
     head_view(attention, tokens)
+
     
 
 def main():
