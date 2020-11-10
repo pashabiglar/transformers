@@ -24,7 +24,8 @@ from tqdm import tqdm
 from ...file_utils import is_tf_available
 from ...tokenization_utils import PreTrainedTokenizer
 from .utils import DataProcessor, InputExample, InputFeatures
-from stop_words import get_stop_words
+import nltk
+from nltk.corpus import stopwords
 
 if is_tf_available():
     import tensorflow as tf
@@ -181,20 +182,25 @@ def _glue_convert_examples_to_features(
 
     examples_no_stopwords=[]
     if(remove_stop_words==True):
-        stop_words = get_stop_words('english')
+        stop_words=stopwords.words('english')
+        stop_words.extend([":","The","A","`","-"])
 
         for example_sw in examples:
             text_a_tokens=example_sw.text_a.split(" ")
             text_a_tokens_new=[]
             for each_token in text_a_tokens:
-                if not each_token in stop_words:
+                if (each_token == "-"):
+                    print("found -")
+                if not each_token.lower() in stop_words:
                     text_a_tokens_new.append(each_token)
             example_sw.text_a=" ".join(text_a_tokens_new)
 
             text_b_tokens=example_sw.text_b.split(" ")
             text_b_tokens_new=[]
             for each_token in text_b_tokens:
-                if not each_token in stop_words:
+                if(each_token=="-"):
+                    print("found -")
+                if not each_token.lower() in stop_words:
                     text_b_tokens_new.append(each_token)
             example_sw.text_b=" ".join(text_b_tokens_new)
 

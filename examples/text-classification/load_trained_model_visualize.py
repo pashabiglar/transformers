@@ -25,7 +25,7 @@ Original file is located at
 """ Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
 CONFIG_FILE_TO_TEST_WITH="config_for_attention_visualization_laptop.py"
 import configparser
-
+import sys, getopt
 import logging
 import math
 import os
@@ -1611,11 +1611,15 @@ class ModelArguments:
     cache_dir: Optional[str] = field(
         default=None, metadata={"help": "Where do you want to store the pretrained models downloaded from s3"}
     )
-def read_and_merge_config_entries():
+def read_and_merge_config_entries(base_file_path):
+
     config = configparser.ConfigParser()
-    config.read(CONFIG_FILE_TO_TEST_WITH)
+    print(f"config file path{base_file_path+CONFIG_FILE_TO_TEST_WITH}")
+
+    config.read(base_file_path+CONFIG_FILE_TO_TEST_WITH)
     #assert not len(config.sections())==0
     combined_configs=[]
+
     for each_section in config.sections():
         for (each_key, each_val) in config.items(each_section):
             #some config entries of type bool just need to exist. doesnt need x=True.
@@ -1627,6 +1631,7 @@ def read_and_merge_config_entries():
                 combined_configs.append("--" + each_key)
                 combined_configs.append(str(each_val).replace("\"",""))
     combined_configs_str=" ".join(combined_configs)
+
     return combined_configs_str
 
 
@@ -1659,8 +1664,6 @@ def run_loading_and_testing(model_args, data_args, training_args):
         training_args.fp16,
     )
     logger.info("Training/evaluation parameters %s", training_args)
-
-
 
 
     # Set seed
@@ -1848,6 +1851,15 @@ def run_loading_and_testing(model_args, data_args, training_args):
             except ValueError:
                 print("")
 
+            # keep finding and removing PAD until it doesnt exist
+            try:
+                while True:
+                    index_cls = input_ids.index(0)
+                    del input_ids[index_cls]
+                    del token_type_ids[index_cls]
+
+            except ValueError:
+                print("")
 
             assert len(token_type_ids) == len(input_ids)
 
@@ -2014,15 +2026,35 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
 
 
-def main():
+def main(argv):
+
+    base_file_path=""
+    try:
+        opts, args = getopt.getopt(argv, "hi:o:", ["ifile=", "ofile="])
+    except getopt.GetoptError:
+        print("ERroror.")
+        'test.py -i <inputfile> -o <outputfile>'
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-i':
+            base_file_path= arg
+
+
+
     # See all possible arguments in src/transformers/training_args.py
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
 
-    configs = read_and_merge_config_entries()
-    print(f"value of configs is {configs}")
+    configs = read_and_merge_config_entries(base_file_path)
+
     configs_split = configs.split()
+
+
+    assert len(configs_split)>0
+
+
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
+    
     model_args, data_args, training_args = parser.parse_args_into_dataclasses(args=configs_split)
 
     training_args.output_dir=training_args.output_dir.replace("%20"," ")
@@ -2042,8 +2074,10 @@ def main():
     run_loading_and_testing(model_args, data_args, training_args)
    
 
-if __name__ == "__main__":    
-    main()
+if __name__ == "__main__":
+
+
+    main(sys.argv[1:])
 
 
 

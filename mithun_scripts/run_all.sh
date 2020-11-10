@@ -78,7 +78,6 @@ export MAX_SEQ_LENGTH="128"
 export OUTPUT_DIR="$OUTPUT_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE/$BERT_MODEL_NAME/$MAX_SEQ_LENGTH/"
 echo $OUTPUT_DIR
 
-
 echo "OUTPUT_DIR=$OUTPUT_DIR"
 
 echo "value of epochs is $EPOCHS"
@@ -139,6 +138,6 @@ export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME     
 
 #actual code runs
 #./run_glue.sh
-#./load_model_test.sh
+./load_model_test.sh
 
 
