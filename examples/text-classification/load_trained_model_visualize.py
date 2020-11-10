@@ -1828,15 +1828,25 @@ def run_loading_and_testing(model_args, data_args, training_args):
             cls_indices =  list(filter(lambda x: input_ids[x] == 101, range(len(input_ids))))
             sep_indices = list(filter(lambda x: input_ids[x] == 102, range(len(input_ids))))
 
+            #keep finding SEP until it doesnt exist
+            try:
+                while True:
+                    index_sep=input_ids.index(102)
+                    del input_ids[index_sep]
+                    del token_type_ids[index_sep]
 
+            except ValueError:
+                print("")
 
-            for index,x in enumerate(cls_indices):
-                del input_ids[x-index]
-                del token_type_ids[x-index]
+            # keep finding CLS until it doesnt exist
+            try:
+                while True:
+                    index_cls = input_ids.index(101)
+                    del input_ids[index_cls]
+                    del token_type_ids[index_cls]
 
-            for index2,x in enumerate(sep_indices):
-                del input_ids[x-index2]
-                del token_type_ids[x-index2]
+            except ValueError:
+                print("")
 
 
             assert len(token_type_ids) == len(input_ids)
@@ -1980,6 +1990,25 @@ def run_loading_and_testing(model_args, data_args, training_args):
     head_view(attention, tokens)
 
     dict_layer_head = get_attention_given_dataset(test_dataset,model_for_bert,tokenizer_to_use,remove_stop_words=True, remove_cls_sep=True)
+
+    # empty out the file which stores intermediate evaluations
+    output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
+    file_to_write_attention = output_dir_absolute_path + "attention_weights_" + \
+                                                git_details['repo_short_sha'] + ".txt"
+    # empty out the
+    with open(file_to_write_attention, "w") as writer:
+        writer.write("")
+
+
+
+    #write the aggregated sorted attention weights to disk
+    with open(file_to_write_attention, "a+") as writer:
+        logger.info(f"***** (Going to write attention results to disk at {file_to_write_attention} *****")
+        for k,v in dict_layer_head.items():
+            writer.write(f"{k}:{v}")
+            writer.write(f"\n")
+
+
 
 
 
