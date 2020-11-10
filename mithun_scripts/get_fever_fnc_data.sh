@@ -10,7 +10,8 @@
 #######fevercrossdomain mod1 (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
 if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUB_TASK_TYPE" = "figerspecific" ]; then
 
-echo "found task type is mod1 and task name as fever cross domain"
+echo "found task type is lex and task name as fever cross domain"
+
 
 echo $DATA_DIR
 mkdir -p $DATA_DIR
@@ -21,22 +22,24 @@ FILE=$DATA_DIR/train.tsv
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/train.tsv     -O $FILE
+    wget https://osf.io/r6mdz/download -O $FILE
 fi
 
 FILE=$DATA_DIR/dev.tsv
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/dev.tsv -O $FILE
+    wget https://osf.io/azf6t/download -O $FILE
 fi
+
+
 
 #note that the test file is fnc dev partition
 FILE=$DATA_DIR/test.tsv
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    #fnc-dev lexicalized plaintext
+        #fnc-dev lexicalized plaintext
       #wget https://osf.io/qs4u6/download -O $FILE
 
       # fnc-dev delexicalized using figerspecific
@@ -149,8 +152,9 @@ if test -f "$FILE";then
 else
 
     #uncomment this if you want to feed lexicalized version of the dataset (fever-dev) as  dev partition. this is useful when you want to sanity check  how a lexicalized model is performing
-    wget https://osf.io/azf6t/download -O $FILE
-    #wget https://osf.io/r5pz3/download -O $FILE
+    #wget https://osf.io/azf6t/download -O $FILE
+
+    wget https://osf.io/r5pz3/download -O $FILE
 
 fi
 
@@ -172,11 +176,11 @@ else
       #wget https://osf.io/jx32m/download   -O $FILE
 
       # fnc-test delexicalized using figerspecific
-      #wget https://osf.io/jentp/download   -O $FILE
+      wget https://osf.io/jentp/download   -O $FILE
 
 
         # fnc-test lexicalized/plaintext
-      wget https://osf.io/r5uvd/download -O $FILE
+      #wget https://osf.io/r5uvd/download -O $FILE
 
 
 

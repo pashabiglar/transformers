@@ -1705,7 +1705,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #this is needed for visualization
     config.output_attentions=True
 
-    # Get datasets
+
     if (training_args.do_train_1student_1teacher == True):
         model_teacher = AutoModelForSequenceClassification.from_pretrained(
             model_args.model_name_or_path,
@@ -1755,7 +1755,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     if (training_args.do_train_1student_1teacher == True):
         test_dataset = (
-            GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="delex", mode="test",
+            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
                         cache_dir=model_args.cache_dir)
             if training_args.do_predict
             else None
