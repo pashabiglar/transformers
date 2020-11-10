@@ -1825,8 +1825,21 @@ def run_loading_and_testing(model_args, data_args, training_args):
             assert len(token_type_ids)==len(input_ids)
 
             #CLS=101 SEP=102
-            input_ids.remove(101)
-            input_ids.remove(102)
+            cls_indices =  list(filter(lambda x: input_ids[x] == 101, range(len(input_ids))))
+            sep_indices = list(filter(lambda x: input_ids[x] == 102, range(len(input_ids))))
+
+
+
+            for index,x in enumerate(cls_indices):
+                del input_ids[x-index]
+                del token_type_ids[x-index]
+
+            for index2,x in enumerate(sep_indices):
+                del input_ids[x-index2]
+                del token_type_ids[x-index2]
+
+
+            assert len(token_type_ids) == len(input_ids)
 
             input_ids_tensor = torch.tensor(np.reshape(input_ids,(1,len(input_ids))))
             token_type_ids_tensor = torch.tensor(np.reshape(token_type_ids,(1,len(token_type_ids))))
