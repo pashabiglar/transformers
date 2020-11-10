@@ -74,7 +74,7 @@ class GlueDataset(Dataset):
         limit_length: Optional[int] = None,
         mode: Union[str, Split] = Split.train,
         cache_dir: Optional[str] = None,
-
+            remove_stop_words_in=False
 
     ):
         self.args = args
@@ -148,10 +148,12 @@ class GlueDataset(Dataset):
                 self.features = glue_convert_examples_to_features(
                     examples,
                     tokenizer,
+                    remove_stop_words=remove_stop_words_in,
                     max_length=args.max_seq_length,
                     task=args.task_name,
                     label_list=label_list,
                     output_mode=self.output_mode,
+
                 )
 
 

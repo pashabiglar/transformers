@@ -95,6 +95,8 @@ import torch
 
 import wget
 import torch
+from stop_words import get_stop_words
+
 if is_apex_available():
     from apex import amp
 
@@ -1763,7 +1765,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     else:
         if (training_args.task_type == "lex"):
             test_dataset = (
-                GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="lex", mode="test",
+                GlueDataset(data_args, tokenizer=tokenizer_lex, remove_stop_words_in=True,task_type="lex", mode="test",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_predict
                 else None
@@ -1821,6 +1823,11 @@ def run_loading_and_testing(model_args, data_args, training_args):
             token_type_ids = each_claim_evidence_pair.token_type_ids
             input_ids = each_claim_evidence_pair.input_ids
             assert len(token_type_ids)==len(input_ids)
+
+            #CLS=101 SEP=102
+            input_ids.remove(101)
+            input_ids.remove(102)
+
             input_ids_tensor = torch.tensor(np.reshape(input_ids,(1,len(input_ids))))
             token_type_ids_tensor = torch.tensor(np.reshape(token_type_ids,(1,len(token_type_ids))))
             attention = model(input_ids_tensor, token_type_ids=token_type_ids_tensor)[-1]

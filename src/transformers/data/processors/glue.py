@@ -24,7 +24,7 @@ from tqdm import tqdm
 from ...file_utils import is_tf_available
 from ...tokenization_utils import PreTrainedTokenizer
 from .utils import DataProcessor, InputExample, InputFeatures
-
+from stop_words import get_stop_words
 
 if is_tf_available():
     import tensorflow as tf
@@ -35,10 +35,12 @@ logger = logging.getLogger(__name__)
 def glue_convert_examples_to_features(
     examples: Union[List[InputExample], "tf.data.Dataset"],
     tokenizer: PreTrainedTokenizer,
+    remove_stop_words,
     max_length: Optional[int] = None,
     task=None,
     label_list=None,
     output_mode=None,
+
 ):
     """
     Loads a data file into a list of ``InputFeatures``
@@ -63,8 +65,7 @@ def glue_convert_examples_to_features(
             raise ValueError("When calling glue_convert_examples_to_features from TF, the task parameter is required.")
         return _tf_glue_convert_examples_to_features(examples, tokenizer, max_length=max_length, task=task)
     return _glue_convert_examples_to_features(
-        examples, tokenizer, max_length=max_length, task=task, label_list=label_list, output_mode=output_mode
-    )
+        examples, tokenizer, remove_stop_words,max_length=max_length, task=task, label_list=label_list, output_mode=output_mode)
 
 def glue_convert_pair_examples_to_features(
     examples1: Union[List[InputExample], "tf.data.Dataset"],
@@ -134,10 +135,11 @@ if is_tf_available():
 def _glue_convert_examples_to_features(
     examples: List[InputExample],
     tokenizer: PreTrainedTokenizer,
+    remove_stop_words,
     max_length: Optional[int] = None,
     task=None,
     label_list=None,
-    output_mode=None,
+    output_mode=None
 ):
     logger.info("inside function _glue_convert_examples_to_features")
     if max_length is None:
@@ -177,6 +179,29 @@ def _glue_convert_examples_to_features(
     logger.info(f"value of tokenixer is {tokenizer}")
 
 
+    examples_no_stopwords=[]
+    if(remove_stop_words==True):
+        stop_words = get_stop_words('english')
+
+        for example_sw in examples:
+            text_a_tokens=example_sw.text_a.split(" ")
+            text_a_tokens_new=[]
+            for each_token in text_a_tokens:
+                if not each_token in stop_words:
+                    text_a_tokens_new.append(each_token)
+            example_sw.text_a=" ".join(text_a_tokens_new)
+
+            text_b_tokens=example_sw.text_b.split(" ")
+            text_b_tokens_new=[]
+            for each_token in text_b_tokens:
+                if not each_token in stop_words:
+                    text_b_tokens_new.append(each_token)
+            example_sw.text_b=" ".join(text_b_tokens_new)
+
+            examples_no_stopwords.append(example_sw)
+        examples=examples_no_stopwords
+
+    assert len(examples)>0
     batch_encoding = tokenizer.batch_encode_plus(
         [(example.text_a, example.text_b) for example in examples], max_length=max_length, pad_to_max_length=True,
     )
