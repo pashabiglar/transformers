@@ -8,7 +8,7 @@
 
 
 #######fevercrossdomain mod1 (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
-if [ "$TASK_TYPE" = "mod1" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUB_TASK_TYPE" = "figerspecific" ]; then
+if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUB_TASK_TYPE" = "figerspecific" ]; then
 
 echo "found task type is mod1 and task name as fever cross domain"
 
@@ -36,11 +36,23 @@ FILE=$DATA_DIR/test.tsv
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/lex/dev.tsv -O $FILE
+    #fnc-dev lexicalized plaintext
+      #wget https://osf.io/qs4u6/download -O $FILE
+
+      # fnc-dev delexicalized using figerspecific
+      #wget https://osf.io/jx32m/download   -O $FILE
+
+      # fnc-test delexicalized using figerspecific
+      #wget https://osf.io/jentp/download   -O $FILE
+
+
+        # fnc-test lexicalized/plaintext
+      wget https://osf.io/r5uvd/download -O $FILE
+
 fi
 fi
 ########fevercrossdomain mod2 where delexicalization was done using overlap aware (oa) technique (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
-if [ "$TASK_TYPE" = "mod2" ] && [ "$TASK_NAME" = "fevercrossdomain" ]  && [ "$SUB_TASK_TYPE" = "oa" ]; then
+if [ "$TASK_TYPE" = "delex" ] && [ "$TASK_NAME" = "fevercrossdomain" ]  && [ "$SUB_TASK_TYPE" = "oa" ]; then
 echo "found task type is mod1 and task name as fever cross domain and SUB_TASK_TYPE is oa"
 echo $DATA_DIR
 mkdir -p $DATA_DIR
@@ -74,7 +86,7 @@ fi
 
 
 ########fevercrossdomain mod2 where delexicalixation was done with figer-specific technique (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
-if [ "$TASK_TYPE" = "mod2" ] && [ "$TASK_NAME" = "fevercrossdomain" ]  && [ "$SUB_TASK_TYPE" = "figerspecific" ]; then
+if [ "$TASK_TYPE" = "delex" ] && [ "$TASK_NAME" = "fevercrossdomain" ]  && [ "$SUB_TASK_TYPE" = "figerspecific" ]; then
 
 echo "found task type is mod2 and task name as fever cross domain and sub task type ==figerspecific"
 echo $DATA_DIR
@@ -152,17 +164,19 @@ else
 
       # if you want to use the lexicalized version of the dataset (fnc-dev) as the test partition.
       # this is useful when you want to sanity check  how a lexicalized model is performing
+
+      #fnc-dev lexicalized plaintext
       #wget https://osf.io/qs4u6/download -O $FILE
 
       # fnc-dev delexicalized using figerspecific
-      wget https://osf.io/jx32m/download   -O $FILE
+      #wget https://osf.io/jx32m/download   -O $FILE
 
       # fnc-test delexicalized using figerspecific
       #wget https://osf.io/jentp/download   -O $FILE
 
 
         # fnc-test lexicalized/plaintext
-      #wget https://osf.io/r5uvd/download -O $FILE
+      wget https://osf.io/r5uvd/download -O $FILE
 
 
 

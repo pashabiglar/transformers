@@ -23,7 +23,7 @@ Original file is located at
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
-CONFIG_FILE_TO_TEST_WITH="config_combined_cased_load_and_test_trained_model_light_plasma_886.py"
+CONFIG_FILE_TO_TEST_WITH="config_for_attention_visualization_laptop.py"
 import configparser
 
 import logging
@@ -1721,7 +1721,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
         )
     else:
-        model = AutoModelForSequenceClassification.from_pretrained(
+        model_for_bert = AutoModelForSequenceClassification.from_pretrained(
             model_args.model_name_or_path,
             from_tf=bool(".ckpt" in model_args.model_name_or_path),
             config=config,
@@ -1755,7 +1755,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     if (training_args.do_train_1student_1teacher == True):
         test_dataset = (
-            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
+            GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="delex", mode="test",
                         cache_dir=model_args.cache_dir)
             if training_args.do_predict
             else None
@@ -1869,7 +1869,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
         trainer = Trainer(
             tokenizer_delex,
             tokenizer_lex,
-            model=model,
+            model=model_for_bert,
             args=training_args,
             train_dataset=None,
             eval_dataset=eval_dataset,
@@ -1879,69 +1879,61 @@ def run_loading_and_testing(model_args, data_args, training_args):
         )
 
     tokenizer_to_use=None
-    use_lex=True
-    use_student_teacher=False
-    use_bert_viz_model=False
     #best student teacher trained (aka combined) models
     #url = 'https://osf.io/twbmu/download' # light-plasma combined trained model-this model gave 59.31 cross domain fnc score and 69.21for cross domain accuracy
     #url = 'https://osf.io/vnyad//download' # legendary-voice-1016 combined trained model-this model gave 61.52  cross domain fnc score and  74.4 for cross domain accuracy- wandb graph name legendary-voice-1016
-    if use_student_teacher==True:
-      url = 'https://osf.io/ht9gb/download'  # celestial-sun-1042 combined trained model- githubsha 21dabe wandb_celestial_sun1042 best_cd_acc_fnc_score_71.89_61.12
+    if training_args.do_train_1student_1teacher:
+
+        url = 'https://osf.io/ht9gb/download'  # celestial-sun-1042 combined trained model- githubsha 21dabe wandb_celestial_sun1042 best_cd_acc_fnc_score_71.89_61.12
 
 
     #best  models when trained on fever lexicalized data- if using this model, dont forget to use tokenizer_lex
     #url = 'https://osf.io/q6apm/download'  # link to one of the best lex trained model- trained_model_lex_wandbGraphNameQuietHaze806_accuracy67point5_fncscore64point5_atepoch2.bin...this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
     # url = 'https://osf.io/fus25/download' #trained_model_lex_sweet_water_1001_trained_model_afterepoch1_accuracy6907_fncscore6254.bin
-    if(use_lex==True):
+    if(training_args.task_type=="lex"):
       print("found use_lex==True")
       url = 'https://osf.io/fp89k/download' #trained_model_lex_helpful_vortex_1002_trained_model_afterepoch1_accuracy70point21percent..bin
 
-
-
+    model_path=None
     #url = 'https://osf.io/uspm4/download'  # link to best delex trained model-this gave 55.69 in cross domain fnc score and 54.04 for cross domain accuracy
     # refer:https://tinyurl.com/y5dyshnh for further details regarding accuracies
 
-    model =None
-
     #model_path = wget.download(url)
+
+
     # use for laptop
-    model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/student_teacher_trained_model.bin"
-    if (use_lex == True):
+    if training_args.do_train_1student_1teacher:
+        model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/student_teacher_trained_model.bin"
+    if (training_args.task_type=="lex"):
         model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/lex_trained_model.bin"
 
 
     device = torch.device('cpu')
 
-    if use_student_teacher==True:
+    if training_args.do_train_1student_1teacher:
         print("found that if use_student_teacher==True:")
-        model=model_student
+        model_for_bert=model_student
         tokenizer_to_use=tokenizer_delex
 
-    if use_lex==True:        
+    if training_args.task_type=="lex":
         tokenizer_to_use=tokenizer_lex
-        model=model_teacher
+
 
     
-
-    model.load_state_dict(torch.load(model_path, map_location=device))
+    assert model_path is not None
+    model_for_bert.load_state_dict(torch.load(model_path, map_location=device))
 
     
-
-    #if using the default model of bertviz
-    if (use_bert_viz_model==True):
-      model_version = 'bert-base-cased'
-      model = BertModel.from_pretrained(model_version, output_attentions=True)
-      tokenizer_to_use = BertTokenizer.from_pretrained(model_version, do_lower_case=False)
 
     
     sentence_a = "Soon Marijuana May Lead to Ticket , Not Arrest , in New York"
     sentence_b = "After campaigning on a promise to reform stop-and-frisk , Mayor Bill de Blasio is set to launch his most significant effort to address the issues raised by the policy ."
 
-    if use_student_teacher==True:
+    if training_args.do_train_1student_1teacher:
       sentence_a="Soon Marijuana May Lead to Ticket , Not Arrest , in governmentC1 "
       sentence_b = "After campaigning on a promise to reform stop-and-frisk , Mayor politicianE1 is set to launch his most significant effort to address the issues raised by the policy ."
 
-    assert model is not None
+    assert model_for_bert is not None
     assert url is not None
     assert len(url)>0
     assert tokenizer_to_use is not None
@@ -1961,13 +1953,13 @@ def run_loading_and_testing(model_args, data_args, training_args):
     
     '''
 
-    attention = model(input_ids, token_type_ids=token_type_ids)[-1]
+    attention = model_for_bert(input_ids, token_type_ids=token_type_ids)[-1]
     input_id_list = input_ids[0].tolist()  # Batch index 0
     tokens = tokenizer_to_use.convert_ids_to_tokens(input_id_list)
     call_html()
     head_view(attention, tokens)
 
-    dict_layer_head = get_attention_given_dataset(test_dataset,model,tokenizer_to_use,remove_stop_words=True, remove_cls_sep=True)
+    dict_layer_head = get_attention_given_dataset(test_dataset,model_for_bert,tokenizer_to_use,remove_stop_words=True, remove_cls_sep=True)
 
 
 

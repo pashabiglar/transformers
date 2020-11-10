@@ -130,7 +130,7 @@ export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME     
 --task_type $TASK_TYPE --subtask_type $SUB_TASK_TYPE --machine_to_run_on $MACHINE_TO_RUN_ON --toy_data_dir_path $TOY_DATA_DIR_PATH "
 
 
-
+exit
 #test cases
 #./run_training_tests.sh
 #./run_loading_tests.sh
@@ -139,6 +139,6 @@ export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME     
 
 #actual code runs
 #./run_glue.sh
-./load_model_test.sh
+#./load_model_test.sh
 
 
