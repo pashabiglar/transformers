@@ -1853,11 +1853,11 @@ def run_loading_and_testing(model_args, data_args, training_args):
             input_ids_tensor=None
             token_type_ids_tensor=None
             if (training_args.machine_to_run_on == "hpc") and torch.cuda.is_available():
-                input_ids_tensor = torch.cuda.IntTensor(np.reshape(input_ids, (1, len(input_ids))))
-                token_type_ids_tensor = torch.cuda.IntTensor(np.reshape(token_type_ids, (1, len(token_type_ids))))
+                input_ids_tensor = torch.cuda.LongTensor(np.reshape(input_ids, (1, len(input_ids))))
+                token_type_ids_tensor = torch.cuda.LongTensor(np.reshape(token_type_ids, (1, len(token_type_ids))))
             if (training_args.machine_to_run_on == "laptop"):
-                input_ids_tensor = torch.IntTensor(np.reshape(input_ids,(1,len(input_ids))))
-                token_type_ids_tensor = torch.IntTensor(np.reshape(token_type_ids,(1,len(token_type_ids))))
+                input_ids_tensor = torch.LongTensor(np.reshape(input_ids,(1,len(input_ids))))
+                token_type_ids_tensor = torch.LongTensor(np.reshape(token_type_ids,(1,len(token_type_ids))))
 
             assert input_ids_tensor is not None
             assert token_type_ids_tensor is not None
