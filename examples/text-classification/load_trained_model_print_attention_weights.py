@@ -1941,7 +1941,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     else:
         model_path = wget.download(url)
-        device = torch.device('gpu')
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        
 
 
 
