@@ -35,15 +35,15 @@ echo $args
 mkdir -p OUTPUT_DIR
 
 export EXAMPLES_DIR_PATH="../examples/text-classification/"
-echo "value of EXAMPLES_DIR_PATH"
-echo $EXAMPLES_DIR_PATH
-
+echo "value of MACHINE_TO_RUN_ON"
+echo $MACHINE_TO_RUN_ON
 env CUDA_VISIBLE_DEVICES=0
 export CUDA_VISIBLE_DEVICES=0
+
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
-       python3 ../examples/text-classification/load_trained_model_predict.py $args
+       python3 ../examples/text-classification/load_trained_model_visualize.py -i $EXAMPLES_DIR_PATH -o $MACHINE_TO_RUN_ON
 else
        #python3 ../examples/text-classification/load_trained_model_predict.py $args
-       python ../examples/text-classification/load_trained_model_visualize.py -i $EXAMPLES_DIR_PATH
+       python ../examples/text-classification/load_trained_model_visualize.py -i $EXAMPLES_DIR_PATH -o $MACHINE_TO_RUN_ON
 fi
 

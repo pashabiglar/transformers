@@ -23,7 +23,8 @@ Original file is located at
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
-CONFIG_FILE_TO_TEST_WITH="config_for_attention_visualization_laptop.py"
+CONFIG_FILE_TO_TEST_WITH_LAPTOP="config_for_attention_visualization_laptop.py"
+CONFIG_FILE_TO_TEST_WITH_HPC="config_for_attention_visualization_hpc.py"
 import configparser
 import sys, getopt
 import logging
@@ -1611,12 +1612,15 @@ class ModelArguments:
     cache_dir: Optional[str] = field(
         default=None, metadata={"help": "Where do you want to store the pretrained models downloaded from s3"}
     )
-def read_and_merge_config_entries(base_file_path):
+def read_and_merge_config_entries(base_file_path,machine_to_run_on):
+    config_file_touse=CONFIG_FILE_TO_TEST_WITH_LAPTOP
+    if(machine_to_run_on=="hpc"):
+        config_file_touse=CONFIG_FILE_TO_TEST_WITH_HPC
 
+    assert len(config_file_touse)>0
     config = configparser.ConfigParser()
-    print(f"config file path{base_file_path+CONFIG_FILE_TO_TEST_WITH}")
 
-    config.read(base_file_path+CONFIG_FILE_TO_TEST_WITH)
+    config.read(base_file_path+config_file_touse)
     #assert not len(config.sections())==0
     combined_configs=[]
 
@@ -2029,6 +2033,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 def main(argv):
 
     base_file_path=""
+    machine_to_run_on=""
     try:
         opts, args = getopt.getopt(argv, "hi:o:", ["ifile=", "ofile="])
     except getopt.GetoptError:
@@ -2038,6 +2043,8 @@ def main(argv):
     for opt, arg in opts:
         if opt == '-i':
             base_file_path= arg
+        if opt == '-o':
+            machine_to_run_on= arg
 
 
 
@@ -2045,7 +2052,7 @@ def main(argv):
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
 
-    configs = read_and_merge_config_entries(base_file_path)
+    configs = read_and_merge_config_entries(base_file_path,machine_to_run_on)
 
     configs_split = configs.split()
 
@@ -2054,7 +2061,7 @@ def main(argv):
 
 
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
-    
+
     model_args, data_args, training_args = parser.parse_args_into_dataclasses(args=configs_split)
 
     training_args.output_dir=training_args.output_dir.replace("%20"," ")
