@@ -181,9 +181,13 @@ def _glue_convert_examples_to_features(
     logger.info(f"value of tokenixer is {tokenizer}")
 
 
+
     examples_no_stopwords=[]
     if(remove_stop_words==True):
-        stop_words=stopwords.words('english')
+        from stop_words import get_stop_words
+        stop_words = get_stop_words('english')
+
+        #stop_words=stopwords.words('english')
         stop_words.extend([":","The","A","`","-"])
 
         for example_sw in examples:
