@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ GLUE processors and helpers """
-
+import string
 import logging
 import os
 from dataclasses import asdict
@@ -25,6 +25,7 @@ from ...file_utils import is_tf_available
 from ...tokenization_utils import PreTrainedTokenizer
 from .utils import DataProcessor, InputExample, InputFeatures
 import nltk
+from stop_words import get_stop_words
 from nltk.corpus import stopwords
 
 
@@ -184,29 +185,28 @@ def _glue_convert_examples_to_features(
 
     examples_no_stopwords=[]
     if(remove_stop_words==True):
-        from stop_words import get_stop_words
-        stop_words = get_stop_words('english')
 
-        #stop_words=stopwords.words('english')
-        stop_words.extend([":","The","A","`","-"])
+        stop_words = get_stop_words('english')
+        nltk_stop_words=stopwords.words('english')
+        stop_words.extend(nltk_stop_words)
+
+
 
         for example_sw in examples:
             text_a_tokens=example_sw.text_a.split(" ")
             text_a_tokens_new=[]
             for each_token in text_a_tokens:
-                if (each_token == "-"):
-                    print("found -")
                 if not each_token.lower() in stop_words:
-                    text_a_tokens_new.append(each_token)
+                    if(not each_token.lower() in string.punctuation):
+                        text_a_tokens_new.append(each_token)
             example_sw.text_a=" ".join(text_a_tokens_new)
 
             text_b_tokens=example_sw.text_b.split(" ")
             text_b_tokens_new=[]
             for each_token in text_b_tokens:
-                if(each_token=="-"):
-                    print("found -")
                 if not each_token.lower() in stop_words:
-                    text_b_tokens_new.append(each_token)
+                    if (not each_token.lower() in string.punctuation):
+                        text_b_tokens_new.append(each_token)
             example_sw.text_b=" ".join(text_b_tokens_new)
 
             examples_no_stopwords.append(example_sw)
