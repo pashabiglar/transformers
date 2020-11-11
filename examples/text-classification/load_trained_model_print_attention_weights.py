@@ -1940,7 +1940,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     else:
         model_path = wget.download(url)
 
-    device = torch.device('cpu')
+    device = torch.device('gpu')
 
     if training_args.do_train_1student_1teacher:
         print("found that if use_student_teacher==True:")
