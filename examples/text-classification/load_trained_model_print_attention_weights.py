@@ -1850,9 +1850,17 @@ def run_loading_and_testing(model_args, data_args, training_args):
                 print("")
 
             assert len(token_type_ids) == len(input_ids)
+            input_ids_tensor=None
+            token_type_ids_tensor=None
+            if (training_args.machine_to_run_on == "hpc") and torch.cuda.is_available():
+                input_ids_tensor = torch.cuda.IntTensor(np.reshape(input_ids, (1, len(input_ids))))
+                token_type_ids_tensor = torch.cuda.IntTensor(np.reshape(token_type_ids, (1, len(token_type_ids))))
+            if (training_args.machine_to_run_on == "laptop"):
+                input_ids_tensor = torch.IntTensor(np.reshape(input_ids,(1,len(input_ids))))
+                token_type_ids_tensor = torch.IntTensor(np.reshape(token_type_ids,(1,len(token_type_ids))))
 
-            input_ids_tensor = torch.tensor(np.reshape(input_ids,(1,len(input_ids))))
-            token_type_ids_tensor = torch.tensor(np.reshape(token_type_ids,(1,len(token_type_ids))))
+            assert input_ids_tensor is not None
+            assert token_type_ids_tensor is not None
             attention = model(input_ids_tensor, token_type_ids=token_type_ids_tensor)[-1]
             claim_evidence_plain_text = tokenizer.decode(input_ids)
             find_aggregate_attention_per_token(attention, claim_evidence_plain_text.split(),dict_layer12_head_12)
