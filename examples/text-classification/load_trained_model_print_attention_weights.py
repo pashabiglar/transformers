@@ -23,8 +23,11 @@ Original file is located at
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
-CONFIG_FILE_TO_TEST_WITH_LAPTOP="config_for_attention_visualization_laptop.py"
-CONFIG_FILE_TO_TEST_WITH_HPC="config_for_attention_visualization_hpc.py"
+CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP= "config_for_attention_visualization_for_loading_lex_model_laptop.py"
+CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC= "config_for_attention_visualization_for_loading_lex_model_hpc.py"
+CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP="config_for_attention_visualization_for_loading_stuteacher_model_laptop.py"
+CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP="config_for_attention_visualization_for_loading_stuteacher_model_laptop.py"
+
 import configparser
 import sys, getopt
 import logging
@@ -1597,9 +1600,15 @@ class ModelArguments:
         default=None, metadata={"help": "Where do you want to store the pretrained models downloaded from s3"}
     )
 def read_and_merge_config_entries(base_file_path,machine_to_run_on):
-    config_file_touse=CONFIG_FILE_TO_TEST_WITH_LAPTOP
-    if(machine_to_run_on=="hpc"):
-        config_file_touse=CONFIG_FILE_TO_TEST_WITH_HPC
+    if (training_args.task_type == "Lex"):
+        config_file_touse=CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP
+        if(machine_to_run_on=="hpc"):
+            config_file_touse=CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC
+
+    if (training_args.do_train_1student_1teacher == True):
+        config_file_touse = CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP
+        if (machine_to_run_on == "hpc"):
+            config_file_touse = CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC
 
     assert len(config_file_touse)>0
     config = configparser.ConfigParser()

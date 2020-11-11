@@ -23,8 +23,8 @@ Original file is located at
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
-CONFIG_FILE_TO_TEST_WITH_LAPTOP="config_for_attention_visualization_laptop.py"
-CONFIG_FILE_TO_TEST_WITH_HPC="config_for_attention_visualization_hpc.py"
+CONFIG_FILE_TO_TEST_WITH_LAPTOP="config_for_attention_visualization_for_loading_lex_model_laptop.py"
+CONFIG_FILE_TO_TEST_WITH_HPC="config_for_attention_visualization_for_loading_lex_model_hpc.py"
 import configparser
 import sys, getopt
 import logging
