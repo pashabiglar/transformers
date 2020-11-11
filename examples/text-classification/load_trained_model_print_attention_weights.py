@@ -26,7 +26,7 @@ Original file is located at
 CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP= "config_for_attention_visualization_for_loading_lex_model_laptop.py"
 CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC= "config_for_attention_visualization_for_loading_lex_model_hpc.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP="config_for_attention_visualization_for_loading_stuteacher_model_laptop.py"
-CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP="config_for_attention_visualization_for_loading_stuteacher_model_laptop.py"
+CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC="config_for_attention_visualization_for_loading_stuteacher_model_hpc.py"
 
 import configparser
 import sys, getopt
@@ -1600,15 +1600,9 @@ class ModelArguments:
         default=None, metadata={"help": "Where do you want to store the pretrained models downloaded from s3"}
     )
 def read_and_merge_config_entries(base_file_path,machine_to_run_on):
-    if (training_args.task_type == "Lex"):
-        config_file_touse=CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP
-        if(machine_to_run_on=="hpc"):
-            config_file_touse=CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC
 
-    if (training_args.do_train_1student_1teacher == True):
-        config_file_touse = CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP
-        if (machine_to_run_on == "hpc"):
-            config_file_touse = CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC
+
+    config_file_touse = CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP
 
     assert len(config_file_touse)>0
     config = configparser.ConfigParser()
@@ -1930,7 +1924,6 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #url = 'https://osf.io/twbmu/download' # light-plasma combined trained model-this model gave 59.31 cross domain fnc score and 69.21for cross domain accuracy
     #url = 'https://osf.io/vnyad//download' # legendary-voice-1016 combined trained model-this model gave 61.52  cross domain fnc score and  74.4 for cross domain accuracy- wandb graph name legendary-voice-1016
     if training_args.do_train_1student_1teacher:
-
         url = 'https://osf.io/ht9gb/download'  # celestial-sun-1042 combined trained model- githubsha 21dabe wandb_celestial_sun1042 best_cd_acc_fnc_score_71.89_61.12
 
 
