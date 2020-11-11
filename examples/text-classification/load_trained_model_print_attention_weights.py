@@ -1928,16 +1928,17 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #url = 'https://osf.io/uspm4/download'  # link to best delex trained model-this gave 55.69 in cross domain fnc score and 54.04 for cross domain accuracy
     # refer:https://tinyurl.com/y5dyshnh for further details regarding accuracies
 
-    #model_path = wget.download(url)
+
 
 
     # use for laptop
-    if training_args.do_train_1student_1teacher:
-        model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/student_teacher_trained_model.bin"
-    if (training_args.task_type=="lex"):
-        model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/lex_trained_model.bin"
+    if(training_args.machine_to_run_on=="laptop"):
+        if training_args.do_train_1student_1teacher:
+            model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/student_teacher_trained_model.bin"
+        if (training_args.task_type=="lex"):
+            model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/lex_trained_model.bin"
 
-
+    model_path = wget.download(url)
     device = torch.device('cpu')
 
     if training_args.do_train_1student_1teacher:
@@ -1951,6 +1952,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     
     assert model_path is not None
+    assert len(model_path)>0
     model_for_bert.load_state_dict(torch.load(model_path, map_location=device))
 
     
