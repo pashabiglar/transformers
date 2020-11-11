@@ -27,7 +27,7 @@ from .utils import DataProcessor, InputExample, InputFeatures
 import nltk
 from nltk.corpus import stopwords
 
-nltk.download()
+
 if is_tf_available():
     import tensorflow as tf
 
