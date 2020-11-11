@@ -1931,14 +1931,15 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
 
 
-    # use for laptop
+    # in laptop we dont want to download model everytime. will load from a pre-downloaded-location
     if(training_args.machine_to_run_on=="laptop"):
         if training_args.do_train_1student_1teacher:
             model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/student_teacher_trained_model.bin"
         if (training_args.task_type=="lex"):
             model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/lex_trained_model.bin"
+    else:
+        model_path = wget.download(url)
 
-    model_path = wget.download(url)
     device = torch.device('cpu')
 
     if training_args.do_train_1student_1teacher:
