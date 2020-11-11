@@ -1940,18 +1940,18 @@ def run_loading_and_testing(model_args, data_args, training_args):
       print("found use_lex==True")
       url = 'https://osf.io/fp89k/download' #trained_model_lex_helpful_vortex_1002_trained_model_afterepoch1_accuracy70point21percent..bin
 
-    model_path=None
+    #model_path=None
     #url = 'https://osf.io/uspm4/download'  # link to best delex trained model-this gave 55.69 in cross domain fnc score and 54.04 for cross domain accuracy
     # refer:https://tinyurl.com/y5dyshnh for further details regarding accuracies
 
-    #model_path = wget.download(url)
+    model_path = wget.download(url)
 
 
     # use for laptop
-    if training_args.do_train_1student_1teacher:
-        model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/student_teacher_trained_model.bin"
-    if (training_args.task_type=="lex"):
-        model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/lex_trained_model.bin"
+    # if training_args.do_train_1student_1teacher:
+    #     model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/student_teacher_trained_model.bin"
+    # if (training_args.task_type=="lex"):
+    #     model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/lex_trained_model.bin"
 
 
     device = torch.device('cpu')
