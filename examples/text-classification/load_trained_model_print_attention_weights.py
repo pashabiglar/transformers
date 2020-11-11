@@ -1933,15 +1933,14 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     # in laptop we dont want to download model everytime. will load from a pre-downloaded-location
     if(training_args.machine_to_run_on=="laptop"):
-       # device = torch.device('cpu')
+        device = torch.device('cpu')
         if training_args.do_train_1student_1teacher:
             model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/student_teacher_trained_model.bin"
         if (training_args.task_type=="lex"):
             model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/lex_trained_model.bin"
-
     else:
         model_path = wget.download(url)
-        #device = torch.device("cuda:0")
+        device = torch.device("cuda:0")
 
 
 
@@ -1958,8 +1957,11 @@ def run_loading_and_testing(model_args, data_args, training_args):
     
     assert model_path is not None
     assert len(model_path)>0
-    #model_for_bert.load_state_dict(torch.load(model_path, map_location=device))
-    model_for_bert.load_state_dict(torch.load(model_path))
+    if(training_args.machine_to_run_on=="laptop"):
+        model_for_bert.load_state_dict(torch.load(model_path, map_location=device))
+    else:
+        model_for_bert.load_state_dict(torch.load(model_path))
+
 
     
 
@@ -1991,9 +1993,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
     
     '''
 
-    attention = model_for_bert(input_ids, token_type_ids=token_type_ids)[-1]
-    input_id_list = input_ids[0].tolist()  # Batch index 0
-    tokens = tokenizer_to_use.convert_ids_to_tokens(input_id_list)
+    #attention = model_for_bert(input_ids, token_type_ids=token_type_ids)[-1]
+    #input_id_list = input_ids[0].tolist()  # Batch index 0
+    #tokens = tokenizer_to_use.convert_ids_to_tokens(input_id_list)
 
     dict_layer_head = get_attention_given_dataset(test_dataset,model_for_bert,tokenizer_to_use,remove_stop_words=True, remove_cls_sep=True)
 
