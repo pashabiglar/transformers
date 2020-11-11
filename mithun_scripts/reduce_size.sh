@@ -24,7 +24,7 @@ FILE="`basename $complete_path`"
 echo $FILE
 #laptop cant handle more than 17 data points at a time
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
-    head -35  $complete_path > temp
+    head -17  $complete_path > temp
     toy_data_full_path="$toy_data_path$FILE"
     mv temp $toy_data_full_path
     echo "found that MACHINE_TO_RUN_ON is laptop . reduced size toy data created at $toy_data_full_path"

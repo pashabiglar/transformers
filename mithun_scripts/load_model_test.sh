@@ -41,9 +41,9 @@ env CUDA_VISIBLE_DEVICES=0
 export CUDA_VISIBLE_DEVICES=0
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
-       python3 ../examples/text-classification/load_trained_model_visualize.py -i $EXAMPLES_DIR_PATH -o $MACHINE_TO_RUN_ON
+       python3 ../examples/text-classification/load_trained_model_print_attention_weights.py -i $EXAMPLES_DIR_PATH -o $MACHINE_TO_RUN_ON
 else
        #python3 ../examples/text-classification/load_trained_model_predict.py $args
-       python ../examples/text-classification/load_trained_model_visualize.py -i $EXAMPLES_DIR_PATH -o $MACHINE_TO_RUN_ON
+       python ../examples/text-classification/load_trained_model_print_attention_weights.py -i $EXAMPLES_DIR_PATH -o $MACHINE_TO_RUN_ON
 fi
 
