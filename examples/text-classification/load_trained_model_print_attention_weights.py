@@ -1602,7 +1602,7 @@ class ModelArguments:
 def read_and_merge_config_entries(base_file_path,machine_to_run_on):
 
 
-    config_file_touse = CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP
+    config_file_touse = CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC
 
     assert len(config_file_touse)>0
     config = configparser.ConfigParser()
@@ -1751,7 +1751,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     if (training_args.do_train_1student_1teacher == True):
         test_dataset = (
-            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
+            GlueDataset(data_args, tokenizer=tokenizer_delex,remove_stop_words_in=True, task_type="delex", mode="test",
                         cache_dir=model_args.cache_dir)
             if training_args.do_predict
             else None
