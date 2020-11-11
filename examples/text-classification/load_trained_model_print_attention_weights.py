@@ -96,7 +96,7 @@ import torch
 
 import wget
 import torch
-from stop_words import get_stop_words
+
 
 if is_apex_available():
     from apex import amp
