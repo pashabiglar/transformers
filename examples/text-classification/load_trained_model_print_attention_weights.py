@@ -1876,16 +1876,26 @@ def run_loading_and_testing(model_args, data_args, training_args):
             #     token_str = tokenizer.convert_tokens_to_string(x)
             #     all_tokens_str.append(token_str)
 
-            claim_evidence_plain_text = tokenizer.decode(input_ids,clean_up_tokenization_spaces=True)
-            tokens=tokenizer.tokenize(claim_evidence_plain_text)
-            assert len(tokens) == len(input_ids)
+            tokens = tokenizer.decode_return_list(input_ids,clean_up_tokenization_spaces=True)
+
+
+            try:
+                assert len(tokens) == len(input_ids)
+            except AssertionError:
+                print(f"len(tokens) == {len(tokens)}")
+                print(f"len(input_ids) == {len(input_ids)}")
+                print(f"(tokens) == {(tokens)}")
+                print(f"(input_ids) == {(input_ids)}")
+                print("assertion error exiting")
+                exit()
+
             # if(training_args.task_type == "lex"):
             #     find_ner_tag_percentage(tokens)
 
             find_aggregate_attention_per_token(attention, tokens,dict_layer12_head_12)
 
         assert attention is not None
-        assert claim_evidence_plain_text is not None
+
         return sort_weights(dict_layer12_head_12)
 
     #out of all the tokens find what percentage of attention goes to NER tags
