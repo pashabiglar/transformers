@@ -1871,12 +1871,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
             assert token_type_ids_tensor is not None
             attention = model(input_ids_tensor, token_type_ids=token_type_ids_tensor)[-1]
 
-            # all_tokens_str=[]
-            # for x in input_ids:
-            #     token_str = tokenizer.convert_tokens_to_string(x)
-            #     all_tokens_str.append(token_str)
 
             tokens = tokenizer.decode_return_list(input_ids,clean_up_tokenization_spaces=True)
+            #tokens = tokenizer.decode(input_ids, clean_up_tokenization_spaces=True)
 
 
             try:
@@ -1889,17 +1886,34 @@ def run_loading_and_testing(model_args, data_args, training_args):
                 print("assertion error exiting")
                 exit()
 
-            # if(training_args.task_type == "lex"):
-            #     find_ner_tag_percentage(tokens)
+
 
             find_aggregate_attention_per_token(attention, tokens,dict_layer12_head_12)
 
-        assert attention is not None
 
+
+
+        assert attention is not None
+        if (training_args.task_type == "lex"):
+            find_percentage_attention_given_to_ner_entities(dict_layer12_head_12)
         return sort_weights(dict_layer12_head_12)
 
+
+    def find_percentage_attention_given_to_ner_entities(dict_layer12_head_12):
+        total_attention_on_all_tokens = 0
+        attention_on_ner_tokens = 0
+        for token,weight in dict_layer12_head_12.items():
+                total_attention_on_all_tokens = total_attention_on_all_tokens + weight
+                is_ner = find_ner_or_not(token)
+                if is_ner:
+                    attention_on_ner_tokens=attention_on_ner_tokens+weight
+
+        ner_percent_attention=attention_on_ner_tokens*100/total_attention_on_all_tokens
+        logger.info(f"ner_percent_attention={ner_percent_attention}")
+
+
     #out of all the tokens find what percentage of attention goes to NER tags
-    def find_ner_tag_percentage(tokens):
+    def find_ner_or_not(token):
         '''
         find_ner_tag_percentage(input_ids,tokenizer)
         For each token find if its a named entity,
@@ -1909,12 +1923,15 @@ def run_loading_and_testing(model_args, data_args, training_args):
         Returns: perecentage value
 
         '''
-        for token in tokens:
-            doc = nlp(token)
-            for ent in doc.ents:
-                print(ent.text, ent.start_char, ent.end_char, ent.label_)
+
+        doc = nlp(token)
+        if(len(doc.ents))>0:
+            return True
+        else:
+            return False
 
     def find_aggregate_attention_per_token(attention,tokens,dict_layer12_head_12):
+
         for layer_index,per_layer_attention in enumerate(attention):
             if(layer_index==11):
                 # lets starts with 12th layer, 12th attention head
@@ -1922,15 +1939,17 @@ def run_loading_and_testing(model_args, data_args, training_args):
                     for head_index,per_head_attention in enumerate(heads):
                         if(head_index==11):
                             for per_left_token_attention in per_head_attention:
+                                assert len(per_left_token_attention.data.tolist())==len(tokens)
                                 for weight,token in zip(per_left_token_attention.data.tolist(),tokens):
                                     current_attention_weight=dict_layer12_head_12.get(token,-1)
+
                                     #if the token already exists, increase its attention weight. else set its attention weight for the first time
                                     if not current_attention_weight==-1:
                                         current_attention_weight+=weight
                                         dict_layer12_head_12[token]= current_attention_weight
                                     else:
                                         dict_layer12_head_12[token] = weight
-
+                                    #to calculate how much percentage of attention is given to ner entities
 
         return dict_layer12_head_12
 
