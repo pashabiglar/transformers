@@ -204,7 +204,7 @@ def _glue_convert_examples_to_features(
                         'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn',
                         "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"]
         stop_words.extend(nltk_stop_words)
-        stop_words.extend(["`","`","--","``","'","\"","''","‘"," — ","-","_","__","="])
+        stop_words.extend(["`","\`","--","``","'","\"","''","‘"," — ","-","_","__","=","."])
 
 
 
@@ -213,7 +213,7 @@ def _glue_convert_examples_to_features(
             text_a_tokens_new=[]
             for each_token in text_a_tokens:
                 if not each_token.lower() in stop_words:
-                    if(not each_token.lower() in string.punctuation):
+                    if not each_token.lower() in string.punctuation:
                         text_a_tokens_new.append(each_token)
             example_sw.text_a=" ".join(text_a_tokens_new)
 
@@ -221,7 +221,7 @@ def _glue_convert_examples_to_features(
             text_b_tokens_new=[]
             for each_token in text_b_tokens:
                 if not each_token.lower() in stop_words:
-                    if (not each_token.lower() in string.punctuation):
+                    if not each_token.lower() in string.punctuation:
                         text_b_tokens_new.append(each_token)
             example_sw.text_b=" ".join(text_b_tokens_new)
 
