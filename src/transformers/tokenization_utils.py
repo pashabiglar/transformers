@@ -2193,6 +2193,8 @@ class PreTrainedTokenizer(SpecialTokensMixin):
         else:
             return text
 
+
+
     def batch_decode(self, sequences: List[List[int]], **kwargs) -> List[str]:
         return [self.decode(seq, **kwargs) for seq in sequences]
 
