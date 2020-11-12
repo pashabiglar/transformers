@@ -27,7 +27,7 @@ CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP= "config_for_attention_visualization_f
 CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC= "config_for_attention_visualization_for_loading_lex_model_hpc.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP="config_for_attention_visualization_for_loading_stuteacher_model_laptop.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC="config_for_attention_visualization_for_loading_stuteacher_model_hpc.py"
-config_file_touse = CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC
+config_file_touse = CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC
 
 
 import spacy
@@ -1896,8 +1896,34 @@ def run_loading_and_testing(model_args, data_args, training_args):
         assert attention is not None
         if (training_args.task_type == "lex"):
             find_percentage_attention_given_to_ner_entities(dict_layer12_head_12)
+
+        if training_args.do_train_1student_1teacher:
+            figer_tags=get_figer_tags()
+            find_percentage_attention_given_to_figer_entities(dict_layer12_head_12,figer_tags)
+
         return sort_weights(dict_layer12_head_12)
 
+    def find_percentage_attention_given_to_ner_groups(dict_layer12_head_12):
+        total_attention_on_all_tokens = 0
+        attention_on_ner_tokens = 0
+        for token,weight in dict_layer12_head_12.items():
+                total_attention_on_all_tokens = total_attention_on_all_tokens + weight
+                is_ner = find_ner_or_not(token)
+                if is_ner:
+                    attention_on_ner_tokens=attention_on_ner_tokens+weight
+
+        ner_percent_attention=attention_on_ner_tokens*100/total_attention_on_all_tokens
+        logger.info(f"ner_percent_attention={ner_percent_attention}")
+
+    def find_percentage_attention_given_to_figer_entities(dict_layer12_head_12,figer_set):
+        total_attention_on_all_tokens = 0
+        attention_on_ner_tokens = 0
+        for token,weight in dict_layer12_head_12.items():
+                total_attention_on_all_tokens = total_attention_on_all_tokens + weight
+                if token in figer_set:
+                    attention_on_ner_tokens=attention_on_ner_tokens+weight
+        ner_percent_attention=attention_on_ner_tokens*100/total_attention_on_all_tokens
+        logger.info(f"figer_percent_attention={ner_percent_attention}")
 
     def find_percentage_attention_given_to_ner_entities(dict_layer12_head_12):
         total_attention_on_all_tokens = 0
@@ -1929,6 +1955,17 @@ def run_loading_and_testing(model_args, data_args, training_args):
             return True
         else:
             return False
+
+    def get_figer_tags():
+        f = open("../../mithun_scripts/figer_tags.txt", "r")
+        all_tags = []
+        for x in f:
+            split_tab = x.split("\t")
+            for y in split_tab:
+                z = y.split("/")
+                for a in z:
+                    all_tags.append(a.strip())
+        return (set(all_tags))
 
     def find_aggregate_attention_per_token(attention,tokens,dict_layer12_head_12):
 
