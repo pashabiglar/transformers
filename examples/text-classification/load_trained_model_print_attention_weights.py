@@ -1602,7 +1602,7 @@ class ModelArguments:
 def read_and_merge_config_entries(base_file_path,machine_to_run_on):
 
 
-    config_file_touse = CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC
+    config_file_touse = CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP
 
     assert len(config_file_touse)>0
     config = configparser.ConfigParser()
@@ -1866,6 +1866,17 @@ def run_loading_and_testing(model_args, data_args, training_args):
             assert token_type_ids_tensor is not None
             attention = model(input_ids_tensor, token_type_ids=token_type_ids_tensor)[-1]
             claim_evidence_plain_text = tokenizer.decode(input_ids)
+            '''
+            for NER tagging
+            import spacy
+from spacy import displacy
+from collections import Counter
+import en_core_web_sm
+nlp = en_core_web_sm.load()
+https://towardsdatascience.com/named-entity-recognition-with-nltk-and-spacy-8c4a7d88e7da
+doc = nlp('European authorities fined Google a record $5.1 billion on Wednesday for abusing its power in the mobile phone market and ordered the company to alter its practices')
+pprint([(X.text, X.label_) for X in doc.ents])
+'''
             find_aggregate_attention_per_token(attention, claim_evidence_plain_text.split(),dict_layer12_head_12)
 
         assert attention is not None
