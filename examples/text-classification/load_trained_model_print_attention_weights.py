@@ -1892,7 +1892,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
             figer_tags=get_figer_tags()
             find_percentage_attention_given_to_figer_entities(dict_layer12_head_12_sans_stopwords,figer_tags)
 
-        return sort_weights(dict_layer12_head_12)
+        return sort_weights(dict_layer12_head_12_sans_stopwords)
+
+
 
     # out of all the tokens find what percentage of attention goes to NER tags
     def find_percentage_attention_given_to_figer_entities(dict_layer12_head_12,figer_set):
