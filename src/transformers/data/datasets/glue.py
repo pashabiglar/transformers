@@ -19,7 +19,9 @@ from ..processors.utils import InputFeatures
 
 logger = logging.getLogger(__name__)
 
+import spacy
 
+nlp = spacy.load("en_core_web_sm")
 @dataclass
 class GlueDataTrainingArguments:
     """
@@ -64,6 +66,7 @@ class GlueDataset(Dataset):
     args: GlueDataTrainingArguments
     output_mode: str
     features: List[InputFeatures]
+
 
     def __init__(
         self,
@@ -141,10 +144,15 @@ class GlueDataset(Dataset):
                 if limit_length is not None:
                     examples = examples[:limit_length]
                 logger.info(f"going to get into function glue_convert_examples_to_features")
+                all_ner={}
                 for x in examples:
-                    if len(x.text_a.split(" "))>500:
-                        logger.info(f"found a data point which has more than 500 tokens. and its evidence is{x.text_a}")
+                    combined=x.text_a+x.text_b
+                    #todo: replace spacy with processors ner tagger.
+                    doc = nlp(combined)
+                    for ent in doc.ents:
+                        all_ner[ent.text]=1
 
+                self.ner_tags=all_ner
                 self.features = glue_convert_examples_to_features(
                     examples,
                     tokenizer,

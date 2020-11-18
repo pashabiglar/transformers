@@ -27,28 +27,19 @@ CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP= "config_for_attention_visualization_f
 CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC= "config_for_attention_visualization_for_loading_lex_model_hpc.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP="config_for_attention_visualization_for_loading_stuteacher_model_laptop.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC="config_for_attention_visualization_for_loading_stuteacher_model_hpc.py"
-config_file_touse = CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC
+config_file_touse = CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP
 
 
 import spacy
-#import en_core_web_sm
-from spacy import displacy
-from collections import Counter
+
 import configparser
 import sys, getopt
-import logging
-import math
-import os
 import re
 import shutil
-import sys
 import warnings
-from contextlib import contextmanager
 from pathlib import Path
 from typing import  Callable, Dict, List, Optional, Tuple
 from torch.nn import CrossEntropyLoss, MSELoss
-import numpy as np
-import torch
 from packaging import version
 from torch import nn
 from torch.utils.data.dataloader import DataLoader
@@ -57,7 +48,8 @@ from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.sampler import RandomSampler, Sampler, SequentialSampler
 from tqdm.auto import tqdm, trange
 import os
-
+from stop_words import get_stop_words
+import string
 nlp = spacy.load("en_core_web_sm")
 
 #os.chdir("/content/gdrive/My Drive/colab_fall2020/transformers2/transformers/src")
@@ -1678,7 +1670,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     # Distributed training:
     # The .from_pretrained methods guarantee that only one local process can concurrently
     # download model_teacher & vocab.
-  
+
     config = AutoConfig.from_pretrained(
         model_args.config_name if model_args.config_name else model_args.model_name_or_path,
         num_labels=num_labels,
@@ -1756,7 +1748,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     if (training_args.do_train_1student_1teacher == True):
         test_dataset = (
-            GlueDataset(data_args, tokenizer=tokenizer_delex,remove_stop_words_in=True, task_type="delex", mode="test",
+            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
                         cache_dir=model_args.cache_dir)
             if training_args.do_predict
             else None
@@ -1764,7 +1756,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     else:
         if (training_args.task_type == "lex"):
             test_dataset = (
-                GlueDataset(data_args, tokenizer=tokenizer_lex, remove_stop_words_in=True,task_type="lex", mode="test",
+                GlueDataset(data_args, tokenizer=tokenizer_lex,task_type="lex", mode="test",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_predict
                 else None
@@ -1791,7 +1783,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
         tokens = tokenizer.convert_ids_to_tokens(input_id_list)
 
 
-        
+
     def build_compute_metrics_fn(task_name: str) -> Callable[[EvalPrediction], Dict]:
         def compute_metrics_fn(p: EvalPrediction):
             if output_mode == "classification":
@@ -1809,7 +1801,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
         return {k: v for k, v in sorted(dict_layer_head_weights.items(), key=lambda item: item[1],reverse=True)}
 
 
-    def get_attention_given_dataset(dataloader,model,tokenizer,remove_stop_words=True, remove_cls_sep=True):
+    def get_attention_given_dataset(dataloader,model,tokenizer):
         attention=claim_evidence_plain_text=None
 
         # create a dictionary to store overall attention of a given head and a layer. maybe can eventually store it in a matrix
@@ -1823,39 +1815,39 @@ def run_loading_and_testing(model_args, data_args, training_args):
             input_ids = each_claim_evidence_pair.input_ids
             assert len(token_type_ids)==len(input_ids)
 
-            #CLS=101 SEP=102
-            cls_indices =  list(filter(lambda x: input_ids[x] == 101, range(len(input_ids))))
-            sep_indices = list(filter(lambda x: input_ids[x] == 102, range(len(input_ids))))
-
-            #keep finding SEP until it doesnt exist
-            try:
-                while True:
-                    index_sep=input_ids.index(102)
-                    del input_ids[index_sep]
-                    del token_type_ids[index_sep]
-
-            except ValueError:
-                print("")
-
-            # keep finding CLS until it doesnt exist
-            try:
-                while True:
-                    index_cls = input_ids.index(101)
-                    del input_ids[index_cls]
-                    del token_type_ids[index_cls]
-
-            except ValueError:
-                print("")
-
-            # keep finding and removing PAD until it doesnt exist
-            try:
-                while True:
-                    index_cls = input_ids.index(0)
-                    del input_ids[index_cls]
-                    del token_type_ids[index_cls]
-
-            except ValueError:
-                print("")
+            # #CLS=101 SEP=102
+            # cls_indices =  list(filter(lambda x: input_ids[x] == 101, range(len(input_ids))))
+            # sep_indices = list(filter(lambda x: input_ids[x] == 102, range(len(input_ids))))
+            #
+            # #keep finding SEP until it doesnt exist
+            # try:
+            #     while True:
+            #         index_sep=input_ids.index(102)
+            #         del input_ids[index_sep]
+            #         del token_type_ids[index_sep]
+            #
+            # except ValueError:
+            #     print("")
+            #
+            # # keep finding CLS until it doesnt exist
+            # try:
+            #     while True:
+            #         index_cls = input_ids.index(101)
+            #         del input_ids[index_cls]
+            #         del token_type_ids[index_cls]
+            #
+            # except ValueError:
+            #     print("")
+            #
+            # # keep finding and removing PAD until it doesnt exist
+            # try:
+            #     while True:
+            #         index_cls = input_ids.index(0)
+            #         del input_ids[index_cls]
+            #         del token_type_ids[index_cls]
+            #
+            # except ValueError:
+            #     print("")
 
             assert len(token_type_ids) == len(input_ids)
             input_ids_tensor=None
@@ -1890,57 +1882,93 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
         find_aggregate_attention_per_token(attention, tokens,dict_layer12_head_12)
 
-
-
+        dict_layer12_head_12_sans_stopwords=remove_stop_words_punctuations_etc(dict_layer12_head_12)
 
         assert attention is not None
         if (training_args.task_type == "lex"):
-            find_percentage_attention_given_to_ner_entities(dict_layer12_head_12)
+            find_percentage_attention_given_to_ner_entities(dict_layer12_head_12_sans_stopwords,test_dataset)
 
         if training_args.do_train_1student_1teacher:
             figer_tags=get_figer_tags()
-            find_percentage_attention_given_to_figer_entities(dict_layer12_head_12,figer_tags)
+            find_percentage_attention_given_to_figer_entities(dict_layer12_head_12_sans_stopwords,figer_tags)
 
         return sort_weights(dict_layer12_head_12)
 
-
+    # out of all the tokens find what percentage of attention goes to NER tags
     def find_percentage_attention_given_to_figer_entities(dict_layer12_head_12,figer_set):
         total_attention_on_all_tokens = 0
         attention_on_ner_tokens = 0
         for token,weight in dict_layer12_head_12.items():
-                total_attention_on_all_tokens = total_attention_on_all_tokens + weight
-                if token in figer_set:
-                    attention_on_ner_tokens=attention_on_ner_tokens+weight
+            total_attention_on_all_tokens = total_attention_on_all_tokens + weight
+            if token in figer_set:
+                attention_on_ner_tokens=attention_on_ner_tokens+weight
         ner_percent_attention=attention_on_ner_tokens*100/total_attention_on_all_tokens
         logger.info(f"figer_percent_attention={ner_percent_attention}")
 
-    def find_percentage_attention_given_to_ner_entities(dict_layer12_head_12):
+    def find_percentage_attention_given_to_ner_entities(dict_layer12_head_12,test_dataset):
         total_attention_on_all_tokens = 0
         attention_on_ner_tokens = 0
         for token,weight in dict_layer12_head_12.items():
-                total_attention_on_all_tokens = total_attention_on_all_tokens + weight
-                is_ner = find_ner_or_not(token)
-                if is_ner:
-                    attention_on_ner_tokens=attention_on_ner_tokens+weight
-
+            total_attention_on_all_tokens = total_attention_on_all_tokens + weight
+            is_ner = find_ner_or_not(token,test_dataset)
+            if is_ner:
+                attention_on_ner_tokens=attention_on_ner_tokens+weight
         ner_percent_attention=attention_on_ner_tokens*100/total_attention_on_all_tokens
         logger.info(f"ner_percent_attention={ner_percent_attention}")
 
 
-    #out of all the tokens find what percentage of attention goes to NER tags
-    def find_ner_or_not(token):
+    def remove_stop_words_punctuations_etc(dict_layer12_head_12):
+
+        stop_words = get_stop_words('english')
+
+        # manually adding nltk stop words since it was getting dificcult to download this on the fly on the hpc machine
+        nltk_stop_words = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've",
+                           "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his',
+                           'himself',
+                           'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them',
+                           'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that',
+                           "that'll",
+                           'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has',
+                           'had',
+                           'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or',
+                           'because',
+                           'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between',
+                           'into',
+                           'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down',
+                           'in',
+                           'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there',
+                           'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most',
+                           'other',
+                           'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very',
+                           's',
+                           't', 'can', 'will', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm',
+                           'o',
+                           're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 'didn', "didn't",
+                           'doesn',
+                           "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 'isn', "isn't", 'ma',
+                           'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't",
+                           'shouldn',
+                           "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"]
+        stop_words.extend(nltk_stop_words)
+        stop_words.extend(["`", "\`", "--", "``", "'", "\"", "''", "‘", " — ", "-", "_", "__", "=", "."])
+        stop_words.extend(["[CLS]", "[SEP]"])
+
+        new_dict1 = {key: val for key, val in dict_layer12_head_12.items() if key not in stop_words}
+        new_dict2 = {key: val for key, val in new_dict1.items() if key.lower() not in stop_words}
+        new_dict3 = {key: val for key, val in new_dict2.items() if key.lower() not in string.punctuation}
+
+        return new_dict3
+
+
+
+
+    def find_ner_or_not(token,test_dataset):
         '''
-        find_ner_tag_percentage(input_ids,tokenizer)
-        For each token find if its a named entity,
-        if yes add up its attention weights…
-        divided by total attention weights..
-
-        Returns: perecentage value
-
+        GO through the dictionary of all NER tags (that were created while the dataset was read)
+        and check if the given token is an NER entity or not
         '''
 
-        doc = nlp(token)
-        if(len(doc.ents))>0:
+        if(token in test_dataset.ner_tags):
             return True
         else:
             return False
@@ -2099,7 +2127,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #input_id_list = input_ids[0].tolist()  # Batch index 0
     #tokens = tokenizer_to_use.convert_ids_to_tokens(input_id_list)
 
-    dict_layer_head = get_attention_given_dataset(test_dataset,model_for_bert,tokenizer_to_use,remove_stop_words=True, remove_cls_sep=True)
+    dict_layer_head = get_attention_given_dataset(test_dataset,model_for_bert,tokenizer_to_use)
 
     # empty out the file which stores intermediate evaluations
     output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
@@ -2125,7 +2153,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
 
 def main(argv):
-    get_figer_tags()
+
     base_file_path=""
     machine_to_run_on=""
     try:
