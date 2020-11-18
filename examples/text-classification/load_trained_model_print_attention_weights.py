@@ -27,7 +27,7 @@ CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP= "config_for_attention_visualization_f
 CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC= "config_for_attention_visualization_for_loading_lex_model_hpc.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP="config_for_attention_visualization_for_loading_stuteacher_model_laptop.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC="config_for_attention_visualization_for_loading_stuteacher_model_hpc.py"
-config_file_touse = CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC
+config_file_touse = CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC
 
 
 import spacy
@@ -2204,16 +2204,7 @@ def main(argv):
 
     run_loading_and_testing(model_args, data_args, training_args)
    
-def get_figer_tags():
-    f = open("figer_tags.txt", "r")
-    all_tags = []
-    for x in f:
-        split_tab = x.split("\t")
-        for y in split_tab:
-            z = y.split("/")
-            for a in z:
-                all_tags.append(a.strip())
-    return (set(all_tags))
+
 
 if __name__ == "__main__":
 
