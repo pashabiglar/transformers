@@ -27,7 +27,7 @@ CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP= "config_for_attention_visualization_f
 CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC= "config_for_attention_visualization_for_loading_lex_model_hpc.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP="config_for_attention_visualization_for_loading_stuteacher_model_laptop.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC="config_for_attention_visualization_for_loading_stuteacher_model_hpc.py"
-config_file_touse = CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC
+config_file_touse = CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC
 
 
 import spacy
@@ -1880,7 +1880,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
 
 
-        find_aggregate_attention_per_token(attention, tokens,dict_layer12_head_12)
+            find_aggregate_attention_per_token(attention, tokens,dict_layer12_head_12)
 
         dict_layer12_head_12_sans_stopwords=remove_stop_words_punctuations_etc(dict_layer12_head_12)
 
@@ -1953,7 +1953,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
                            "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"]
         stop_words.extend(nltk_stop_words)
         stop_words.extend(["`", "\`", "--", "``", "'", "\"", "''", "‘", " — ", "-", "_", "__", "=", "."])
-        stop_words.extend(["[CLS]", "[SEP]"])
+        stop_words.extend(["[CLS]", "[SEP]","[PAD]"])
 
         new_dict1 = {key: val for key, val in dict_layer12_head_12.items() if key not in stop_words}
         new_dict2 = {key: val for key, val in new_dict1.items() if key.lower() not in stop_words}
@@ -1969,6 +1969,11 @@ def run_loading_and_testing(model_args, data_args, training_args):
         GO through the dictionary of all NER tags (that were created while the dataset was read)
         and check if the given token is an NER entity or not
         '''
+        assert test_dataset.ner_tags is not None
+        if not (test_dataset.ner_tags):
+            print("ner_tags is null going to exit")
+            import sys
+            sys.exit(1)
 
         if(token in test_dataset.ner_tags):
             return True
@@ -1977,7 +1982,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     def get_figer_tags():
         if (training_args.machine_to_run_on == "laptop"):
-            f = open("../../mithun_scripts/figer_tags.txt", "r")
+            f = open("figer_tags.txt", "r")
         else:
             f = open("figer_tags.txt", "r")
         all_tags = []

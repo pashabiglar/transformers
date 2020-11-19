@@ -144,15 +144,18 @@ class GlueDataset(Dataset):
                 if limit_length is not None:
                     examples = examples[:limit_length]
                 logger.info(f"going to get into function glue_convert_examples_to_features")
-                all_ner={}
-                for x in examples:
-                    combined=x.text_a+x.text_b
-                    #todo: replace spacy with processors ner tagger.
-                    doc = nlp(combined)
-                    for ent in doc.ents:
-                        all_ner[ent.text]=1
 
-                self.ner_tags=all_ner
+                #finding all NER entities. this is needed in attention calculations for bert
+                if(task_type == "lex"):
+                    all_ner={}
+                    for x in examples:
+                        combined=x.text_a+x.text_b
+                        #todo: replace spacy with processors ner tagger.
+                        doc = nlp(combined)
+                        for ent in doc.ents:
+                            all_ner[ent.text]=1
+                    self.ner_tags=all_ner
+
                 self.features = glue_convert_examples_to_features(
                     examples,
                     tokenizer,
