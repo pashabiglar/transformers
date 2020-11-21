@@ -203,17 +203,17 @@ def run_loading_and_testing(model_args, data_args, training_args):
             else None
         )
     else:
-        if (training_args.task_type == "mod1"):
+        if (training_args.task_type == "lex"):
             eval_dataset = (
-                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="mod1", mode="dev",
+                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="dev",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_eval
                 else None
             )
         else:
-            if (training_args.task_type == "mod2"):
+            if (training_args.task_type == "delex"):
                 eval_dataset = (
-                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="dev",
+                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_eval
                     else None
@@ -221,24 +221,24 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     if (training_args.do_train_1student_1teacher == True):
         test_dataset = (
-            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="test",
+            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
                         cache_dir=model_args.cache_dir)
             if training_args.do_predict
             else None
         )
     else:
-        if (training_args.task_type == "mod1"):
+        if (training_args.task_type == "lex"):
             test_dataset = (
-                GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="mod1", mode="test",
+                GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="lex", mode="test",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_predict
                 else None
             )
 
         else:
-            if (training_args.task_type == "mod2"):
+            if (training_args.task_type == "delex"):
                 test_dataset = (
-                    GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="test",
+                    GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_predict
                     else None
@@ -301,8 +301,10 @@ def run_loading_and_testing(model_args, data_args, training_args):
     # refer:https://tinyurl.com/y5dyshnh for further details regarding accuracies
 
 
-    model_path = wget.download(url)
-    #model_path="/home/u11/mithunpaul/xdisk/run_training_again_sweet_water_1001/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/pytorch_model_234bd3.bin"
+    #model_path = wget.download(url)
+
+    #uncomment and use this if you want to load the model from local disk.
+    model_path="/home/u11/mithunpaul/xdisk/huggingface_bert_fnc_to_fever_combined_attndropout0pt5classLossWeight0pt0875/output/fever/fnccrossdomain/lex/figerspecific/bert-base-cased/128/pytorch_model_b29119.bin"
     device = torch.device('cpu')
 
     if training_args.do_train_1student_1teacher:
