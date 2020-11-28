@@ -16,6 +16,14 @@ pandas
 nlp
 tensorflow
 pytest
-transformers
-
-
+gitpython
+requests
+filelock
+tqdm
+tokenizers
+wandb
+#conda install pytorch torchvision torchaudio -c pytorch
+ipython
+wget
+nltk
+stop-words
