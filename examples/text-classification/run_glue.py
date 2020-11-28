@@ -180,18 +180,27 @@ def run_training(model_args, data_args, training_args):
         config=config,
         cache_dir=model_args.cache_dir,
         )
+
+        # detach so as to have no backpropagation in lex. instead
+
+        model_teacher_ema = AutoModelForSequenceClassification.from_pretrained(
+            model_args.model_name_or_path,
+            from_tf=bool(".ckpt" in model_args.model_name_or_path),
+            config=config,
+            cache_dir=model_args.cache_dir,
+        )
+
+
+        for param in model_teacher_ema.bert.parameters():
+            param.requires_grad = False
+
         model_student = AutoModelForSequenceClassification.from_pretrained(
         model_args.model_name_or_path,
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
         config=config,
         cache_dir=model_args.cache_dir,
         )
-        model_student_not_combined = AutoModelForSequenceClassification.from_pretrained(
-            model_args.model_name_or_path,
-            from_tf=bool(".ckpt" in model_args.model_name_or_path),
-            config=config,
-            cache_dir=model_args.cache_dir,
-        )
+
     else:
         model = AutoModelForSequenceClassification.from_pretrained(
             model_args.model_name_or_path,
@@ -314,7 +323,7 @@ def run_training(model_args, data_args, training_args):
 
             tokenizer_delex,
             tokenizer_lex,
-            models={"teacher": model_teacher, "student": model_student},
+            models={"teacher": model_teacher, "teacher_ema":model_teacher_ema,"student": model_student},
             args=training_args,
             train_datasets={"combined": train_dataset},
             test_dataset=test_dataset,

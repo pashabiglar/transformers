@@ -204,7 +204,9 @@ class StudentTeacherTrainer:
                 (Optional) in evaluation and prediction, only return the loss
         """
         self.lex_teacher_model = models.get("teacher").to(args.device)
+        self.lex_teacher_model_ema = models.get("teacher_ema").to(args.device)
         self.delex_student_model = models.get("student").to(args.device)
+
 
 
         self.eval_dataset = eval_dataset
@@ -456,6 +458,15 @@ class StudentTeacherTrainer:
                 "weight_decay": 0.0,
             },
             {
+                "params": [p for n, p in self.lex_teacher_model_ema.named_parameters() if
+                           not any(nd in n for nd in no_decay)],
+                "weight_decay": self.args.weight_decay,
+            },
+            {
+                "params": [p for n, p in self.lex_teacher_model_ema.named_parameters() if any(nd in n for nd in no_decay)],
+                "weight_decay": 0.0,
+            },
+            {
                 "params": [p for n, p in self.delex_student_model.named_parameters() if
                            not any(nd in n for nd in no_decay)],
                 "weight_decay": self.args.weight_decay,
@@ -523,6 +534,10 @@ class StudentTeacherTrainer:
             wandb.watch(
                 self.lex_teacher_model, log=os.getenv("WANDB_WATCH", "gradients"), log_freq=max(100, self.args.logging_steps)
             )
+            # wandb.watch(
+            #     self.lex_teacher_model_ema, log=os.getenv("WANDB_WATCH", "gradients"),
+            #     log_freq=max(100, self.args.logging_steps)
+            # )
             wandb.watch(
                 self.delex_student_model, log=os.getenv("WANDB_WATCH", "gradients"), log_freq=max(100, self.args.logging_steps)
             )
@@ -738,6 +753,12 @@ class StudentTeacherTrainer:
             labels = labels.detach()
         return (loss, logits.detach(), labels)
 
+    def update_ema_variables(self,model, ema_model, alpha, global_step):
+        # Use the true average until the exponential average is more correct
+        alpha = min(1 - 1 / (global_step + 1), alpha)
+        for ema_param, param in zip(ema_model.parameters(), model.parameters()):
+            ema_param.data.mul_(alpha).add_(1 - alpha, param.data)
+
     def get_git_info(self):
         repo = git.Repo(search_parent_directories=True)
 
@@ -771,6 +792,7 @@ class StudentTeacherTrainer:
             num_train_epochs = self.args.num_train_epochs
 
         model_teacher = self.lex_teacher_model
+        model_teacher_ema = self.lex_teacher_model_ema
         model_student = self.delex_student_model
 
         weight_consistency_loss = 1
@@ -969,6 +991,7 @@ class StudentTeacherTrainer:
 
                 #model returns # (loss), logits, (hidden_states), (attentions)
                 tr_loss_lex,outputs_lex = self.get_classification_loss(model_teacher, input_lex, optimizer)
+                tr_loss_lex_ema, outputs_lex_ema = self.get_classification_loss(model_teacher_ema, input_lex, optimizer)
                 tr_loss_delex,outputs_delex = self.get_classification_loss(model_student, input_delex, optimizer)
 
 
@@ -988,8 +1011,13 @@ class StudentTeacherTrainer:
 
                 # outputs contains in that order # (loss), logits, (hidden_states), (attentions)-src/transformers/modeling_bert.py
                 logits_lex = outputs_lex[1]
+                logits_lex_ema = outputs_lex_ema[1]
                 logits_delex=outputs_delex[1]
-                consistency_loss = self.get_consistency_loss(logits_lex,logits_delex,"mse")
+
+                #in the world of student teacher with ema, the consistency loss will be between the student and ema of something. that something
+                #can be an emaof lex , ema of delex, or both
+                consistency_loss = self.get_consistency_loss(logits_lex_ema,logits_delex,"mse")
+                #consistency_loss = self.get_consistency_loss(logits_lex, logits_delex, "mse")
 
                 if (flag_run_both):
                     combined_loss = (weight_classification_loss*combined_classification_loss) + (weight_consistency_loss*consistency_loss)
@@ -1041,6 +1069,9 @@ class StudentTeacherTrainer:
                         optimizer.step()
                         logger.debug("just done withn optimixer.step)")
                     scheduler.step()
+                    self.update_ema_variables(model_teacher, model_teacher_ema, self.args.weight_decay,
+                                              self.global_step)
+
                     if (flag_run_both):
                         model_teacher.zero_grad()
                         model_student.zero_grad()
@@ -1084,10 +1115,12 @@ class StudentTeacherTrainer:
                         if (flag_run_both):
                             if hasattr(model_teacher, "module"):
                                 assert model_teacher.module is self.lex_teacher_model.module
+                                assert model_teacher_ema.module is self.lex_teacher_model_ema.module
                                 assert model_student.module is self.delex_student_model.module
 
                             else:
                                 assert model_teacher is self.lex_teacher_model
+                                assert model_teacher_ema is self.lex_teacher_model_ema
                                 assert model_student is self.delex_student_model
 
 
@@ -1108,8 +1141,10 @@ class StudentTeacherTrainer:
                             if (flag_run_teacher_alone):
                                 if hasattr(model_teacher, "module"):
                                     assert model_teacher.module is self.lex_teacher_model.module
+                                    assert model_teacher_ema.module is self.lex_teacher_model_ema.module
                                 else:
                                     assert model_teacher is self.lex_teacher_model
+                                    assert model_teacher_ema.module is self.lex_teacher_model_ema.module
                                 self.model = model_teacher
                                 output_dir = os.path.join(self.args.output_dir,
                                                           f"model_teacher_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
