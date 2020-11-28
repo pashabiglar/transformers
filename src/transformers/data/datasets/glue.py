@@ -19,7 +19,9 @@ from ..processors.utils import InputFeatures
 
 logger = logging.getLogger(__name__)
 
+import spacy
 
+nlp = spacy.load("en_core_web_sm")
 @dataclass
 class GlueDataTrainingArguments:
     """
@@ -65,6 +67,7 @@ class GlueDataset(Dataset):
     output_mode: str
     features: List[InputFeatures]
 
+
     def __init__(
         self,
 
@@ -74,7 +77,7 @@ class GlueDataset(Dataset):
         limit_length: Optional[int] = None,
         mode: Union[str, Split] = Split.train,
         cache_dir: Optional[str] = None,
-
+            remove_stop_words_in=False
 
     ):
         self.args = args
@@ -141,13 +144,27 @@ class GlueDataset(Dataset):
                 if limit_length is not None:
                     examples = examples[:limit_length]
                 logger.info(f"going to get into function glue_convert_examples_to_features")
+
+                #finding all NER entities. this is needed in attention calculations for bert
+                if(task_type == "lex"):
+                    all_ner={}
+                    for x in examples:
+                        combined=x.text_a+x.text_b
+                        #todo: replace spacy with processors ner tagger.
+                        doc = nlp(combined)
+                        for ent in doc.ents:
+                            all_ner[ent.text]=1
+                    self.ner_tags=all_ner
+
                 self.features = glue_convert_examples_to_features(
                     examples,
                     tokenizer,
+                    remove_stop_words=remove_stop_words_in,
                     max_length=args.max_seq_length,
                     task=args.task_name,
                     label_list=label_list,
                     output_mode=self.output_mode,
+
                 )
 
 
