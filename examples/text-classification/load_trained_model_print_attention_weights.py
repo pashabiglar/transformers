@@ -22,12 +22,24 @@ Original file is located at
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""
+note from mithun @Sat Nov 28 15:25:43 MST 2020: 
+to run this file, you need to set settings in two places. ./run_all.sh and here at the config file
+For example: to load a model trained on lexicalized data, and to run it over test partition (which is cross domain's  dev partition)
+1) got to ./run_all.sh and set export TASK_TYPE="lex"
+2) pick either of CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC or CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP depending on whether you
+are running on laptop or hpc server
+"""
+
+
+
 """ Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
 CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP= "config_for_attention_visualization_for_loading_lex_model_laptop.py"
 CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC= "config_for_attention_visualization_for_loading_lex_model_hpc.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP="config_for_attention_visualization_for_loading_stuteacher_model_laptop.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC="config_for_attention_visualization_for_loading_stuteacher_model_hpc.py"
-config_file_touse = CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC
+config_file_touse = CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC
 
 
 import spacy
@@ -1801,7 +1813,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
         return {k: v for k, v in sorted(dict_layer_head_weights.items(), key=lambda item: item[1],reverse=True)}
 
 
-    def get_attention_given_dataset(dataloader,model,tokenizer):
+    def get_per_token_attention_weights(dataloader,model,tokenizer):
         attention=claim_evidence_plain_text=None
 
         # create a dictionary to store overall attention of a given head and a layer. maybe can eventually store it in a matrix
@@ -1813,41 +1825,6 @@ def run_loading_and_testing(model_args, data_args, training_args):
         for each_claim_evidence_pair in tqdm(dataloader, desc="getting attention per data point"):
             token_type_ids = each_claim_evidence_pair.token_type_ids
             input_ids = each_claim_evidence_pair.input_ids
-            assert len(token_type_ids)==len(input_ids)
-
-            # #CLS=101 SEP=102
-            # cls_indices =  list(filter(lambda x: input_ids[x] == 101, range(len(input_ids))))
-            # sep_indices = list(filter(lambda x: input_ids[x] == 102, range(len(input_ids))))
-            #
-            # #keep finding SEP until it doesnt exist
-            # try:
-            #     while True:
-            #         index_sep=input_ids.index(102)
-            #         del input_ids[index_sep]
-            #         del token_type_ids[index_sep]
-            #
-            # except ValueError:
-            #     print("")
-            #
-            # # keep finding CLS until it doesnt exist
-            # try:
-            #     while True:
-            #         index_cls = input_ids.index(101)
-            #         del input_ids[index_cls]
-            #         del token_type_ids[index_cls]
-            #
-            # except ValueError:
-            #     print("")
-            #
-            # # keep finding and removing PAD until it doesnt exist
-            # try:
-            #     while True:
-            #         index_cls = input_ids.index(0)
-            #         del input_ids[index_cls]
-            #         del token_type_ids[index_cls]
-            #
-            # except ValueError:
-            #     print("")
 
             assert len(token_type_ids) == len(input_ids)
             input_ids_tensor=None
@@ -1862,11 +1839,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
             assert input_ids_tensor is not None
             assert token_type_ids_tensor is not None
             attention = model(input_ids_tensor, token_type_ids=token_type_ids_tensor)[-1]
-
-
             tokens = tokenizer.decode_return_list(input_ids,clean_up_tokenization_spaces=True)
-            #tokens = tokenizer.decode(input_ids, clean_up_tokenization_spaces=True)
-
 
             try:
                 assert len(tokens) == len(input_ids)
@@ -1878,7 +1851,57 @@ def run_loading_and_testing(model_args, data_args, training_args):
                 print("assertion error exiting")
                 exit()
 
+            find_aggregate_attention_per_token(attention, tokens,dict_layer12_head_12)
 
+        dict_layer12_head_12_sans_stopwords=remove_stop_words_punctuations_etc(dict_layer12_head_12)
+
+        assert attention is not None
+        if (training_args.task_type == "lex"):
+            find_percentage_attention_given_to_ner_entities(dict_layer12_head_12_sans_stopwords,test_dataset)
+
+        if training_args.do_train_1student_1teacher:
+            figer_tags=get_figer_tags()
+            find_percentage_attention_given_to_figer_entities(dict_layer12_head_12_sans_stopwords,figer_tags)
+
+        return sort_weights(dict_layer12_head_12_sans_stopwords)
+
+    def find_cross_sentence_attention(dataloader,model,tokenizer):
+        attention=claim_evidence_plain_text=None
+
+        # create a dictionary to store overall attention of a given head and a layer. maybe can eventually store it in a matrix
+        # lets start with 12th layer, 12th attention head- eventually we wil need to create a 12x12 matrix of such dicts for 12 layers and 12 heads
+        dict_layer12_head_12={}
+
+
+
+        for each_claim_evidence_pair in tqdm(dataloader, desc="getting attention per data point"):
+            token_type_ids = each_claim_evidence_pair.token_type_ids
+            input_ids = each_claim_evidence_pair.input_ids
+
+            assert len(token_type_ids) == len(input_ids)
+            input_ids_tensor=None
+            token_type_ids_tensor=None
+            if (training_args.machine_to_run_on == "hpc") and torch.cuda.is_available():
+                input_ids_tensor = torch.cuda.LongTensor(np.reshape(input_ids, (1, len(input_ids))))
+                token_type_ids_tensor = torch.cuda.LongTensor(np.reshape(token_type_ids, (1, len(token_type_ids))))
+            if (training_args.machine_to_run_on == "laptop"):
+                input_ids_tensor = torch.LongTensor(np.reshape(input_ids,(1,len(input_ids))))
+                token_type_ids_tensor = torch.LongTensor(np.reshape(token_type_ids,(1,len(token_type_ids))))
+
+            assert input_ids_tensor is not None
+            assert token_type_ids_tensor is not None
+            attention = model(input_ids_tensor, token_type_ids=token_type_ids_tensor)[-1]
+            tokens = tokenizer.decode_return_list(input_ids,clean_up_tokenization_spaces=True)
+
+            try:
+                assert len(tokens) == len(input_ids)
+            except AssertionError:
+                print(f"len(tokens) == {len(tokens)}")
+                print(f"len(input_ids) == {len(input_ids)}")
+                print(f"(tokens) == {(tokens)}")
+                print(f"(input_ids) == {(input_ids)}")
+                print("assertion error exiting")
+                exit()
 
             find_aggregate_attention_per_token(attention, tokens,dict_layer12_head_12)
 
@@ -1982,7 +2005,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     def get_figer_tags():
         if (training_args.machine_to_run_on == "laptop"):
-            f = open("figer_tags.txt", "r")
+            f = open("./figer_tags.txt", "r")
         else:
             f = open("figer_tags.txt", "r")
         all_tags = []
@@ -1999,11 +2022,11 @@ def run_loading_and_testing(model_args, data_args, training_args):
     def find_aggregate_attention_per_token(attention,tokens,dict_layer12_head_12):
 
         for layer_index,per_layer_attention in enumerate(attention):
-            if(layer_index==11):
+            if(layer_index==0):
                 # lets starts with 12th layer, 12th attention head
                 for heads in per_layer_attention:
                     for head_index,per_head_attention in enumerate(heads):
-                        if(head_index==11):
+                        if(head_index==0):
                             for per_left_token_attention in per_head_attention:
                                 assert len(per_left_token_attention.data.tolist())==len(tokens)
                                 for weight,token in zip(per_left_token_attention.data.tolist(),tokens):
@@ -2048,15 +2071,12 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     tokenizer_to_use=None
     #best student teacher trained (aka combined) models
-    #url = 'https://osf.io/twbmu/download' # light-plasma combined trained model-this model gave 59.31 cross domain fnc score and 69.21for cross domain accuracy
-    #url = 'https://osf.io/vnyad//download' # legendary-voice-1016 combined trained model-this model gave 61.52  cross domain fnc score and  74.4 for cross domain accuracy- wandb graph name legendary-voice-1016
+
     if training_args.do_train_1student_1teacher:
         url = 'https://osf.io/ht9gb/download'  # celestial-sun-1042 combined trained model- githubsha 21dabe wandb_celestial_sun1042 best_cd_acc_fnc_score_71.89_61.12
 
 
-    #best  models when trained on fever lexicalized data- if using this model, dont forget to use tokenizer_lex
-    #url = 'https://osf.io/q6apm/download'  # link to one of the best lex trained model- trained_model_lex_wandbGraphNameQuietHaze806_accuracy67point5_fncscore64point5_atepoch2.bin...this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
-    # url = 'https://osf.io/fus25/download' #trained_model_lex_sweet_water_1001_trained_model_afterepoch1_accuracy6907_fncscore6254.bin
+
     if(training_args.task_type=="lex"):
       print("found use_lex==True")
       url = 'https://osf.io/fp89k/download' #trained_model_lex_helpful_vortex_1002_trained_model_afterepoch1_accuracy70point21percent..bin
@@ -2134,7 +2154,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #input_id_list = input_ids[0].tolist()  # Batch index 0
     #tokens = tokenizer_to_use.convert_ids_to_tokens(input_id_list)
 
-    dict_layer_head = get_attention_given_dataset(test_dataset,model_for_bert,tokenizer_to_use)
+    dict_layer_head = get_per_token_attention_weights(test_dataset,model_for_bert,tokenizer_to_use)
 
     # empty out the file which stores intermediate evaluations
     output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)

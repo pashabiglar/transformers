@@ -83,7 +83,7 @@ def report_score(actual,predicted):
 dtypes={'a': np.float64, 'b': np.int32, 'c': 'Int64','d': 'Int64','e': 'Int64'}
 
 
-model1_predictions=pd.read_csv("predictions/predictions_on_test_partition_5291a1_figerabstract.txt", sep="\t", dtype=dtypes)
+model1_predictions=pd.read_csv("predictions/predictions_fnc2fever_by_lex_model.txt", sep="\t", dtype=dtypes)
 model2_predictions=pd.read_csv("predictions/predictions_on_test_partition_7b2f40_legendary_voice_best_figerspecific_7474acc_6344fncs.txt", sep="\t", dtype=dtypes)
 model3_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_lex_cdaccuracy6908_wandbGraphSweetWater1001.txt", sep="\t", dtype=dtypes)
 gold=pd.read_csv("predictions/fnc_dev_gold.tsv", sep="\t")

@@ -45,8 +45,8 @@ fi
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
 
 
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_visualizations/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_visualizations/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_attention_weights_branch/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_attention_weights_branch/data"
 else
         wandb off
         export DATA_DIR_BASE="/Users/mordor/research/huggingface/src/transformers/data/datasets"
@@ -64,9 +64,9 @@ echo "EPOCHS=$EPOCHS"
 
 export DATASET="fever"
 export basedir="$DATA_DIR_BASE/$DATASET"
-export TASK_TYPE="combined" #options for task type include lex,delex,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both mod1 and mod2 folders
+export TASK_TYPE="lex" #options for task type include lex,delex,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both mod1 and mod2 folders
 export SUB_TASK_TYPE="figerspecific" #options for TASK_SUB_TYPE (usually used only for TASK_TYPEs :[mod2,combined])  include [oa, figerspecific, figerabstract, oass, simplener]
-export TASK_NAME="fnccrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
+export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
 export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE"
 
 export TOY_DATA_DIR="toydata"
@@ -106,12 +106,6 @@ fi
 echo "done with data download  TOY_DATA_DIR_PATH now is $TOY_DATA_DIR_PATH"
 
 
-#
-##use a smaller toy data to test on laptop
-#if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
-#        DATA_DIR=$TOY_DATA_DIR_PATH
-#fi
-
 
 #use a smaller toy data to test
 
@@ -139,6 +133,7 @@ export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME     
 
 #actual code runs
 #./run_glue.sh
+
 ./load_model_test.sh
 
 
