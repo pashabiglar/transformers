@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ GLUE processors and helpers """
-
+import string
 import logging
 import os
 from dataclasses import asdict
@@ -24,6 +24,9 @@ from tqdm import tqdm
 from ...file_utils import is_tf_available
 from ...tokenization_utils import PreTrainedTokenizer
 from .utils import DataProcessor, InputExample, InputFeatures
+import nltk
+from stop_words import get_stop_words
+from nltk.corpus import stopwords
 
 
 if is_tf_available():
@@ -35,10 +38,12 @@ logger = logging.getLogger(__name__)
 def glue_convert_examples_to_features(
     examples: Union[List[InputExample], "tf.data.Dataset"],
     tokenizer: PreTrainedTokenizer,
+    remove_stop_words,
     max_length: Optional[int] = None,
     task=None,
     label_list=None,
     output_mode=None,
+
 ):
     """
     Loads a data file into a list of ``InputFeatures``
@@ -63,8 +68,7 @@ def glue_convert_examples_to_features(
             raise ValueError("When calling glue_convert_examples_to_features from TF, the task parameter is required.")
         return _tf_glue_convert_examples_to_features(examples, tokenizer, max_length=max_length, task=task)
     return _glue_convert_examples_to_features(
-        examples, tokenizer, max_length=max_length, task=task, label_list=label_list, output_mode=output_mode
-    )
+        examples, tokenizer, remove_stop_words,max_length=max_length, task=task, label_list=label_list, output_mode=output_mode)
 
 def glue_convert_pair_examples_to_features(
     examples1: Union[List[InputExample], "tf.data.Dataset"],
@@ -134,10 +138,11 @@ if is_tf_available():
 def _glue_convert_examples_to_features(
     examples: List[InputExample],
     tokenizer: PreTrainedTokenizer,
+    remove_stop_words,
     max_length: Optional[int] = None,
     task=None,
     label_list=None,
-    output_mode=None,
+    output_mode=None
 ):
     logger.info("inside function _glue_convert_examples_to_features")
     if max_length is None:
@@ -177,6 +182,53 @@ def _glue_convert_examples_to_features(
     logger.info(f"value of tokenixer is {tokenizer}")
 
 
+
+    examples_no_stopwords=[]
+    if(remove_stop_words==True):
+        stop_words = get_stop_words('english')
+        #manually adding nltk stop words since it was getting dificcult to download this on the fly on the hpc machine
+        nltk_stop_words= ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've",
+                        "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself',
+                        'she', "she's", 'her', 'hers', 'herself', 'it', "it's", 'its', 'itself', 'they', 'them',
+                        'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', "that'll",
+                        'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had',
+                        'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because',
+                        'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into',
+                        'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in',
+                        'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there',
+                        'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other',
+                        'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's',
+                        't', 'can', 'will', 'just', 'don', "don't", 'should', "should've", 'now', 'd', 'll', 'm', 'o',
+                        're', 've', 'y', 'ain', 'aren', "aren't", 'couldn', "couldn't", 'didn', "didn't", 'doesn',
+                        "doesn't", 'hadn', "hadn't", 'hasn', "hasn't", 'haven', "haven't", 'isn', "isn't", 'ma',
+                        'mightn', "mightn't", 'mustn', "mustn't", 'needn', "needn't", 'shan', "shan't", 'shouldn',
+                        "shouldn't", 'wasn', "wasn't", 'weren', "weren't", 'won', "won't", 'wouldn', "wouldn't"]
+        stop_words.extend(nltk_stop_words)
+        stop_words.extend(["`","\`","--","``","'","\"","''","‘"," — ","-","_","__","=","."])
+
+
+
+        for example_sw in examples:
+            text_a_tokens=example_sw.text_a.split(" ")
+            text_a_tokens_new=[]
+            for each_token in text_a_tokens:
+                if not each_token.lower() in stop_words:
+                    if not each_token.lower() in string.punctuation:
+                        text_a_tokens_new.append(each_token)
+            example_sw.text_a=" ".join(text_a_tokens_new)
+
+            text_b_tokens=example_sw.text_b.split(" ")
+            text_b_tokens_new=[]
+            for each_token in text_b_tokens:
+                if not each_token.lower() in stop_words:
+                    if not each_token.lower() in string.punctuation:
+                        text_b_tokens_new.append(each_token)
+            example_sw.text_b=" ".join(text_b_tokens_new)
+
+            examples_no_stopwords.append(example_sw)
+        examples=examples_no_stopwords
+
+    assert len(examples)>0
     batch_encoding = tokenizer.batch_encode_plus(
         [(example.text_a, example.text_b) for example in examples], max_length=max_length, pad_to_max_length=True,
     )
