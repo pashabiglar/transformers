@@ -39,7 +39,7 @@ CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP= "config_for_attention_visualization_f
 CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC= "config_for_attention_visualization_for_loading_lex_model_hpc.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP="config_for_attention_visualization_for_loading_stuteacher_model_laptop.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC="config_for_attention_visualization_for_loading_stuteacher_model_hpc.py"
-config_file_touse = CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC
+config_file_touse = CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP
 NO_OF_LAYERS=12
 NO_OF_HEADS_PER_LAYER=12
 
@@ -1821,18 +1821,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
         # lets start with 12th layer, 12th attention head- eventually we wil need to create a 12x12 matrix of such dicts for 12 layers and 12 heads
         dict_tokens_attention={}
 
-        # for each data point, create a dictionary each for each of 144 heads (i.e 12 layers x 12 heads)
-        # create a list of n dictionary
-        # list_layer_dicts=[]
-        # for layer in range(NO_OF_LAYERS):
-        #     list_head_dicts = []
-        #     for head in range(NO_OF_HEADS_PER_LAYER):
-        #         name_of_dict={}
-        #         list_head_dicts.append(name_of_dict)
-        #     list_layer_dicts.append(list_head_dicts)
-        #
-        # assert len(list_layer_dicts)>0
-        # assert len(list_layer_dicts[0]) > 0
+
 
         # create the file which will write highest NER percentages
         #  (refer comments below for definition of NER percentage)
@@ -1850,15 +1839,21 @@ def run_loading_and_testing(model_args, data_args, training_args):
             writer.write("layer\thead\tpercentage\n")
 
         for layer in range(NO_OF_LAYERS):
+            logger.info(f"getting into layer number:{layer}")
+            print(f"getting into head number:{layer}")
             for head in range(NO_OF_HEADS_PER_LAYER):
-
-
-
-
+                logger.info(f"getting into head number:{head}")
+                print(f"getting into head number:{head}")
                 dict_unique_tokens_attention_weights={}
+                data_counter=1
+                total_length_datapoints=len(dataloader)
                 #go through the entire dataset (usually test or dev partition), and for each claim evidence pair,
                 # run it through the trained model, which then predicts the label, along with attention it places on each token.
-                for each_claim_evidence_pair in tqdm(dataloader, desc="getting attention per data point"):
+                for each_claim_evidence_pair in tqdm(dataloader, desc="getting attention per data point",total=total_length_datapoints):
+                    print(f"data point:{data_counter}/{total_length_datapoints} of head:{head} layer:{layer}")
+                    logger.info(f"data point:{data_counter}/{total_length_datapoints} of head:{head} layer:{layer}")
+
+                    data_counter=data_counter+1
                     token_type_ids = each_claim_evidence_pair.token_type_ids
                     input_ids = each_claim_evidence_pair.input_ids
 
