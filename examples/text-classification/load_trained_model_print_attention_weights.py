@@ -1834,23 +1834,25 @@ def run_loading_and_testing(model_args, data_args, training_args):
         # assert len(list_layer_dicts)>0
         # assert len(list_layer_dicts[0]) > 0
 
+        # create the file which will write highest NER percentages
+        #  (refer comments below for definition of NER percentage)
+        output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
+        file_to_write_nerp = None
+        if (training_args.task_type == "lex"):
+            file_to_write_nerp = output_dir_absolute_path + "lex_named_entity_percentage" + git_details[
+                'repo_short_sha'] + ".csv"
+        if training_args.do_train_1student_1teacher:
+            file_to_write_nerp = output_dir_absolute_path + "stuteacher_ner_tags_percentage" + git_details[
+                'repo_short_sha'] + ".csv"
+        assert file_to_write_nerp is not None
+        # empty out the file
+        with open(file_to_write_nerp, "w") as writer:
+            writer.write("layer\thead\tpercentage\n")
+
         for layer in range(NO_OF_LAYERS):
             for head in range(NO_OF_HEADS_PER_LAYER):
 
-                # create the file which will write highest NER percentages
-                #  (refer comments below for definition of NER percentage)
-                output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
-                file_to_write_nerp = None
-                if (training_args.task_type == "lex"):
-                    file_to_write_nerp = output_dir_absolute_path + "lex_named_entity_percentage" + git_details[
-                        'repo_short_sha'] + ".csv"
-                if training_args.do_train_1student_1teacher:
-                    file_to_write_nerp = output_dir_absolute_path + "stuteacher_ner_tags_percentage" + git_details[
-                        'repo_short_sha'] + ".csv"
-                assert file_to_write_nerp is not None
-                # empty out the file
-                with open(file_to_write_nerp, "w") as writer:
-                    writer.write("layer\thead\tpercentage\n")
+
 
 
                 dict_unique_tokens_attention_weights={}
@@ -1889,7 +1891,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
                         # tokens store it in a dictionary and do it for all data points
 
 
-                        find_aggregate_attention_per_token(attention, tokens,dict_unique_tokens_attention_weights,layer, head)
+                    find_aggregate_attention_per_token(attention, tokens,dict_unique_tokens_attention_weights,layer, head)
 
                 # so at the end of all data points, there will be one dictionary, each containing tokens and attention
                 # weights per that layer per head. Go through each of them, remove stop words , calculate
@@ -2035,6 +2037,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
         # write the aggregated sorted attention weights to disk
         with open(output_file_name, "w") as writer:
             logger.info(f"***** (Going to write attention results to disk at {output_file_name} *****")
+            print(f"***** (Going to write attention results to disk at {output_file_name} *****")
             for k, v in dict_layer_head.items():
                 writer.write(f"{k}:{v}")
                 writer.write(f"\n")
@@ -2051,7 +2054,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
         # write the aggregated sorted attention weights to disk
         with open(output_file_name, "a+") as csvfile:
             writer = csv.writer(csvfile, delimiter='\t')
-            logger.info(f"***** (Going to write csv file to disk at {output_file_name} *****")
+            logger.info(f"***** (Going to write csv file to disk at {output_file_name} . this is for layer:{layer} head:{head}*****")
+            print(
+                f"***** (Going to write csv file to disk at {output_file_name} . this is for layer:{layer} head:{head}*****")
             writer.writerow([layer,head,percentage])
 
 
