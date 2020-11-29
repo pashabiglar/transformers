@@ -39,11 +39,12 @@ CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP= "config_for_attention_visualization_f
 CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC= "config_for_attention_visualization_for_loading_lex_model_hpc.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP="config_for_attention_visualization_for_loading_stuteacher_model_laptop.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC="config_for_attention_visualization_for_loading_stuteacher_model_hpc.py"
-config_file_touse = CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP
-
+config_file_touse = CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC
+NO_OF_LAYERS=12
+NO_OF_HEADS_PER_LAYER=12
 
 import spacy
-
+import csv
 import configparser
 import sys, getopt
 import re
@@ -1820,6 +1821,19 @@ def run_loading_and_testing(model_args, data_args, training_args):
         # lets start with 12th layer, 12th attention head- eventually we wil need to create a 12x12 matrix of such dicts for 12 layers and 12 heads
         dict_tokens_attention={}
 
+        # for each data point, create a dictionary each for each of 144 heads (i.e 12 layers x 12 heads)
+        # create a list of n dictionary
+        list_layer_dicts=[]
+        for layer in range(NO_OF_LAYERS):
+            list_head_dicts = []
+            for head in range(NO_OF_HEADS_PER_LAYER):
+                name_of_dict={}
+                list_head_dicts.append(name_of_dict)
+            list_layer_dicts.append(list_head_dicts)
+
+        assert len(list_layer_dicts)>0
+        assert len(list_layer_dicts[0]) > 0
+
 
         #go through the entire dataset (usually test or dev partition), and for each claim evidence pair,
         # run it through the trained model, which then predicts the label, along with attention it places on each token.
@@ -1852,80 +1866,73 @@ def run_loading_and_testing(model_args, data_args, training_args):
                 print("assertion error exiting")
                 exit()
 
-            #for each data point, get token-attention pair across 144 heads (i.e 12 layers x 12 heads)
-            for layer in range(12):
-                for head in range(12):
-                    find_aggregate_attention_per_token(attention, tokens,dict_tokens_attention,layer, head)
-
-        dict_unique_tokens_attention_weights_sans_stopwords=remove_stop_words_punctuations_etc(dict_tokens_attention)
-
-        # out of all the attention placed on all the tokens how much/what percentage was given to Named entities (EG:Apple, Islamic)
-        # note: in case of delexicalized it will become percentage placed on NER entities like person, country etc
-        ner_percent_attention=0
+            for layer in range(NO_OF_LAYERS):
+                for head in range(NO_OF_HEADS_PER_LAYER):
+                    assert list_layer_dicts[layer][head] is not None
+                    assert type(list_layer_dicts[layer][head]) is dict
+                    find_aggregate_attention_per_token(attention, tokens,list_layer_dicts[layer][head],layer, head)
 
 
-        assert attention is not None
+
+        # so at the end of all data points, there will be 144 dictionaries, each containing tokens and attention weights per layer per head
+        #go through each of them, remove stop words , calculate  ner entity attention percentage and write to disk
+
+        # also before getting into loop create the file which will write highest NER percentages (refer comments below)
+        output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
+
+        file_to_write_nerp=None
         if (training_args.task_type == "lex"):
-            ner_percent_attention=find_percentage_attention_given_to_ner_entities(dict_unique_tokens_attention_weights_sans_stopwords,test_dataset)
+            file_to_write_nerp = output_dir_absolute_path + "lex_named_entity_percentage" + git_details['repo_short_sha'] + ".csv"
 
         if training_args.do_train_1student_1teacher:
-            figer_tags=get_figer_tags()
-            ner_percent_attention=find_percentage_attention_given_to_figer_entities(dict_unique_tokens_attention_weights_sans_stopwords,figer_tags)
+            file_to_write_nerp = output_dir_absolute_path + "stuteacher_ner_tags_percentage" + git_details['repo_short_sha']+".csv"
 
-        assert ner_percent_attention != 0
-        return sort_weights(dict_unique_tokens_attention_weights_sans_stopwords),ner_percent_attention
+        assert file_to_write_nerp is not None
 
-    def find_cross_sentence_attention(dataloader,model,tokenizer):
-        attention=claim_evidence_plain_text=None
-
-        # create a dictionary to store overall attention of a given head and a layer. maybe can eventually store it in a matrix
-        # lets start with 12th layer, 12th attention head- eventually we wil need to create a 12x12 matrix of such dicts for 12 layers and 12 heads
-        dict_layer12_head_12={}
+        # empty out the file
+        with open(file_to_write_nerp, "w") as writer:
+            writer.write("layer\thead\tpercentage\n")
 
 
+        for layer in range(NO_OF_LAYERS):
+            for head in range(NO_OF_HEADS_PER_LAYER):
+                dict_unique_tokens_attention_weights_sans_stopwords=remove_stop_words_punctuations_etc(list_layer_dicts[layer][head])
 
-        for each_claim_evidence_pair in tqdm(dataloader, desc="getting attention per data point"):
-            token_type_ids = each_claim_evidence_pair.token_type_ids
-            input_ids = each_claim_evidence_pair.input_ids
+                # out of all the attention placed on all the tokens how much/what percentage was given to Named entities (EG:Apple, Islamic)
+                # note: in case of delexicalized data it will become same percentage placed on NER entities like person, country etc
+                ner_percent_attention=0
 
-            assert len(token_type_ids) == len(input_ids)
-            input_ids_tensor=None
-            token_type_ids_tensor=None
-            if (training_args.machine_to_run_on == "hpc") and torch.cuda.is_available():
-                input_ids_tensor = torch.cuda.LongTensor(np.reshape(input_ids, (1, len(input_ids))))
-                token_type_ids_tensor = torch.cuda.LongTensor(np.reshape(token_type_ids, (1, len(token_type_ids))))
-            if (training_args.machine_to_run_on == "laptop"):
-                input_ids_tensor = torch.LongTensor(np.reshape(input_ids,(1,len(input_ids))))
-                token_type_ids_tensor = torch.LongTensor(np.reshape(token_type_ids,(1,len(token_type_ids))))
+                assert attention is not None
+                if (training_args.task_type == "lex"):
+                    ner_percent_attention=find_percentage_attention_given_to_ner_entities(dict_unique_tokens_attention_weights_sans_stopwords,test_dataset)
 
-            assert input_ids_tensor is not None
-            assert token_type_ids_tensor is not None
-            attention = model(input_ids_tensor, token_type_ids=token_type_ids_tensor)[-1]
-            tokens = tokenizer.decode_return_list(input_ids,clean_up_tokenization_spaces=True)
+                if training_args.do_train_1student_1teacher:
+                    figer_tags=get_figer_tags()
+                    ner_percent_attention=find_percentage_attention_given_to_figer_entities(dict_unique_tokens_attention_weights_sans_stopwords,figer_tags)
 
-            try:
-                assert len(tokens) == len(input_ids)
-            except AssertionError:
-                print(f"len(tokens) == {len(tokens)}")
-                print(f"len(input_ids) == {len(input_ids)}")
-                print(f"(tokens) == {(tokens)}")
-                print(f"(input_ids) == {(input_ids)}")
-                print("assertion error exiting")
-                exit()
+                assert ner_percent_attention != 0
 
-            find_aggregate_attention_per_token(attention, tokens,dict_layer12_head_12)
+                dict_layer_head=sort_weights(dict_unique_tokens_attention_weights_sans_stopwords)
 
-        dict_layer12_head_12_sans_stopwords=remove_stop_words_punctuations_etc(dict_layer12_head_12)
+                # empty out the file which stores top tokens and their attention weights
+                output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
+                file_to_write_attention = output_dir_absolute_path + "attention_weights_" + \
+                                          git_details['repo_short_sha'] + "_layer" + str(layer) + "_head" + str(
+                    head) + ".txt"
 
-        assert attention is not None
-        if (training_args.task_type == "lex"):
-            find_percentage_attention_given_to_ner_entities(dict_layer12_head_12_sans_stopwords,test_dataset)
+                # empty out the file
+                with open(file_to_write_attention, "w") as writer:
+                    writer.write("")
 
-        if training_args.do_train_1student_1teacher:
-            figer_tags=get_figer_tags()
-            find_percentage_attention_given_to_figer_entities(dict_layer12_head_12_sans_stopwords,figer_tags)
+                # write the aggregated sorted attention weights to disk
+                append_to_file(file_to_write_attention, dict_layer_head)
 
-        return sort_weights(dict_layer12_head_12_sans_stopwords)
+                #also append the ner percentage value
+                append_to_csv_file(file_to_write_nerp, layer,head, ner_percent_attention)
+
+
+
+
 
 
 
@@ -2033,17 +2040,24 @@ def run_loading_and_testing(model_args, data_args, training_args):
     def append_to_file(output_file_name,dict_layer_head):
         # write the aggregated sorted attention weights to disk
         with open(output_file_name, "a+") as writer:
-            logger.info(f"***** (Going to write attention results of layer number  {layer} and head"
-                        f"number {head}to disk at {output_file_name} *****")
+            logger.info(f"***** (Going to write attention results to disk at {output_file_name} *****")
             for k, v in dict_layer_head.items():
                 writer.write(f"{k}:{v}")
                 writer.write(f"\n")
 
-    def find_aggregate_attention_per_token(attention, tokens, dict_token_attention, layer, head):
+    def append_to_csv_file(output_file_name,layer, head, percentage):
+        # write the aggregated sorted attention weights to disk
+        with open(output_file_name, "a+") as csvfile:
+            writer = csv.writer(csvfile, delimiter='\t')
+            logger.info(f"***** (Going to write csv file to disk at {output_file_name} *****")
+            writer.writerow([layer,head,percentage])
 
+
+
+    def find_aggregate_attention_per_token(attention, tokens, dict_token_attention, layer, head):
         for layer_index,per_layer_attention in enumerate(attention):
             if(layer_index==layer):
-                # lets starts with 12th layer, 12th attention head
+
                 for heads in per_layer_attention:
                     for head_index,per_head_attention in enumerate(heads):
                         if(head_index==head):
@@ -2058,7 +2072,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
                                         dict_token_attention[token]= current_attention_weight
                                     else:
                                         dict_token_attention[token] = weight
-                                    #to calculate how much percentage of attention is given to ner entities
+
 
 
 
@@ -2175,16 +2189,16 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     dict_layer_head = get_per_token_attention_weights(test_dataset,model_for_bert,tokenizer_to_use)
 
-    # empty out the file which stores top tokens and their attention weights
-    output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
-    file_to_write_attention = output_dir_absolute_path + "attention_weights_" + \
-                                                git_details['repo_short_sha'] + "_layer"+str(layer)+"_head"+str(head)+".txt"
-    # empty out the file
-    with open(file_to_write_attention, "w") as writer:
-        writer.write("")
-
-    #write the aggregated sorted attention weights to disk
-    append_to_file(file_to_write_attention,dict_layer_head)
+    # # empty out the file which stores top tokens and their attention weights
+    # output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
+    # file_to_write_attention = output_dir_absolute_path + "attention_weights_" + \
+    #                                             git_details['repo_short_sha'] + "_layer"+str(layer)+"_head"+str(head)+".txt"
+    # # empty out the file
+    # with open(file_to_write_attention, "w") as writer:
+    #     writer.write("")
+    #
+    # #write the aggregated sorted attention weights to disk
+    # append_to_file(file_to_write_attention,dict_layer_head)
 
             # with open(file_to_write_attention, "a+") as writer:
             #     logger.info(f"***** (Going to write attention results of layer number  {layer} and head"
