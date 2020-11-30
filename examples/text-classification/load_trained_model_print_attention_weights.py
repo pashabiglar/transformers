@@ -30,6 +30,11 @@ For example: to load a model trained on lexicalized data, and to run it over tes
 1) got to ./run_all.sh and set export TASK_TYPE="lex" or "combined"
 2) pick either of CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC or CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP depending on whether you
 are running on laptop or hpc server
+
+also if your running folder name is changed, you need to change it in 3 files
+1)run_all.sh (2instances)
+2)run_on_hpc_ocelote_venv_array.sh (3 instances)
+3) the corresponding config file you are going to use (see below) 2 instances
 """
 
 

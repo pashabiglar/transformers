@@ -5,7 +5,7 @@ do_train=True
 do_eval=True
 do_predict=True
 do_train_1student_1teacher=True
-data_dir="/home/u11/mithunpaul/xdisk/huggingface_bert_visualizations/data/fever/fevercrossdomain/combined/figerspecific/"
+data_dir="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_attention_weights_branch_run_student_teacher/data/fever/fevercrossdomain/combined/figerspecific/"
 max_seq_length="128"
 per_device_eval_batch_size="16"
 per_device_train_batch_size="16"
@@ -13,7 +13,7 @@ learning_rate="1e-5"
 # Note: use num_train_epochs=1 only. For testing purposes, in trainery.py we are as of now, sep 2020 we are returning the dev and test partition evaluation results for epoch1
 # if you want to test for more than 1 eopch, return best_dev and best_test values
 num_train_epochs="1"
-output_dir="/home/u11/mithunpaul/xdisk/huggingface_bert_visualizations/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/"
+output_dir="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_attention_weights_branch_run_student_teacher/output/fever/fevercrossdomain/combined/figerspecific/bert-base-cased/128/"
 overwrite_output_dir=True
 weight_decay="0.01"
 adam_epsilon="1e-6"
