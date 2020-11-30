@@ -27,7 +27,7 @@ Original file is located at
 note from mithun @Sat Nov 28 15:25:43 MST 2020: 
 to run this file, you need to set settings in two places. ./run_all.sh and here at the config file
 For example: to load a model trained on lexicalized data, and to run it over test partition (which is cross domain's  dev partition)
-1) got to ./run_all.sh and set export TASK_TYPE="lex"
+1) got to ./run_all.sh and set export TASK_TYPE="lex" or "combined"
 2) pick either of CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC or CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP depending on whether you
 are running on laptop or hpc server
 """
@@ -39,7 +39,7 @@ CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP= "config_for_attention_visualization_f
 CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC= "config_for_attention_visualization_for_loading_lex_model_hpc.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP="config_for_attention_visualization_for_loading_stuteacher_model_laptop.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC="config_for_attention_visualization_for_loading_stuteacher_model_hpc.py"
-config_file_touse = CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP
+config_file_touse = CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC
 NO_OF_LAYERS=12
 NO_OF_HEADS_PER_LAYER=12
 
