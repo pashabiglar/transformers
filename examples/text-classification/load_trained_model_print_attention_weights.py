@@ -24,12 +24,13 @@ Original file is located at
 # limitations under the License.
 
 """
-note from mithun @Sat Nov 28 15:25:43 MST 2020: 
-to run this file, you need to set settings in two places. ./run_all.sh and here at the config file
-For example: to load a model trained on lexicalized data, and to run it over test partition (which is cross domain's  dev partition)
+note from mithun @Sat Nov 28 15:25:43 MST 2020:to run this file, you need to set settings in two places. ./run_all.sh 
+and here at the config file
+For example: to load a model trained on lexicalized data, and to run it over test partition (which is cross domain's  
+dev partition)
 1) got to ./run_all.sh and set export TASK_TYPE="lex" or "combined"
-2) pick either of CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC or CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP depending on whether you
-are running on laptop or hpc server
+2) pick either of CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC or CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP depending on 
+whether you are running on laptop or hpc server
 
 also if your running folder name is changed, you need to change it in 3 files
 1)run_all.sh (2instances)
@@ -48,7 +49,7 @@ config_file_touse = CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC
 NO_OF_LAYERS=12
 NO_OF_HEADS_PER_LAYER=12
 
-import spacy
+
 import csv
 import configparser
 import sys, getopt
@@ -116,7 +117,7 @@ import torch
 import wget
 import torch
 
-
+import spacy
 if is_apex_available():
     from apex import amp
 
@@ -799,17 +800,17 @@ class StudentTeacherTrainer:
         flag_run_student_alone = True
         flag_run_both = False
 
-        if (flag_run_both):
+        if flag_run_both:
             optimizer, scheduler = self.get_optimizers_for_student_teacher(num_training_steps=self.args.lr_max_value)
             assert optimizer is not None
             assert scheduler is not None
         else:
-            if (flag_run_teacher_alone):
+            if flag_run_teacher_alone:
                 optimizer, scheduler = self.get_optimizer(model_teacher, num_training_steps=self.args.lr_max_value)
                 assert optimizer is not None
                 assert scheduler is not None
             else:
-                if (flag_run_student_alone):
+                if flag_run_student_alone:
                     optimizer, scheduler = self.get_optimizer(model_student, num_training_steps=self.args.lr_max_value)
                     assert optimizer is not None
                     assert scheduler is not None
@@ -1843,10 +1844,10 @@ def run_loading_and_testing(model_args, data_args, training_args):
         with open(file_to_write_nerp, "w") as writer:
             writer.write("layer\thead\tpercentage\n")
 
-        for layer in range(NO_OF_LAYERS):
+        for layer in range(3,NO_OF_LAYERS):
             logger.info(f"getting into layer number:{layer}")
             print(f"getting into head number:{layer}")
-            for head in range(NO_OF_HEADS_PER_LAYER):
+            for head in range(3,NO_OF_HEADS_PER_LAYER):
                 logger.info(f"getting into head number:{head}")
                 print(f"getting into head number:{head}")
                 dict_unique_tokens_attention_weights={}
