@@ -36,6 +36,8 @@ also if your running folder name is changed, you need to change it in 3 files
 1)run_all.sh (2instances)
 2)run_on_hpc_ocelote_venv_array.sh (3 instances)
 3) the corresponding config file you are going to use (see below) 2 instances
+
+Note: if you are running from pycharm, the configuration you should use is "load combined trained model and get attention weights"
 """
 
 
@@ -1857,8 +1859,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
                 #go through the entire dataset (usually test or dev partition), and for each claim evidence pair,
                 # run it through the trained model, which then predicts the label, along with attention it places on each token.
                 for each_claim_evidence_pair in tqdm(dataloader, desc="getting attention per data point",total=total_length_datapoints):
-                    print(f"data point:{data_counter}/{total_length_datapoints} of head:{head} layer:{layer}")
-                    logger.info(f"data point:{data_counter}/{total_length_datapoints} of head:{head} layer:{layer}")
+                    print(f"data point:{data_counter}/{total_length_datapoints} of BERT layer:{layer} head:{head} ")
+                    logger.info(f"data point:{data_counter}/{total_length_datapoints} of BERT layer:{layer} head:{head}")
 
                     data_counter=data_counter+1
                     token_type_ids = each_claim_evidence_pair.token_type_ids
@@ -1899,7 +1901,10 @@ def run_loading_and_testing(model_args, data_args, training_args):
                 # weights per that layer per head. Go through each of them, remove stop words , calculate
                 # ner entity attention percentage and write to disk
 
-                dict_unique_tokens_attention_weights_sans_stopwords=remove_stop_words_punctuations_etc(dict_unique_tokens_attention_weights)
+                dict_unique_tokens_attention_weights_sans_stopwords=dict_unique_tokens_attention_weights
+
+                if (training_args.remove_stop_words):
+                    dict_unique_tokens_attention_weights=remove_stop_words_punctuations_etc(dict_unique_tokens_attention_weights)
 
                 # out of all the attention placed on all the tokens how much/what percentage was given to Named entities (EG:Apple, Islamic)
                 # note: in case of delexicalized data it will become same percentage placed on NER entities like person, country etc
