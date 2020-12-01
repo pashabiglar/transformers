@@ -1845,10 +1845,10 @@ def run_loading_and_testing(model_args, data_args, training_args):
         with open(file_to_write_nerp, "w") as writer:
             writer.write("layer\thead\tpercentage\n")
 
-        for layer in range(3,NO_OF_LAYERS):
+        for layer in range(4,NO_OF_LAYERS):
             logger.info(f"getting into layer number:{layer}")
             print(f"getting into head number:{layer}")
-            for head in range(3,NO_OF_HEADS_PER_LAYER):
+            for head in range(0,NO_OF_HEADS_PER_LAYER):
                 logger.info(f"getting into head number:{head}")
                 print(f"getting into head number:{head}")
                 dict_unique_tokens_attention_weights={}
