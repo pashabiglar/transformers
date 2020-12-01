@@ -69,6 +69,7 @@ from tqdm.auto import tqdm, trange
 import os
 from stop_words import get_stop_words
 import string
+import spacy
 nlp = spacy.load("en_core_web_sm")
 
 #os.chdir("/content/gdrive/My Drive/colab_fall2020/transformers2/transformers/src")
@@ -117,7 +118,7 @@ import torch
 import wget
 import torch
 
-import spacy
+
 if is_apex_available():
     from apex import amp
 
