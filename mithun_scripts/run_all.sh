@@ -45,8 +45,8 @@ fi
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
 
 
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_attention_weights_branch_loading_lex_trained_model_no_stop_words/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_attention_weights_branch_loading_lex_trained_model_no_stop_words/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_attention_weights_branch_run_student_teacher/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_attention_weights_branch_run_student_teacher/data"
 else
         wandb off
         export DATA_DIR_BASE="/Users/mordor/research/huggingface/src/transformers/data/datasets"
