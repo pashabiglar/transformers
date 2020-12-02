@@ -1846,7 +1846,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
         # empty out the file
         with open(file_to_write_nerp, "w") as writer:
             writer.write("layer\thead\tpercentage\n")
-
+ 
         for layer in range(4,NO_OF_LAYERS):
             logger.info(f"getting into layer number:{layer}")
             print(f"getting into head number:{layer}")
