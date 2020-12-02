@@ -64,7 +64,7 @@ def report_score(actual,predicted):
 
 
 #expected order of models is lex, delex, combined- rather, atleast that is what they are called below
-model1_predictions=pd.read_csv("predictions/predictions_on_test_partition_5291a1_figerabstract.txt", sep="\t", header=None)
+model1_predictions=pd.read_csv("predictions/predictions_fnc2fever_by_lex_model.txt", sep="\t", header=None)
 model2_predictions=pd.read_csv("predictions/predictions_on_test_partition_7b2f40_legendary_voice_best_figerspecific_7474acc_6344fncs.txt", sep="\t", header=None)
 model3_predictions=pd.read_csv("predictions/predictions_on_test_partition_5291a1_figerabstract.txt", sep="\t", header=None)
 test_gold=pd.read_csv("predictions/fnc_dev_gold.tsv",sep="\t",header=None)

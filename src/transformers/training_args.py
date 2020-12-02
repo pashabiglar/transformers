@@ -240,6 +240,8 @@ class TrainingArguments:
         metadata={"help": "Deprecated, the use of `--debug` is preferred. TPU: Whether to print debug metrics"},
     )
     debug: bool = field(default=False, metadata={"help": "Whether to print debug metrics on TPU"})
+    remove_stop_words: bool = field(default=False, metadata={"help": "While loading a trained model and predicting/trying to find"
+                                                                     "attention weights of bert system, remove stop words"})
     use_trained_model: bool = field(default=False, metadata={"help": "Whether to print debug metrics on TPU"})
 
     dataloader_drop_last: bool = field(
