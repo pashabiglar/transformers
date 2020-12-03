@@ -1847,9 +1847,12 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
         for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences = 0
         for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_claims = 0
-
+        data_counter = 1
         for each_claim_evidence_pair in tqdm(dataloader, desc="getting attention per data point",
                                              total=total_length_datapoints):
+            print(f"data point:{data_counter}/{total_length_datapoints} ")
+            logger.info(f"data point:{data_counter}/{total_length_datapoints} ")
+            data_counter = data_counter + 1
 
             token_type_ids = each_claim_evidence_pair.token_type_ids
             input_ids = each_claim_evidence_pair.input_ids
