@@ -1831,73 +1831,78 @@ def run_loading_and_testing(model_args, data_args, training_args):
         # lets start with 12th layer, 12th attention head- eventually we wil need to create a 12x12 matrix of such dicts for 12 layers and 12 heads
         dict_tokens_attention = {}
 
+        cross_fit = "cross_sentence.csv"
+
+        write_to_csv_file(cross_fit, 0, 0, 0)
+        for layer in range(0, NO_OF_LAYERS):
+            logger.info(f"getting into layer number:{layer}")
+            print(f"getting into layer number:{layer}")
+            for head in range(0, NO_OF_HEADS_PER_LAYER):
+                logger.info(f"getting into head number:{head}")
+                print(f"getting into head number:{head}")
+                dict_unique_tokens_attention_weights = {}
+                data_counter = 1
+                total_length_datapoints = len(dataloader)
+                # go through the entire dataset (usually test or dev partition), and for each claim evidence pair,
+                # run it through the trained model, which then predicts the label, along with attention it places on each token.
+
+                for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences = 0
+                for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_claims = 0
+                data_counter = 1
 
 
-        # for layer in range(11, NO_OF_LAYERS):
-        #     logger.info(f"getting into layer number:{layer}")
-        #     print(f"getting into head number:{layer}")
-        #     for head in range(11, NO_OF_HEADS_PER_LAYER):
-        #         logger.info(f"getting into head number:{head}")
-        #         print(f"getting into head number:{head}")
-        #         dict_unique_tokens_attention_weights = {}
-        #         data_counter = 1
-        total_length_datapoints = len(dataloader)
-        # go through the entire dataset (usually test or dev partition), and for each claim evidence pair,
-        # run it through the trained model, which then predicts the label, along with attention it places on each token.
+                for each_claim_evidence_pair in tqdm(dataloader, desc="getting attention per data point",
+                                                     total=total_length_datapoints):
+                    print(f"data point:{data_counter}/{total_length_datapoints} ")
+                    logger.info(f"data point:{data_counter}/{total_length_datapoints} ")
+                    data_counter = data_counter + 1
 
-        for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences = 0
-        for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_claims = 0
-        data_counter = 1
-        for each_claim_evidence_pair in tqdm(dataloader, desc="getting attention per data point",
-                                             total=total_length_datapoints):
-            print(f"data point:{data_counter}/{total_length_datapoints} ")
-            logger.info(f"data point:{data_counter}/{total_length_datapoints} ")
-            data_counter = data_counter + 1
+                    token_type_ids = each_claim_evidence_pair.token_type_ids
+                    input_ids = each_claim_evidence_pair.input_ids
 
-            token_type_ids = each_claim_evidence_pair.token_type_ids
-            input_ids = each_claim_evidence_pair.input_ids
+                    assert len(token_type_ids) == len(input_ids)
+                    input_ids_tensor = None
+                    token_type_ids_tensor = None
+                    if (training_args.machine_to_run_on == "hpc") and torch.cuda.is_available():
+                        input_ids_tensor = torch.cuda.LongTensor(np.reshape(input_ids, (1, len(input_ids))))
+                        token_type_ids_tensor = torch.cuda.LongTensor(
+                            np.reshape(token_type_ids, (1, len(token_type_ids))))
+                    if (training_args.machine_to_run_on == "laptop"):
+                        input_ids_tensor = torch.LongTensor(np.reshape(input_ids, (1, len(input_ids))))
+                        token_type_ids_tensor = torch.LongTensor(np.reshape(token_type_ids, (1, len(token_type_ids))))
 
-            assert len(token_type_ids) == len(input_ids)
-            input_ids_tensor = None
-            token_type_ids_tensor = None
-            if (training_args.machine_to_run_on == "hpc") and torch.cuda.is_available():
-                input_ids_tensor = torch.cuda.LongTensor(np.reshape(input_ids, (1, len(input_ids))))
-                token_type_ids_tensor = torch.cuda.LongTensor(
-                    np.reshape(token_type_ids, (1, len(token_type_ids))))
-            if (training_args.machine_to_run_on == "laptop"):
-                input_ids_tensor = torch.LongTensor(np.reshape(input_ids, (1, len(input_ids))))
-                token_type_ids_tensor = torch.LongTensor(np.reshape(token_type_ids, (1, len(token_type_ids))))
+                    assert input_ids_tensor is not None
+                    assert token_type_ids_tensor is not None
+                    attention = model(input_ids_tensor, token_type_ids=token_type_ids_tensor)[-1]
+                    tokens = tokenizer.decode_return_list(input_ids, clean_up_tokenization_spaces=True)
 
-            assert input_ids_tensor is not None
-            assert token_type_ids_tensor is not None
-            attention = model(input_ids_tensor, token_type_ids=token_type_ids_tensor)[-1]
-            tokens = tokenizer.decode_return_list(input_ids, clean_up_tokenization_spaces=True)
+                    try:
+                        assert len(tokens) == len(input_ids)
+                    except AssertionError:
+                        print(f"len(tokens) == {len(tokens)}")
+                        print(f"len(input_ids) == {len(input_ids)}")
+                        print(f"(tokens) == {(tokens)}")
+                        print(f"(input_ids) == {(input_ids)}")
+                        print("assertion error exiting")
+                        exit()
 
-            try:
-                assert len(tokens) == len(input_ids)
-            except AssertionError:
-                print(f"len(tokens) == {len(tokens)}")
-                print(f"len(input_ids) == {len(input_ids)}")
-                print(f"(tokens) == {(tokens)}")
-                print(f"(input_ids) == {(input_ids)}")
-                print("assertion error exiting")
-                exit()
+                        # For each data point (i.e one claim-evidence pair) get the attention given to each of the
+                        # tokens store it in a dictionary and do it for all data points
 
-                # For each data point (i.e one claim-evidence pair) get the attention given to each of the
-                # tokens store it in a dictionary and do it for all data points
+                    for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence, \
+                    for_this_claim_what_is_the_total_attention_weight_that_came_from_other_tokens_in_claim = \
+                        find_attention_percentage_across_claim_ev(attention, tokens, layer, head)
 
-            for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence, \
-            for_this_claim_what_is_the_total_attention_weight_that_came_from_other_tokens_in_claim = \
-                find_attention_percentage_across_claim_ev(attention, tokens, 11, 11)
+                    for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences += for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence
+                    for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_claims += for_this_claim_what_is_the_total_attention_weight_that_came_from_other_tokens_in_claim
 
-            for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences += for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence
-            for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_claims += for_this_claim_what_is_the_total_attention_weight_that_came_from_other_tokens_in_claim
+                    # so at the end of all data points,calculat overall for all claims what percentage attention came from claims and evidence
+                percent_from_evidence = for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences * 100 / (
+                            for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences + for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_claims)
+                logger.info(f"for layer:{layer} head {head} percent_attn_on_claims_from_evidence={percent_from_evidence}")
+                append_to_csv_file(cross_fit,layer,head,percent_from_evidence)
+                    #append_to_csv_file(output_file_name,layer, head, percentage):
 
-        # so at the end of all data points,calculat overall for all claims what percentage attention came from claims and evidence
-        percent_from_evidence = for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences * 100 / (
-                    for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences + for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_claims)
-        logger.info(f"percent_from_evidence={percent_from_evidence}")
-        exit()
 
 
     # out of all the tokens find what percentage of attention goes to NER tags
@@ -2027,6 +2032,15 @@ def run_loading_and_testing(model_args, data_args, training_args):
                 f"***** (Going to write csv file to disk at {output_file_name} . this is for layer:{layer} head:{head}*****")
             writer.writerow([layer,head,percentage])
 
+    def write_to_csv_file(output_file_name, layer, head, percentage):
+            # write the aggregated sorted attention weights to disk
+            with open(output_file_name, "w") as csvfile:
+                writer = csv.writer(csvfile, delimiter='\t')
+                logger.info(
+                    f"***** (Going to write csv file to disk at {output_file_name} . this is for layer:{layer} head:{head}*****")
+                print(
+                    f"***** (Going to write csv file to disk at {output_file_name} . this is for layer:{layer} head:{head}*****")
+                writer.writerow([layer, head, percentage])
 
     """
     Aim: find what percentage of attention is given to intra-sentence (in this case claim to claim or evidence to evidence)
