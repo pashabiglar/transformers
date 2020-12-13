@@ -1823,120 +1823,81 @@ def run_loading_and_testing(model_args, data_args, training_args):
         return {k: v for k, v in sorted(dict_layer_head_weights.items(), key=lambda item: item[1],reverse=True)}
 
 
-    def get_per_token_attention_weights(dataloader,model,tokenizer):
-        attention=claim_evidence_plain_text=None
+
+    def get_cross_claim_evidence_percentage_attention_weights(dataloader, model, tokenizer):
+        attention = claim_evidence_plain_text = None
 
         # create a dictionary to store overall attention of a given head and a layer. maybe can eventually store it in a matrix
         # lets start with 12th layer, 12th attention head- eventually we wil need to create a 12x12 matrix of such dicts for 12 layers and 12 heads
-        dict_tokens_attention={}
+        dict_tokens_attention = {}
 
 
 
-        # create the file which will write highest NER percentages
-        #  (refer comments below for definition of NER percentage)
-        output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
-        file_to_write_nerp = None
-        if (training_args.task_type == "lex"):
-            file_to_write_nerp = output_dir_absolute_path + "lex_named_entity_percentage" + git_details[
-                'repo_short_sha'] + ".csv"
-        if training_args.do_train_1student_1teacher:
-            file_to_write_nerp = output_dir_absolute_path + "stuteacher_ner_tags_percentage" + git_details[
-                'repo_short_sha'] + ".csv"
-        assert file_to_write_nerp is not None
-        # empty out the file
-        with open(file_to_write_nerp, "w") as writer:
-            writer.write("layer\thead\tpercentage\n")
+        # for layer in range(11, NO_OF_LAYERS):
+        #     logger.info(f"getting into layer number:{layer}")
+        #     print(f"getting into head number:{layer}")
+        #     for head in range(11, NO_OF_HEADS_PER_LAYER):
+        #         logger.info(f"getting into head number:{head}")
+        #         print(f"getting into head number:{head}")
+        #         dict_unique_tokens_attention_weights = {}
+        #         data_counter = 1
+        total_length_datapoints = len(dataloader)
+        # go through the entire dataset (usually test or dev partition), and for each claim evidence pair,
+        # run it through the trained model, which then predicts the label, along with attention it places on each token.
 
-        for layer in range(4,NO_OF_LAYERS):
-            logger.info(f"getting into layer number:{layer}")
-            print(f"getting into head number:{layer}")
-            for head in range(0,NO_OF_HEADS_PER_LAYER):
-                logger.info(f"getting into head number:{head}")
-                print(f"getting into head number:{head}")
-                dict_unique_tokens_attention_weights={}
-                data_counter=1
-                total_length_datapoints=len(dataloader)
-                #go through the entire dataset (usually test or dev partition), and for each claim evidence pair,
-                # run it through the trained model, which then predicts the label, along with attention it places on each token.
-                for each_claim_evidence_pair in tqdm(dataloader, desc="getting attention per data point",total=total_length_datapoints):
-                    print(f"data point:{data_counter}/{total_length_datapoints} of BERT layer:{layer} head:{head} ")
-                    logger.info(f"data point:{data_counter}/{total_length_datapoints} of BERT layer:{layer} head:{head}")
+        for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences = 0
+        for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_claims = 0
+        data_counter = 1
+        for each_claim_evidence_pair in tqdm(dataloader, desc="getting attention per data point",
+                                             total=total_length_datapoints):
+            print(f"data point:{data_counter}/{total_length_datapoints} ")
+            logger.info(f"data point:{data_counter}/{total_length_datapoints} ")
+            data_counter = data_counter + 1
 
-                    data_counter=data_counter+1
-                    token_type_ids = each_claim_evidence_pair.token_type_ids
-                    input_ids = each_claim_evidence_pair.input_ids
+            token_type_ids = each_claim_evidence_pair.token_type_ids
+            input_ids = each_claim_evidence_pair.input_ids
 
-                    assert len(token_type_ids) == len(input_ids)
-                    input_ids_tensor=None
-                    token_type_ids_tensor=None
-                    if (training_args.machine_to_run_on == "hpc") and torch.cuda.is_available():
-                        input_ids_tensor = torch.cuda.LongTensor(np.reshape(input_ids, (1, len(input_ids))))
-                        token_type_ids_tensor = torch.cuda.LongTensor(np.reshape(token_type_ids, (1, len(token_type_ids))))
-                    if (training_args.machine_to_run_on == "laptop"):
-                        input_ids_tensor = torch.LongTensor(np.reshape(input_ids,(1,len(input_ids))))
-                        token_type_ids_tensor = torch.LongTensor(np.reshape(token_type_ids,(1,len(token_type_ids))))
+            assert len(token_type_ids) == len(input_ids)
+            input_ids_tensor = None
+            token_type_ids_tensor = None
+            if (training_args.machine_to_run_on == "hpc") and torch.cuda.is_available():
+                input_ids_tensor = torch.cuda.LongTensor(np.reshape(input_ids, (1, len(input_ids))))
+                token_type_ids_tensor = torch.cuda.LongTensor(
+                    np.reshape(token_type_ids, (1, len(token_type_ids))))
+            if (training_args.machine_to_run_on == "laptop"):
+                input_ids_tensor = torch.LongTensor(np.reshape(input_ids, (1, len(input_ids))))
+                token_type_ids_tensor = torch.LongTensor(np.reshape(token_type_ids, (1, len(token_type_ids))))
 
-                    assert input_ids_tensor is not None
-                    assert token_type_ids_tensor is not None
-                    attention = model(input_ids_tensor, token_type_ids=token_type_ids_tensor)[-1]
-                    tokens = tokenizer.decode_return_list(input_ids,clean_up_tokenization_spaces=True)
+            assert input_ids_tensor is not None
+            assert token_type_ids_tensor is not None
+            attention = model(input_ids_tensor, token_type_ids=token_type_ids_tensor)[-1]
+            tokens = tokenizer.decode_return_list(input_ids, clean_up_tokenization_spaces=True)
 
-                    try:
-                        assert len(tokens) == len(input_ids)
-                    except AssertionError:
-                        print(f"len(tokens) == {len(tokens)}")
-                        print(f"len(input_ids) == {len(input_ids)}")
-                        print(f"(tokens) == {(tokens)}")
-                        print(f"(input_ids) == {(input_ids)}")
-                        print("assertion error exiting")
-                        exit()
+            try:
+                assert len(tokens) == len(input_ids)
+            except AssertionError:
+                print(f"len(tokens) == {len(tokens)}")
+                print(f"len(input_ids) == {len(input_ids)}")
+                print(f"(tokens) == {(tokens)}")
+                print(f"(input_ids) == {(input_ids)}")
+                print("assertion error exiting")
+                exit()
 
-                        #For each data point (i.e one claim-evidence pair) get the attention given to each of the
-                        # tokens store it in a dictionary and do it for all data points
+                # For each data point (i.e one claim-evidence pair) get the attention given to each of the
+                # tokens store it in a dictionary and do it for all data points
 
+            for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence, \
+            for_this_claim_what_is_the_total_attention_weight_that_came_from_other_tokens_in_claim = \
+                find_attention_percentage_across_claim_ev(attention, tokens, 11, 11)
 
-                    find_aggregate_attention_per_token(attention, tokens,dict_unique_tokens_attention_weights,layer, head)
+            for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences += for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence
+            for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_claims += for_this_claim_what_is_the_total_attention_weight_that_came_from_other_tokens_in_claim
 
-                # so at the end of all data points, there will be one dictionary, each containing tokens and attention
-                # weights per that layer per head. Go through each of them, remove stop words , calculate
-                # ner entity attention percentage and write to disk
-
-                dict_unique_tokens_attention_weights_sans_stopwords=dict_unique_tokens_attention_weights
-
-                if (training_args.remove_stop_words):
-                    dict_unique_tokens_attention_weights=remove_stop_words_punctuations_etc(dict_unique_tokens_attention_weights)
-
-                # out of all the attention placed on all the tokens how much/what percentage was given to Named entities (EG:Apple, Islamic)
-                # note: in case of delexicalized data it will become same percentage placed on NER entities like person, country etc
-                ner_percent_attention=0
-                assert attention is not None
-                if (training_args.task_type == "lex"):
-                    ner_percent_attention=find_percentage_attention_given_to_ner_entities(dict_unique_tokens_attention_weights_sans_stopwords,test_dataset)
-
-                if training_args.do_train_1student_1teacher:
-                    figer_tags=get_figer_tags()
-                    ner_percent_attention=find_percentage_attention_given_to_figer_entities(dict_unique_tokens_attention_weights_sans_stopwords,figer_tags)
-
-                assert ner_percent_attention != 0
-
-                dict_layer_head=sort_weights(dict_unique_tokens_attention_weights_sans_stopwords)
-
-                # empty out the file which stores top tokens and their attention weights
-                output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
-                file_to_write_attention = output_dir_absolute_path + "attention_weights_" + \
-                                          git_details['repo_short_sha'] + "_layer" + str(layer) + "_head" + str(
-                    head) + ".txt"
-
-                # write the aggregated sorted attention weights to disk
-                write_to_file(file_to_write_attention, dict_layer_head)
-
-                #also append the ner percentage value to the big file which has ner percentage value per layer
-                append_to_csv_file(file_to_write_nerp, layer,head, ner_percent_attention)
-
-
-
-
-
+        # so at the end of all data points,calculat overall for all claims what percentage attention came from claims and evidence
+        percent_from_evidence = for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences * 100 / (
+                    for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences + for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_claims)
+        logger.info(f"percent_from_evidence={percent_from_evidence}")
+        exit()
 
 
     # out of all the tokens find what percentage of attention goes to NER tags
@@ -2067,6 +2028,85 @@ def run_loading_and_testing(model_args, data_args, training_args):
             writer.writerow([layer,head,percentage])
 
 
+    """
+    Aim: find what percentage of attention is given to intra-sentence (in this case claim to claim or evidence to evidence)
+    as opposed to cross-sentence (i.e while in claim how much attention came from words in evidence and vice versa)
+    
+    steps:
+    - Go through the claim-evidence pair and look for where the first [SEP] tag comes in. That should be where claim ends 
+    and evidence starts.  say the length of claim evidence pair if 128 tokens and the claim ends after say token 30.
+    
+    
+    - for each token in claim:
+        - for each token, there will be attention coming from 127 other tokens and itself. 
+        - find total attention weight coming from tokens before 30 
+        - find total attention weight coming from tokens after 30.
+    -sum up before 30 and after 30 for each of the n tokens in claim
+    - so at the end you should be able to say for entire claim, 35% of attention came from claim itself and 65% came from evidence
+    - get the total number. for all claims overall, 25% of attention came from claims itself and 75% from its evidence.
+    - now compare these numbers between teacher and student. (i.e using model trained on lex and model trained using 
+    student teacher architecture on delexicalized data)
+        
+    
+    - do this for one head. preferably the last one..layer 11, head 11
+    - do first from claim to evidence.
+    - then do both directions..i.e for evidence, claim will be cross sentence etc
+    """
+
+    def find_attention_percentage_across_claim_ev(attention, tokens, layer, head):
+
+        # first go through the entire tokens and find where first [SEP] is. that is where the
+        # claim ends and evidence starts
+        separator_token = 0
+        for index, token in enumerate(tokens):
+            if (token == "[SEP]"):
+                separator_token = index
+                break
+        claim_starting_tokens=tokens[:5]
+        assert separator_token != 0
+        for layer_index,per_layer_attention in enumerate(attention):
+            if(layer_index==layer):
+                for heads in per_layer_attention:
+                    for head_index,per_head_attention in enumerate(heads):
+                        if(head_index==head):
+                            for_this_claim_what_is_the_total_attention_weight_that_came_from_other_tokens_in_claim=0
+                            for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence = 0
+                            for per_left_token_attention, token_column in zip(per_head_attention, tokens):
+                                # Now go column wise. i.e for each word in column[0] of, what was the attention it got from other words.
+                                # aggregate attention into two classes now if the index is before separator_token or not
+
+                                #go to the next claim evidence pair once you hit the end of claim. This is because right now we care only about attention on claim words. Eventually it must be for all words, cross sentence and in-sentence
+                                if (token_column == "[SEP]"):
+                                    break
+
+                                for_each_token_in_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_claim = 0
+                                for_each_token_in_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence = 0
+
+                                assert len(per_left_token_attention.data.tolist()) == len(tokens)
+                                for index2,(weight, token) in enumerate(zip(per_left_token_attention.data.tolist(), tokens)):
+                                    #ignore if the token is [SEP] . we have enough problems without [SEP]+ we only care about claim and evidence tokens here, not separateor token
+                                    if(token=="[SEP]"):
+                                        continue
+
+                                    if(index2>separator_token):
+                                        for_each_token_in_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence += weight
+                                    else:
+                                        for_each_token_in_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_claim += weight
+
+                                percent_attention_from_evidence_tokens=for_each_token_in_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence*100/(for_each_token_in_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence+for_each_token_in_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_claim)
+                                logger.debug(f"for the token : {token_column} in claim {percent_attention_from_evidence_tokens} percentage of attention weights that came from "
+                                      f"came from evidence and rest from tokens in claim itself")
+                                for_this_claim_what_is_the_total_attention_weight_that_came_from_other_tokens_in_claim+=for_each_token_in_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_claim
+                                for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence+=for_each_token_in_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence
+
+                            overall_attention_from_evidence_tokens_percentage = for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence * 100 / (for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence + for_this_claim_what_is_the_total_attention_weight_that_came_from_other_tokens_in_claim)
+                            logger.debug(
+                                f"\nfor this claim which starts with {claim_starting_tokens} percentage of attention weights that came from "
+                                f"came from evidence is {overall_attention_from_evidence_tokens_percentage} and the rest from tokens in claim itself")
+        return for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence,for_this_claim_what_is_the_total_attention_weight_that_came_from_other_tokens_in_claim
+
+
+
 
     def find_aggregate_attention_per_token(attention, tokens, dict_token_attention, layer, head):
         for layer_index,per_layer_attention in enumerate(attention):
@@ -2078,7 +2118,6 @@ def run_loading_and_testing(model_args, data_args, training_args):
                                 assert len(per_left_token_attention.data.tolist())==len(tokens)
                                 for weight,token in zip(per_left_token_attention.data.tolist(),tokens):
                                     current_attention_weight=dict_token_attention.get(token, -1)
-
                                     #if the token already exists, increase its attention weight. else set its attention weight for the first time
                                     if not current_attention_weight==-1:
                                         current_attention_weight+=weight
@@ -2200,7 +2239,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
 
 
-    dict_layer_head = get_per_token_attention_weights(test_dataset,model_for_bert,tokenizer_to_use)
+    dict_layer_head = get_cross_claim_evidence_percentage_attention_weights(test_dataset,model_for_bert,tokenizer_to_use)
 
 
 
