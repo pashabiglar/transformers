@@ -1834,10 +1834,10 @@ def run_loading_and_testing(model_args, data_args, training_args):
         cross_fit = "cross_sentence.csv"
 
         write_to_csv_file(cross_fit, 0, 0, 0)
-        for layer in range(11, NO_OF_LAYERS):
+        for layer in range(5, NO_OF_LAYERS):
             logger.info(f"getting into layer number:{layer}")
             print(f"getting into layer number:{layer}")
-            for head in range(11, NO_OF_HEADS_PER_LAYER):
+            for head in range(0, NO_OF_HEADS_PER_LAYER):
                 logger.info(f"getting into head number:{head}")
                 print(f"getting into head number:{head}")
                 dict_unique_tokens_attention_weights = {}
