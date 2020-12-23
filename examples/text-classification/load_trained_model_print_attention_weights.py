@@ -47,7 +47,7 @@ CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP= "config_for_attention_visualization_f
 CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC= "config_for_attention_visualization_for_loading_lex_model_hpc.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP="config_for_attention_visualization_for_loading_stuteacher_model_laptop.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC="config_for_attention_visualization_for_loading_stuteacher_model_hpc.py"
-config_file_touse = CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC
+config_file_touse = CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP
 NO_OF_LAYERS=12
 NO_OF_HEADS_PER_LAYER=12
 
@@ -1834,7 +1834,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
         cross_fit = "cross_sentence.csv"
 
         write_to_csv_file(cross_fit, 0, 0, 0)
-        for layer in range(8, NO_OF_LAYERS):
+        for layer in range(0, NO_OF_LAYERS):
             logger.info(f"getting into layer number:{layer}")
             print(f"getting into layer number:{layer}")
             for head in range(0, NO_OF_HEADS_PER_LAYER):
@@ -1890,8 +1890,10 @@ def run_loading_and_testing(model_args, data_args, training_args):
                         # tokens store it in a dictionary and do it for all data points
 
                     for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence, \
-                    for_this_claim_what_is_the_total_attention_weight_that_came_from_other_tokens_in_claim = \
-                        find_attention_percentage_across_claim_ev(attention, tokens, layer, head)
+                    for_this_claim_what_is_the_total_attention_weight_that_came_from_other_tokens_in_claim = find_attention_percentage_across_claim_ev_both_directions(attention, tokens, layer, head)
+                        #find_attention_percentage_across_claim_ev(attention, tokens, layer, head)
+
+
 
                     for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences += for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence
                     for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_claims += for_this_claim_what_is_the_total_attention_weight_that_came_from_other_tokens_in_claim
@@ -2076,7 +2078,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
             if (token == "[SEP]"):
                 separator_token = index
                 break
-        claim_starting_tokens=tokens[:5]
+        claim_starting_tokens=tokens[:5] #this is used only to print error message. dont worry too much about this.
         assert separator_token != 0
         for layer_index,per_layer_attention in enumerate(attention):
             if(layer_index==layer):
@@ -2087,9 +2089,11 @@ def run_loading_and_testing(model_args, data_args, training_args):
                             for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence = 0
                             for per_left_token_attention, token_column in zip(per_head_attention, tokens):
                                 # Now go column wise. i.e for each word in column[0] of, what was the attention it got from other words.
-                                # aggregate attention into two classes now if the index is before separator_token or not
+                                # aggregate attention into two classes now if the index is before separator_token_index or not
 
-                                #go to the next claim evidence pair once you hit the end of claim. This is because right now we care only about attention on claim words. Eventually it must be for all words, cross sentence and in-sentence
+                                #go to the next claim evidence pair once you hit the end of claim.
+                                # This is because right now we care only about attention on claim words.
+                                # Eventually it must be for all words, cross sentence and in-sentence
                                 if (token_column == "[SEP]"):
                                     break
 
@@ -2098,7 +2102,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
                                 assert len(per_left_token_attention.data.tolist()) == len(tokens)
                                 for index2,(weight, token) in enumerate(zip(per_left_token_attention.data.tolist(), tokens)):
-                                    #ignore if the token is [SEP] . we have enough problems without [SEP]+ we only care about claim and evidence tokens here, not separateor token
+                                    #ignore the attention placed on [SEP]. Bert places way too much attention on it.
+                                    # + we have enough problems without it + we only care about claim and evidence tokens here, not separateor token
                                     if(token=="[SEP]"):
                                         continue
 
@@ -2121,6 +2126,81 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
 
 
+    def add_attentions_per_tokens(tokens_list, weights_list):
+        weight_to_add = 0
+        for ( token, weight) in zip( tokens_list, weights_list):
+            weight_to_add = weight_to_add + weight
+        assert weight_to_add !=0
+        return weight_to_add
+
+    def find_attention_percentage_across_claim_ev_both_directions(attention, tokens, layer, head):
+
+        # first go through the entire tokens and find where first [SEP] is. that is where the
+        # claim ends and evidence starts
+        separator_token_index = 0
+        for index, token in enumerate(tokens):
+            if (token == "[SEP]"):
+                separator_token_index = index
+                break
+        claim_starting_tokens = tokens[:5]  # this is used only to print error message. dont worry too much about this.
+        assert separator_token_index != 0
+
+        tokens_claim = tokens[:separator_token_index]
+
+        #get all the tokens in evidence except that of [SEP]
+        tokens_evidence = tokens[(separator_token_index+1):]
+
+        for layer_index, per_layer_attention in enumerate(attention):
+            if layer_index == layer:
+                for heads in per_layer_attention:
+                    for head_index, per_head_attention in enumerate(heads):
+                        if head_index == head:
+                            total_attention_weight_that_came_from_in_sent = 0
+                            total_attention_weight_that_came_from_across_sent = 0
+                            for per_left_token_attention, token_column in zip(per_head_attention, tokens):
+                                total_attention_weight_that_came_from_tokens_in_same_data_subpoint = 0 #a data sub point means claim or evidence
+                                total_attention_weight_that_came_from_tokens_from_data_subpoint_across = 0 #note sentence can
+                                assert len(per_left_token_attention.data.tolist()) == len(tokens)
+                                weights_claim=per_left_token_attention.data.tolist()[:separator_token_index]
+                                assert len(tokens_claim) == len(weights_claim)
+                                weights_evidence = per_left_token_attention.data.tolist()[(separator_token_index+1):]
+                                assert len(tokens_evidence) == len(weights_evidence)
+
+                                #now there are 2 pairs, tokens_claim(A), tokens_evidence(B), weights_claim(C), weights_evidence(D)
+                                # do AC, AD, BC, BD with fn add_attentions_per_tokens- but with the right total cumulative weight
+                                #i.e in sentence vs cross sentence
+
+
+                                #add_attentions_per_tokens(tokens_list, weights_list, weight_to_add):
+                                total_attention_weight_that_came_from_tokens_in_same_data_subpoint += add_attentions_per_tokens(tokens_claim,weights_claim)
+                                total_attention_weight_that_came_from_tokens_from_data_subpoint_across += add_attentions_per_tokens(
+                                    tokens_claim, weights_evidence)
+                                total_attention_weight_that_came_from_tokens_in_same_data_subpoint += add_attentions_per_tokens(
+                                    tokens_evidence, weights_evidence)
+                                total_attention_weight_that_came_from_tokens_from_data_subpoint_across += add_attentions_per_tokens(
+                                    tokens_evidence, weights_claim)
+
+
+
+
+                                # tested till here only
+
+                            #
+                            #
+                            #     percent_attention_from_evidence_tokens = total_attention_weight_that_came_from_tokens_from_data_subpoint_across * 100 / (
+                            #                 total_attention_weight_that_came_from_tokens_from_data_subpoint_across + total_attention_weight_that_came_from_tokens_in_same_data_subpoint)
+                            #     logger.debug(
+                            #         f"for the token : {token_column} in claim {percent_attention_from_evidence_tokens} percentage of attention weights that came from "
+                            #         f"came from evidence and rest from tokens in claim itself")
+                            #     total_attention_weight_that_came_from_in_sent += total_attention_weight_that_came_from_tokens_in_same_data_subpoint
+                            #     total_attention_weight_that_came_from_across_sent += total_attention_weight_that_came_from_tokens_from_data_subpoint_across
+                            #
+                            # overall_attention_from_evidence_tokens_percentage = total_attention_weight_that_came_from_across_sent * 100 / (
+                            #             total_attention_weight_that_came_from_across_sent + total_attention_weight_that_came_from_in_sent)
+                            # logger.debug(
+                            #     f"\nfor this claim which starts with {claim_starting_tokens} percentage of attention weights that came from "
+                            #     f"came from evidence is {overall_attention_from_evidence_tokens_percentage} and the rest from tokens in claim itself")
+        return total_attention_weight_that_came_from_across_sent, total_attention_weight_that_came_from_in_sent
 
     def find_aggregate_attention_per_token(attention, tokens, dict_token_attention, layer, head):
         for layer_index,per_layer_attention in enumerate(attention):
