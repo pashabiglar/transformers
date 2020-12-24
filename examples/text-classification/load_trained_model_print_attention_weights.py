@@ -1663,7 +1663,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
-        level=logging.DEBUG if training_args.local_rank in [-1, 0] else logging.WARN,
+        level=logging.INFO if training_args.local_rank in [-1, 0] else logging.WARN,
         filename=log_file_name,
         filemode='w'
     )
