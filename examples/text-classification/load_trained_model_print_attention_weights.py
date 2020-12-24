@@ -50,7 +50,7 @@ CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP= "config_for_attention_visualization_f
 CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC= "config_for_attention_visualization_for_loading_lex_model_hpc.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_LAPTOP="config_for_attention_visualization_for_loading_stuteacher_model_laptop.py"
 CONFIG_FILE_TO_TEST_STUTEACHER_MODEL_WITH_HPC="config_for_attention_visualization_for_loading_stuteacher_model_hpc.py"
-config_file_touse = CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP
+config_file_touse = CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC
 NO_OF_LAYERS=12
 NO_OF_HEADS_PER_LAYER=12
 
@@ -1663,7 +1663,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
-        level=logging.INFO if training_args.local_rank in [-1, 0] else logging.WARN,
+        level=logging.DEBUG if training_args.local_rank in [-1, 0] else logging.WARN,
         filename=log_file_name,
         filemode='w'
     )
