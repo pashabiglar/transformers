@@ -1829,7 +1829,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     def get_cross_claim_evidence_percentage_attention_weights(dataloader, model, tokenizer):
         attention = claim_evidence_plain_text = None
-
+        logger.info(f"getting into fn get_cross_claim_evidence_percentage_attention_weights ")
         # create a dictionary to store overall attention of a given head and a layer. maybe can eventually store it in a matrix
         # lets start with 12th layer, 12th attention head- eventually we wil need to create a 12x12 matrix of such dicts for 12 layers and 12 heads
         dict_tokens_attention = {}
@@ -1894,7 +1894,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
                     for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence, \
                     for_this_claim_what_is_the_total_attention_weight_that_came_from_other_tokens_in_claim = find_attention_percentage_across_claim_ev_both_directions(attention, tokens, layer, head)
-                        #find_attention_percentage_across_claim_ev(attention, tokens, layer, head)
+
 
 
 
@@ -2141,6 +2141,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
         return weight_to_add
 
     def find_attention_percentage_across_claim_ev_both_directions(attention, tokens, layer, head):
+
+        logger.info(f"getting into fn find_attention_percentage_across_claim_ev_both_directions ")
 
         # first go through the entire tokens and find where first [SEP] is. that is where the
         # claim ends and evidence starts
