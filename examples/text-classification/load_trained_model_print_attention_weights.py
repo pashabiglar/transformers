@@ -1849,13 +1849,12 @@ def run_loading_and_testing(model_args, data_args, training_args):
                 # go through the entire dataset (usually test or dev partition), and for each claim evidence pair,
                 # run it through the trained model, which then predicts the label, along with attention it places on each token.
 
-                for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences = 0
-                for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_claims = 0
+                for_all_datapoints_total_attention_weight_that_came_from_cross_datapoints = 0
+                for_all_datapoints_total_attention_weight_that_came_from_within_itself = 0
                 data_counter = 1
 
 
-                for each_claim_evidence_pair in tqdm(dataloader, desc="getting attention per data point",
-                                                     total=total_length_datapoints):
+                for each_claim_evidence_pair in dataloader:
                     print(f"data point:{data_counter}/{total_length_datapoints} ")
                     logger.info(f"data point:{data_counter}/{total_length_datapoints} ")
                     data_counter = data_counter + 1
@@ -1901,12 +1900,20 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
 
 
-                    for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences += for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence
-                    for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_claims += for_this_claim_what_is_the_total_attention_weight_that_came_from_other_tokens_in_claim
+                    for_all_datapoints_total_attention_weight_that_came_from_cross_datapoints += for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence
+                    for_all_datapoints_total_attention_weight_that_came_from_within_itself += for_this_claim_what_is_the_total_attention_weight_that_came_from_other_tokens_in_claim
 
-                    # so at the end of all data points,calculat overall for all claims what percentage attention came from claims and evidence
-                percent_from_evidence = for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences * 100 / (
-                            for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences + for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_claims)
+                # so at the end of all data points,calculat overall for all claims what percentage attention came from claims and evidence
+
+                logger.info(
+                    f"for_all_datapoints_total_attention_weight_that_came_from_cross_datapoints= {for_all_datapoints_total_attention_weight_that_came_from_cross_datapoints} ")
+
+                logger.info(
+                    f"for_all_datapoints_total_attention_weight_that_came_from_within_itself= {for_all_datapoints_total_attention_weight_that_came_from_within_itself} ")
+
+
+                percent_from_evidence = for_all_datapoints_total_attention_weight_that_came_from_cross_datapoints * 100 / (
+                            for_all_datapoints_total_attention_weight_that_came_from_cross_datapoints + for_all_datapoints_total_attention_weight_that_came_from_within_itself)
                 logger.info(f"for layer:{layer} head {head} percent_attn_from_all_cross_sentence_tokens={percent_from_evidence}")
                 append_to_csv_file(cross_fit,layer,head,percent_from_evidence)
                     #append_to_csv_file(output_file_name,layer, head, percentage):
