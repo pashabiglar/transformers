@@ -32,14 +32,17 @@ dev partition)
 2) pick either of CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC or CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP depending on 
 whether you are running on laptop or hpc server
 
-also if your running folder name is changed, you need to change it in 3 files
+3) download data from terminal at folder huggingface/mithun_scripts  using: bash run_all.sh --epochs_to_run 2 --machine_to_run_on laptop --use_toy_data true --download_fresh_data true
+- you can kill the run from terminal after the data is downloaded and converted to mnli format
+
+also if your running folder name is changed (which usually happens in hpc) you need to change it in 3 files
 1)run_all.sh (2instances)
 2)run_on_hpc_ocelote_venv_array.sh (3 instances)
 3) the corresponding config file you are going to use (see below) 2 instances
 
 Note: if you are running from pycharm, the configuration you should use is "load combined trained model and get attention weights"
 """
-  
+
 
 
 """ Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
@@ -1834,10 +1837,10 @@ def run_loading_and_testing(model_args, data_args, training_args):
         cross_fit = "cross_sentence.csv"
 
         write_to_csv_file(cross_fit, 0, 0, 0)
-        for layer in range(0, NO_OF_LAYERS):
+        for layer in range(11, NO_OF_LAYERS):
             logger.info(f"getting into layer number:{layer}")
             print(f"getting into layer number:{layer}")
-            for head in range(0, NO_OF_HEADS_PER_LAYER):
+            for head in range(11, NO_OF_HEADS_PER_LAYER):
                 logger.info(f"getting into head number:{head}")
                 print(f"getting into head number:{head}")
                 dict_unique_tokens_attention_weights = {}
@@ -1904,7 +1907,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
                     # so at the end of all data points,calculat overall for all claims what percentage attention came from claims and evidence
                 percent_from_evidence = for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences * 100 / (
                             for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences + for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_claims)
-                logger.info(f"for layer:{layer} head {head} percent_attn_on_claims_from_evidence={percent_from_evidence}")
+                logger.info(f"for layer:{layer} head {head} percent_attn_from_all_cross_sentence_tokens={percent_from_evidence}")
                 append_to_csv_file(cross_fit,layer,head,percent_from_evidence)
                     #append_to_csv_file(output_file_name,layer, head, percentage):
 
@@ -2178,6 +2181,11 @@ def run_loading_and_testing(model_args, data_args, training_args):
                                     continue
 
                                 for index_token, (token_row) in enumerate(tokens):
+                                    logger.debug(
+                                        f"---------\n"
+                                        f"the column token we are looking at is {token_column} and the row token is {token_row} ")
+
+
                                     if (token_row == "[SEP]") or (token_row == "[CLS]") or (token_row == "[PAD]"):
                                         continue
 
@@ -2217,24 +2225,22 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
 
                             logger.info(
-                                f"total_attention_weight_that_came_from_tokens_in_same_data_subpoint:{total_attention_weight_that_came_from_tokens_in_same_data_subpoint}")
+                                    f"total_attention_weight_that_came_from_tokens_in_same_data_subpoint= {total_attention_weight_that_came_from_tokens_in_same_data_subpoint} ")
+
                             logger.info(
-                                f"total_attention_weight_that_came_from_tokens_from_data_subpoint_across:{total_attention_weight_that_came_from_tokens_from_data_subpoint_across}")
+                                    f"total_attention_weight_that_came_from_tokens_from_data_subpoint_across= {total_attention_weight_that_came_from_tokens_from_data_subpoint_across} ")
 
                             percent_attention_from_evidence_tokens = total_attention_weight_that_came_from_tokens_from_data_subpoint_across * 100 / (
-                                        total_attention_weight_that_came_from_tokens_from_data_subpoint_across + total_attention_weight_that_came_from_tokens_in_same_data_subpoint)
-                            logger.debug(
-                                f"for the token : {token_column} in claim {percent_attention_from_evidence_tokens} percentage of attention weights that came from "
-                                f"came from evidence and rest from tokens in claim itself")
-                            total_attention_weight_that_came_from_in_sent += total_attention_weight_that_came_from_tokens_in_same_data_subpoint
-                            total_attention_weight_that_came_from_across_sent += total_attention_weight_that_came_from_tokens_from_data_subpoint_across
+                                    total_attention_weight_that_came_from_tokens_from_data_subpoint_across + total_attention_weight_that_came_from_tokens_in_same_data_subpoint)
 
-                        overall_attention_from_evidence_tokens_percentage = total_attention_weight_that_came_from_across_sent * 100 / (
-                                    total_attention_weight_that_came_from_across_sent + total_attention_weight_that_came_from_in_sent)
-                        logger.debug(
-                            f"\nfor this claim which starts with {claim_starting_tokens} percentage of attention weights that came from "
-                            f"came from evidence is {overall_attention_from_evidence_tokens_percentage} and the rest from tokens in claim itself")
-        return total_attention_weight_that_came_from_across_sent, total_attention_weight_that_came_from_in_sent
+                            logger.info(
+                                f"\nfor this claim which starts with {claim_starting_tokens} percentage of attention weights that came from "
+                                    f"came from cross sentence both directions is {percent_attention_from_evidence_tokens} and the rest from tokens in sentence itself")
+
+
+
+
+        return total_attention_weight_that_came_from_tokens_from_data_subpoint_across, total_attention_weight_that_came_from_tokens_in_same_data_subpoint
 
     def find_aggregate_attention_per_token(attention, tokens, dict_token_attention, layer, head):
         for layer_index,per_layer_attention in enumerate(attention):
