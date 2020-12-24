@@ -2142,7 +2142,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     def find_attention_percentage_across_claim_ev_both_directions(attention, tokens, layer, head):
 
-        logger.info(f"getting into fn find_attention_percentage_across_claim_ev_both_directions ")
+        logger.debug(f"getting into fn find_attention_percentage_across_claim_ev_both_directions ")
 
         # first go through the entire tokens and find where first [SEP] is. that is where the
         # claim ends and evidence starts
@@ -2226,16 +2226,16 @@ def run_loading_and_testing(model_args, data_args, training_args):
                                             each_attention_column[index_token].item()
 
 
-                            logger.info(
+                            logger.debug(
                                     f"total_attention_weight_that_came_from_tokens_in_same_data_subpoint= {total_attention_weight_that_came_from_tokens_in_same_data_subpoint} ")
 
-                            logger.info(
+                            logger.debug(
                                     f"total_attention_weight_that_came_from_tokens_from_data_subpoint_across= {total_attention_weight_that_came_from_tokens_from_data_subpoint_across} ")
 
                             percent_attention_from_evidence_tokens = total_attention_weight_that_came_from_tokens_from_data_subpoint_across * 100 / (
                                     total_attention_weight_that_came_from_tokens_from_data_subpoint_across + total_attention_weight_that_came_from_tokens_in_same_data_subpoint)
 
-                            logger.info(
+                            logger.debug(
                                 f"\nfor this claim which starts with {claim_starting_tokens} percentage of attention weights that came from "
                                     f"came from cross sentence both directions is {percent_attention_from_evidence_tokens} and the rest from tokens in sentence itself")
 
