@@ -1837,10 +1837,10 @@ def run_loading_and_testing(model_args, data_args, training_args):
         cross_fit = "cross_sentence.csv"
 
         write_to_csv_file(cross_fit, 0, 0, 0)
-        for layer in range(11, NO_OF_LAYERS):
+        for layer in range(0, NO_OF_LAYERS):
             logger.info(f"getting into layer number:{layer}")
             print(f"getting into layer number:{layer}")
-            for head in range(11, NO_OF_HEADS_PER_LAYER):
+            for head in range(0, NO_OF_HEADS_PER_LAYER):
                 logger.info(f"getting into head number:{head}")
                 print(f"getting into head number:{head}")
                 dict_unique_tokens_attention_weights = {}
@@ -2186,8 +2186,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
                                 #ignore weights to or from bert specific tokens
                                 #todo: eventually you might want to find out this also
-                                # if (token_column == "[SEP]") or (token_column == "[CLS]") or (token_column == "[PAD]"):
-                                #     continue
+                                if (token_column == "[SEP]") or (token_column == "[CLS]") or (token_column == "[PAD]"):
+                                    continue
 
                                 for index_token, (token_row) in enumerate(tokens):
                                     logger.debug(
@@ -2195,8 +2195,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
                                         f"the column token we are looking at is {token_column} and the row token is {token_row} ")
 
 
-                                    # if (token_row == "[SEP]") or (token_row == "[CLS]") or (token_row == "[PAD]"):
-                                    #     continue
+                                    if (token_row == "[SEP]") or (token_row == "[CLS]") or (token_row == "[PAD]"):
+                                        continue
 
                                     # if token is in claim and attention is coming from a token in evidence, increase cross_sentence weight, else increase in_sentence weight. and vice versa
                                     # token we are looking at (index_attention_column)is in claim, and the attention is coming from a token in claim
