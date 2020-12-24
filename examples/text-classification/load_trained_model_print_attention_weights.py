@@ -1895,6 +1895,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
 
 
+
+
+
                     for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_evidences += for_this_claim_what_is_the_total_attention_weight_that_came_from_tokens_in_evidence
                     for_all_claims_what_is_the_total_attention_weight_that_came_from_tokens_in_claims += for_this_claim_what_is_the_total_attention_weight_that_came_from_other_tokens_in_claim
 
@@ -2128,8 +2131,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     def add_attentions_per_tokens(tokens_list, weights_list):
         weight_to_add = 0
-        for ( token, weight) in zip( tokens_list, weights_list):
-            weight_to_add = weight_to_add + weight
+        for (token) in zip(tokens_list, weights_list):
+            for (token, weight) in zip(tokens_list, weights_list):
+                weight_to_add = weight_to_add + weight
         assert weight_to_add !=0
         return weight_to_add
 
@@ -2157,49 +2161,79 @@ def run_loading_and_testing(model_args, data_args, training_args):
                         if head_index == head:
                             total_attention_weight_that_came_from_in_sent = 0
                             total_attention_weight_that_came_from_across_sent = 0
-                            for per_left_token_attention, token_column in zip(per_head_attention, tokens):
-                                total_attention_weight_that_came_from_tokens_in_same_data_subpoint = 0 #a data sub point means claim or evidence
-                                total_attention_weight_that_came_from_tokens_from_data_subpoint_across = 0 #note sentence can
-                                assert len(per_left_token_attention.data.tolist()) == len(tokens)
-                                weights_claim=per_left_token_attention.data.tolist()[:separator_token_index]
-                                assert len(tokens_claim) == len(weights_claim)
-                                weights_evidence = per_left_token_attention.data.tolist()[(separator_token_index+1):]
-                                assert len(tokens_evidence) == len(weights_evidence)
-
-                                #now there are 2 pairs, tokens_claim(A), tokens_evidence(B), weights_claim(C), weights_evidence(D)
-                                # do AC, AD, BC, BD with fn add_attentions_per_tokens- but with the right total cumulative weight
-                                #i.e in sentence vs cross sentence
 
 
-                                #add_attentions_per_tokens(tokens_list, weights_list, weight_to_add):
-                                total_attention_weight_that_came_from_tokens_in_same_data_subpoint += add_attentions_per_tokens(tokens_claim,weights_claim)
-                                total_attention_weight_that_came_from_tokens_from_data_subpoint_across += add_attentions_per_tokens(
-                                    tokens_claim, weights_evidence)
-                                total_attention_weight_that_came_from_tokens_in_same_data_subpoint += add_attentions_per_tokens(
-                                    tokens_evidence, weights_evidence)
-                                total_attention_weight_that_came_from_tokens_from_data_subpoint_across += add_attentions_per_tokens(
-                                    tokens_evidence, weights_claim)
+                            total_attention_weight_that_came_from_tokens_in_same_data_subpoint = 0  # a data sub point means claim or evidence
+                            total_attention_weight_that_came_from_tokens_from_data_subpoint_across = 0  # note sentence can
+
+                            # each_attention_column is the weight for a given token (lets call it x)/that came from all the other
+                            # tokens in the entire datapoint (claim and evidence combined). So each_attention_column[0] is the weight that came to x from 1st token
+                            # (called token_column here), each_attention_column[1] from second token etc etc
+
+                            for index_attention_column, (each_attention_column,token_column) in enumerate(zip(per_head_attention,tokens)):
+
+                                #ignore weights to or from bert specific tokens
+                                #todo: eventually you might want to find out this also
+                                if (token_column == "[SEP]") or (token_column == "[CLS]") or (token_column == "[PAD]"):
+                                    continue
+
+                                for index_token, (token_row) in enumerate(tokens):
+                                    if (token_row == "[SEP]") or (token_row == "[CLS]") or (token_row == "[PAD]"):
+                                        continue
+
+                                    # if token is in claim and attention is coming from a token in evidence, increase cross_sentence weight, else increase in_sentence weight. and vice versa
+                                    # token we are looking at (index_attention_column)is in claim, and the attention is coming from a token in claim
+                                    if(index_token < separator_token_index) and (index_attention_column < separator_token_index):
+                                        logger.debug(
+                                            f"the column token we are looking at is {token_column} which is in claim and the weight is coming from the token {token_row} which also is in claim")
+                                        total_attention_weight_that_came_from_tokens_in_same_data_subpoint+= each_attention_column[index_token].item()
+
+                                    # token we are looking at (index_attention_column)is in evidence, and the attention is coming from a token in evidence
+                                    if (index_token > separator_token_index) and (
+                                            index_attention_column > separator_token_index):
+                                        logger.debug(
+                                            f"the column token we are looking at is {token_column} which is in evidence and the weight is coming from the token {token_row} which also is in evidence")
+
+                                        total_attention_weight_that_came_from_tokens_in_same_data_subpoint += \
+                                        each_attention_column[index_token].item()
+
+                                    #token we are looking at (index_attention_column)is in claim, while the attention is coming from a token in evidence
+                                    if (index_token > separator_token_index) and (
+                                            index_attention_column < separator_token_index):
+                                        logger.debug(
+                                            f"the column token we are looking at is {token_column} which is in claim and the weight is coming from the token {token_row} which  is in evidence")
+
+                                        total_attention_weight_that_came_from_tokens_from_data_subpoint_across += \
+                                            each_attention_column[index_token].item()
+
+                                    # token we are looking at (index_attention_column)is in evidence, while the attention is coming from a token in claim
+                                    if (index_token < separator_token_index) and (
+                                            index_attention_column > separator_token_index):
+                                        logger.debug(
+                                            f"the column token we are looking at is {token_column} which is in evidence and the weight is coming from the token {token_row} which  is in claim")
+
+                                        total_attention_weight_that_came_from_tokens_from_data_subpoint_across += \
+                                            each_attention_column[index_token].item()
 
 
+                            logger.info(
+                                f"total_attention_weight_that_came_from_tokens_in_same_data_subpoint:{total_attention_weight_that_came_from_tokens_in_same_data_subpoint}")
+                            logger.info(
+                                f"total_attention_weight_that_came_from_tokens_from_data_subpoint_across:{total_attention_weight_that_came_from_tokens_from_data_subpoint_across}")
 
+                            percent_attention_from_evidence_tokens = total_attention_weight_that_came_from_tokens_from_data_subpoint_across * 100 / (
+                                        total_attention_weight_that_came_from_tokens_from_data_subpoint_across + total_attention_weight_that_came_from_tokens_in_same_data_subpoint)
+                            logger.debug(
+                                f"for the token : {token_column} in claim {percent_attention_from_evidence_tokens} percentage of attention weights that came from "
+                                f"came from evidence and rest from tokens in claim itself")
+                            total_attention_weight_that_came_from_in_sent += total_attention_weight_that_came_from_tokens_in_same_data_subpoint
+                            total_attention_weight_that_came_from_across_sent += total_attention_weight_that_came_from_tokens_from_data_subpoint_across
 
-                                # tested till here only
-
-                            #
-                            #
-                            #     percent_attention_from_evidence_tokens = total_attention_weight_that_came_from_tokens_from_data_subpoint_across * 100 / (
-                            #                 total_attention_weight_that_came_from_tokens_from_data_subpoint_across + total_attention_weight_that_came_from_tokens_in_same_data_subpoint)
-                            #     logger.debug(
-                            #         f"for the token : {token_column} in claim {percent_attention_from_evidence_tokens} percentage of attention weights that came from "
-                            #         f"came from evidence and rest from tokens in claim itself")
-                            #     total_attention_weight_that_came_from_in_sent += total_attention_weight_that_came_from_tokens_in_same_data_subpoint
-                            #     total_attention_weight_that_came_from_across_sent += total_attention_weight_that_came_from_tokens_from_data_subpoint_across
-                            #
-                            # overall_attention_from_evidence_tokens_percentage = total_attention_weight_that_came_from_across_sent * 100 / (
-                            #             total_attention_weight_that_came_from_across_sent + total_attention_weight_that_came_from_in_sent)
-                            # logger.debug(
-                            #     f"\nfor this claim which starts with {claim_starting_tokens} percentage of attention weights that came from "
-                            #     f"came from evidence is {overall_attention_from_evidence_tokens_percentage} and the rest from tokens in claim itself")
+                        overall_attention_from_evidence_tokens_percentage = total_attention_weight_that_came_from_across_sent * 100 / (
+                                    total_attention_weight_that_came_from_across_sent + total_attention_weight_that_came_from_in_sent)
+                        logger.debug(
+                            f"\nfor this claim which starts with {claim_starting_tokens} percentage of attention weights that came from "
+                            f"came from evidence is {overall_attention_from_evidence_tokens_percentage} and the rest from tokens in claim itself")
         return total_attention_weight_that_came_from_across_sent, total_attention_weight_that_came_from_in_sent
 
     def find_aggregate_attention_per_token(attention, tokens, dict_token_attention, layer, head):
