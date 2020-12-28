@@ -1,4 +1,9 @@
-#note: this is another version/combination of accuracies. despite having these accuracies, the model performed fine on hpc. So am not sure which one of the accuracies is right to test on laptop . so doing both.
+#note: thiese are the config values used when running the architecture in a student teacher (aka combined) mode on laptop.
+#update: as of dec 2020, both test cases and actual training code reads the  arguments from this file except a few
+#these arguments are not read from this file, since they are used in shell script BEFORE the python code is called. They are defined
+#in run_all.sh and hence will have to modified in two places, here and run_all.sh
+#task_name="fevercrossdomain"
+
 [BERT]
 model_name_or_path="bert-base-cased"
 task_name="fevercrossdomain"
@@ -24,6 +29,6 @@ subtask_type="figerspecific"
 machine_to_run_on="laptop"
 toy_data_dir_path="/Users/mordor/research/huggingface/src/transformers/data/datasets/fever/fevercrossdomain/combined/figerspecific/toydata/"
 #what are the scores that you should assert against. i.e the ones we got when we ran the toy data alone
-fever_in_domain_accuracy_on_toy_data_17_datapoints=0.0
+fever_in_domain_accuracy_on_toy_data_17_datapoints=0.125
 fever_cross_domain_accuracy_on_toy_data_17_datapoints=0.0625
-fever_cross_domain_fncscore_on_toy_data_17_datapoints=0.275
+fever_cross_domain_fncscore_on_toy_data_17_datapoints=0.25

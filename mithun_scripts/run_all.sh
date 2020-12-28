@@ -62,7 +62,7 @@ echo "EPOCHS=$EPOCHS"
 
 
 
-export DATASET="fever"
+#export DATASET="fever"
 export basedir="$DATA_DIR_BASE/$DATASET"
 export TASK_TYPE="combined" #options for task type include lex,delex,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both mod1 and mod2 folders
 export SUB_TASK_TYPE="figerspecific" #options for TASK_SUB_TYPE (usually used only for TASK_TYPEs :[mod2,combined])  include [oa, figerspecific, figerabstract, oass, simplener]
@@ -74,18 +74,7 @@ export TOY_DATA_DIR_PATH="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TAS
 
 
 
-export BERT_MODEL_NAME="bert-base-cased" #options include things like [bert-base-uncased,bert-base-cased] etc. refer src/transformers/tokenization_bert.py for more.
-export MAX_SEQ_LENGTH="128"
-export OUTPUT_DIR="$OUTPUT_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE/$BERT_MODEL_NAME/$MAX_SEQ_LENGTH/"
-echo $OUTPUT_DIR
-
-echo "OUTPUT_DIR=$OUTPUT_DIR"
-
-echo "value of epochs is $EPOCHS"
 echo "value of DATA_DIR is $DATA_DIR"
-
-
-
 #get data fresh before every run
 echo ". going to download data"
 
@@ -99,6 +88,7 @@ if [ $DOWNLOAD_FRESH_DATA == "true" ]; then
     ./get_fever_fnc_data.sh
     ./convert_to_mnli_format.sh
 fi
+
 
 #create a small part of data as toy data. this will be used to run regresssion tests before the actual run starts
 ./reduce_size.sh  --data_path $TOY_DATA_DIR_PATH
@@ -115,14 +105,21 @@ if  [ "$USE_TOY_DATA" = true ]; then
 fi
 
 
+export BERT_MODEL_NAME="bert-base-cased" #options include things like [bert-base-uncased,bert-base-cased] etc. refer src/transformers/tokenization_bert.py for more.
+export MAX_SEQ_LENGTH="128"
+export OUTPUT_DIR="$OUTPUT_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE/$BERT_MODEL_NAME/$MAX_SEQ_LENGTH/"
+echo $OUTPUT_DIR
+
+echo "OUTPUT_DIR=$OUTPUT_DIR"
+echo "value of epochs is $EPOCHS"
 
 
-export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME      --do_train   --do_eval   --do_predict    \
---data_dir $DATA_DIR    --max_seq_length $MAX_SEQ_LENGTH      --per_device_eval_batch_size=16        --per_device_train_batch_size=16       \
---learning_rate 1e-5      --num_train_epochs $EPOCHS     --output_dir $OUTPUT_DIR --overwrite_output_dir  \
---weight_decay 0.01 --adam_epsilon 1e-6  --evaluate_during_training \
---task_type $TASK_TYPE --subtask_type $SUB_TASK_TYPE --machine_to_run_on $MACHINE_TO_RUN_ON --toy_data_dir_path $TOY_DATA_DIR_PATH "
-
+#export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME      --do_train   --do_eval   --do_predict    \
+#--data_dir $DATA_DIR    --max_seq_length $MAX_SEQ_LENGTH      --per_device_eval_batch_size=16        --per_device_train_batch_size=16       \
+#--learning_rate 1e-5      --num_train_epochs $EPOCHS     --output_dir $OUTPUT_DIR --overwrite_output_dir  \
+#--weight_decay 0.01 --adam_epsilon 1e-6  --evaluate_during_training \
+#--task_type $TASK_TYPE --subtask_type $SUB_TASK_TYPE --machine_to_run_on $MACHINE_TO_RUN_ON --toy_data_dir_path $TOY_DATA_DIR_PATH "
+#
 
 
 #test cases
@@ -132,8 +129,8 @@ export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME     
 
 
 #actual code runs
-#./run_glue.sh
+./run_glue.sh
 
-./load_model_test.sh
+#./load_model_test.sh
 
 

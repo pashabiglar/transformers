@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from typing import Callable, Dict, Optional
 import git
 import numpy as np
-
+import configparser
 
 from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer, EvalPrediction, GlueDataset
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
@@ -40,7 +40,7 @@ from transformers import (
 )
 import math
 from transformers.data.datasets import ParallelDataDataset
-
+CONFIG_FILE_TO_TEST_WITH="../examples/tests/config_training_combined_cased_laptop.py"
 
 def get_git_info():
     repo = git.Repo(search_parent_directories=True)
@@ -78,30 +78,58 @@ class ModelArguments:
         default=None, metadata={"help": "Where do you want to store the pretrained models downloaded from s3"}
     )
 
+def read_and_merge_config_entries():
+    config = configparser.ConfigParser()
+    config.read(CONFIG_FILE_TO_TEST_WITH)
+    assert not len(config.sections())==0
+    combined_configs=[]
+    for each_section in config.sections():
+        for (each_key, each_val) in config.items(each_section):
+            #some config entries of type bool just need to exist. doesnt need x=True.
+            # so now have to strip True out, until we findc a way to be able to pass it as bool itself
+            # so if True is a value, append only key
+            if (each_val=="True"):
+                combined_configs.append("--"+each_key)
+            else:
+                combined_configs.append("--" + each_key)
+                combined_configs.append(str(each_val).replace("\"",""))
+    combined_configs_str=" ".join(combined_configs)
+    return combined_configs_str
+
 
 def main():
     # See all possible arguments in src/transformers/training_args.py
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
 
+    configs = read_and_merge_config_entries()
+
+    print(f"value of configs is {configs}")
+
+    configs_split = configs.split()
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
+    model_args, data_args, training_args = parser.parse_args_into_dataclasses(args=configs_split)
 
-    if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
-        # If we pass only one argument to the script and it's the path to a json file,
-        # let's parse it to get our arguments.
-        model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
-    else:
-        model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
-    if (
-        os.path.exists(training_args.output_dir)
-        and os.listdir(training_args.output_dir)
-        and training_args.do_train
-        and not training_args.overwrite_output_dir
-    ):
-        raise ValueError(
-            f"Output directory ({training_args.output_dir}) already exists and is not empty. Use --overwrite_output_dir to overcome."
-        )
+    # parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
+    #
+    #
+    # if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
+    #     # If we pass only one argument to the script and it's the path to a json file,
+    #     # let's parse it to get our arguments.
+    #     model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
+    # else:
+    #     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
+    #
+    # if (
+    #     os.path.exists(training_args.output_dir)
+    #     and os.listdir(training_args.output_dir)
+    #     and training_args.do_train
+    #     and not training_args.overwrite_output_dir
+    # ):
+    #     raise ValueError(
+    #         f"Output directory ({training_args.output_dir}) already exists and is not empty. Use --overwrite_output_dir to overcome."
+    #     )
 
     run_training(model_args, data_args, training_args)
 
