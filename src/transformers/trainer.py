@@ -805,8 +805,8 @@ class StudentTeacherTrainer:
         # flag_run_both=True. Other two flags are to test by loading each of these models independently from within
         #the same trainer class
         flag_run_teacher_alone = False
-        flag_run_student_alone = True
-        flag_run_both = False
+        flag_run_student_alone = False
+        flag_run_both = True
 
 
 
@@ -2498,8 +2498,8 @@ class GlobalTrainer:
 
                 # in the world of student teacher with ema, the consistency loss will be between the student and ema of something. that something
                 # can be an emaof lex , ema of delex, or both
-                consistency_loss = self.get_consistency_loss(logits_lex_ema, logits_delex, "mse")
-                # consistency_loss = self.get_consistency_loss(logits_lex, logits_delex, "mse")
+                #consistency_loss = self.get_consistency_loss(logits_lex_ema, logits_delex, "mse")
+                consistency_loss = self.get_consistency_loss(logits_lex, logits_delex, "mse")
 
                 if (flag_run_both):
                     combined_loss = (weight_classification_loss * combined_classification_loss) + (

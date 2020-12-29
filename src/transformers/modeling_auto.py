@@ -66,6 +66,7 @@ from .modeling_bert import (
     BertForPreTraining,
     BertForQuestionAnswering,
     BertForSequenceClassification,
+    BertForFactVerficiationStudentTeacher,
     BertForTokenClassification,
     BertLMHeadModel,
     BertModel,
@@ -295,7 +296,9 @@ MODEL_FOR_SEQUENCE_CLASSIFICATION_MAPPING = OrderedDict(
         (BartConfig, BartForSequenceClassification),
         (LongformerConfig, LongformerForSequenceClassification),
         (RobertaConfig, RobertaForSequenceClassification),
-        (BertConfig, BertForSequenceClassification),
+        #mithun changing this on Dec 2020 to call another class, for studentteacher architecture, which encompasses BertForSequenceClassification
+        #original(BertConfig, BertForSequenceClassification),
+        (BertConfig, BertForFactVerficiationStudentTeacher),
         (XLNetConfig, XLNetForSequenceClassification),
         (MobileBertConfig, MobileBertForSequenceClassification),
         (FlaubertConfig, FlaubertForSequenceClassification),
