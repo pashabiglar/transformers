@@ -142,11 +142,11 @@ def run_training(model_args, data_args, training_args):
     except KeyError:
         raise ValueError("Task not found: %s" % (data_args.task_name))
 
-    # Load pretrained model_teacher and tokenizer_lex
+    # Load pretrained model_combined_student_teacher and tokenizer_lex
     #
     # Distributed training:
     # The .from_pretrained methods guarantee that only one local process can concurrently
-    # download model_teacher & vocab.
+    # download model_combined_student_teacher & vocab.
   
     config = AutoConfig.from_pretrained(
         model_args.config_name if model_args.config_name else model_args.model_name_or_path,
@@ -174,7 +174,7 @@ def run_training(model_args, data_args, training_args):
     )
 
     if (training_args.do_train_1student_1teacher == True):
-        model_teacher = AutoModelForSequenceClassification.from_pretrained(
+        model_combined_student_teacher = AutoModelForSequenceClassification.from_pretrained(
         model_args.model_name_or_path,
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
         config=config,
@@ -245,7 +245,7 @@ def run_training(model_args, data_args, training_args):
 
 
     # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
-    # combined model_teacher performs in a delexicalized dataset. This will serve as a verification point
+    # combined model_combined_student_teacher performs in a delexicalized dataset. This will serve as a verification point
     #to confirm the accuracy (we got 92.91% for fever delx in domain) if something goes wrong in the prediction phase below
 
 
@@ -323,7 +323,7 @@ def run_training(model_args, data_args, training_args):
 
             tokenizer_delex,
             tokenizer_lex,
-            models={"teacher": model_teacher, "teacher_ema":model_teacher_ema,"student": model_student},
+            models={"teacher": model_combined_student_teacher, "teacher_ema":model_teacher_ema,"student": model_student},
             args=training_args,
             train_datasets={"combined": train_dataset},
             test_dataset=test_dataset,
@@ -360,7 +360,7 @@ def run_training(model_args, data_args, training_args):
 
 
         # For convenience, we also re-save the tokenizer_lex to the same directory,
-        # so that you can share your model_teacher easily on huggingface.co/models =)
+        # so that you can share your model_combined_student_teacher easily on huggingface.co/models =)
         if trainer.is_world_master():
             tokenizer_lex.save_pretrained(training_args.output_dir)
         assert dev_partition_evaluation_result is not None
