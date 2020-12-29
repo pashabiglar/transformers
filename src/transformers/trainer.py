@@ -1016,8 +1016,8 @@ class StudentTeacherTrainer:
 
                 #in the world of student teacher with ema, the consistency loss will be between the student and ema of something. that something
                 #can be an emaof lex , ema of delex, or both
-                consistency_loss = self.get_consistency_loss(logits_lex_ema,logits_delex,"mse")
-                #consistency_loss = self.get_consistency_loss(logits_lex, logits_delex, "mse")
+                #consistency_loss = self.get_consistency_loss(logits_lex_ema,logits_delex,"mse")
+                consistency_loss = self.get_consistency_loss(logits_lex, logits_delex, "mse")
 
                 if (flag_run_both):
                     combined_loss = (weight_classification_loss*combined_classification_loss) + (weight_consistency_loss*consistency_loss)
@@ -2962,9 +2962,8 @@ class GlobalTrainer:
             inputs:
             optimizer:
         Returns:loss
-        ''' \
- \
-                if (loss_function == "mse"):
+        '''
+        if (loss_function == "mse"):
                     loss_fct = MSELoss()
                     loss = loss_fct(logit1.view(-1), logit2.view(-1))
 
