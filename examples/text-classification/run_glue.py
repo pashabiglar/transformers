@@ -33,6 +33,7 @@ from transformers import (
     Trainer,
     TrainingArguments,
     StudentTeacherTrainer,
+    GlobalTrainer,
     glue_compute_metrics,
     glue_output_modes,
     glue_tasks_num_labels,
@@ -183,31 +184,31 @@ def run_training(model_args, data_args, training_args):
 
         # detach so as to have no backpropagation in lex. instead
 
-        model_teacher_ema = AutoModelForSequenceClassification.from_pretrained(
-            model_args.model_name_or_path,
-            from_tf=bool(".ckpt" in model_args.model_name_or_path),
-            config=config,
-            cache_dir=model_args.cache_dir,
-        )
-
-
-        for param in model_teacher_ema.bert.parameters():
-            param.requires_grad = False
-
-        model_student = AutoModelForSequenceClassification.from_pretrained(
-        model_args.model_name_or_path,
-        from_tf=bool(".ckpt" in model_args.model_name_or_path),
-        config=config,
-        cache_dir=model_args.cache_dir,
-        )
-
-    else:
-        model = AutoModelForSequenceClassification.from_pretrained(
-            model_args.model_name_or_path,
-            from_tf=bool(".ckpt" in model_args.model_name_or_path),
-            config=config,
-            cache_dir=model_args.cache_dir,
-        )
+    #     model_teacher_ema = AutoModelForSequenceClassification.from_pretrained(
+    #         model_args.model_name_or_path,
+    #         from_tf=bool(".ckpt" in model_args.model_name_or_path),
+    #         config=config,
+    #         cache_dir=model_args.cache_dir,
+    #     )
+    #
+    #
+    #     for param in model_teacher_ema.bert.parameters():
+    #         param.requires_grad = False
+    #
+    #     model_student = AutoModelForSequenceClassification.from_pretrained(
+    #     model_args.model_name_or_path,
+    #     from_tf=bool(".ckpt" in model_args.model_name_or_path),
+    #     config=config,
+    #     cache_dir=model_args.cache_dir,
+    #     )
+    #
+    # else:
+    #     model = AutoModelForSequenceClassification.from_pretrained(
+    #         model_args.model_name_or_path,
+    #         from_tf=bool(".ckpt" in model_args.model_name_or_path),
+    #         config=config,
+    #         cache_dir=model_args.cache_dir,
+    #     )
 
     # Get datasets
 
@@ -319,30 +320,16 @@ def run_training(model_args, data_args, training_args):
     test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
 
     if training_args.do_train_1student_1teacher:
-        trainer = StudentTeacherTrainer(
-
-            tokenizer_delex,
-            tokenizer_lex,
-            models={"teacher": model_combined_student_teacher, "teacher_ema":model_teacher_ema,"student": model_student},
+        trainer = GlobalTrainer(
+            model=model_combined_student_teacher,
             args=training_args,
             train_datasets={"combined": train_dataset},
-            test_dataset=test_dataset,
-            eval_dataset=eval_dataset,
-            eval_compute_metrics=dev_compute_metrics,
-            test_compute_metrics=test_compute_metrics
-        )
-    else:
-        trainer = Trainer(
-            tokenizer_delex,
-            tokenizer_lex,
-            model=model,
-            args=training_args,
-            train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             test_dataset=test_dataset,
+            test_compute_metrics=test_compute_metrics,
             eval_compute_metrics=dev_compute_metrics,
-            test_compute_metrics=test_compute_metrics
         )
+
 
 
     if training_args.do_train:
@@ -350,7 +337,7 @@ def run_training(model_args, data_args, training_args):
         test_partition_evaluation_result=None
 
         if (training_args.do_train_1student_1teacher == True):
-            dev_partition_evaluation_result,test_partition_evaluation_result=trainer.train_1teacher_1student(
+            dev_partition_evaluation_result,test_partition_evaluation_result=trainer.train(
                 model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
             )
         else:
