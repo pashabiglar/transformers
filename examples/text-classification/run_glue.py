@@ -321,13 +321,15 @@ def run_training(model_args, data_args, training_args):
 
     if training_args.do_train_1student_1teacher:
         trainer = GlobalTrainer(
+            tokenizer_delex,
             model=model_combined_student_teacher,
             args=training_args,
             train_datasets={"combined": train_dataset},
             eval_dataset=eval_dataset,
             test_dataset=test_dataset,
             test_compute_metrics=test_compute_metrics,
-            eval_compute_metrics=dev_compute_metrics,
+            eval_compute_metrics=dev_compute_metrics
+
         )
 
 

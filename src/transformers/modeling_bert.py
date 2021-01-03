@@ -1237,18 +1237,7 @@ class BertForFactVerficiationStudentTeacher(BertPreTrainedModel):
 
 
     def forward(
-        self,
-        input_ids=None,
-        attention_mask=None,
-        token_type_ids=None,
-        position_ids=None,
-        head_mask=None,
-        inputs_embeds=None,
-        labels=None,
-        output_attentions=None,
-        output_hidden_states=None,
-        return_tuple=None,
-    ):
+        self,all_inputs):
         r"""
         labels (:obj:`torch.LongTensor` of shape :obj:`(batch_size,)`, `optional`, defaults to :obj:`None`):
             Labels for computing the sequence classification/regression loss.
@@ -1258,29 +1247,8 @@ class BertForFactVerficiationStudentTeacher(BertPreTrainedModel):
         """
 
 
-        outputs_teacher = self.model_teacher(
-            input_ids,
-            attention_mask=attention_mask,
-            token_type_ids=token_type_ids,
-            position_ids=position_ids,
-            head_mask=head_mask,
-            inputs_embeds=inputs_embeds,
-            output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
-            return_tuple=return_tuple,
-        )
-
-        outputs_student = self.model_student(
-            input_ids,
-            attention_mask=attention_mask,
-            token_type_ids=token_type_ids,
-            position_ids=position_ids,
-            head_mask=head_mask,
-            inputs_embeds=inputs_embeds,
-            output_attentions=output_attentions,
-            output_hidden_states=output_hidden_states,
-            return_tuple=return_tuple,
-        )
+        outputs_teacher = self.model_teacher(**(all_inputs[0]))
+        outputs_student = self.model_student(**(all_inputs[1]))
 
         return outputs_teacher, outputs_student
 

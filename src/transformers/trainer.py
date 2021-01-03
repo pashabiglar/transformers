@@ -1669,6 +1669,7 @@ class GlobalTrainer:
 
     def __init__(
             self,
+            tokenizer_delex,
             model: PreTrainedModel,
             args: TrainingArguments,
             train_datasets: {},
@@ -1689,9 +1690,7 @@ class GlobalTrainer:
                 (Optional) in evaluation and prediction, only return the loss
         """
         self.model = model
-
         self.eval_dataset = eval_dataset
-
         ###for fnc score evaluation
         self.test_dataset = test_dataset
         self.test_compute_metrics = test_compute_metrics
@@ -1705,6 +1704,7 @@ class GlobalTrainer:
         self.compute_metrics = None
         self.prediction_loss_only = prediction_loss_only
         self.optimizer, self.lr_scheduler = optimizers
+        self.delex_tokenizer=tokenizer_delex
         if tb_writer is not None:
             self.tb_writer = tb_writer
         elif is_tensorboard_available() and self.is_world_master():
@@ -1923,12 +1923,13 @@ class GlobalTrainer:
         # Prepare optimizer and schedule (linear warmup and decay)
         no_decay = ["bias", "LayerNorm.weight"]
 
-        params_teacher= [p for n, p in self.model.model_teacher.named_parameters() if not any(nd in n for nd in no_decay)]
+        params_teacher = [p for n, p in self.model.model_teacher.named_parameters() if
+                          not any(nd in n for nd in no_decay)]
 
-        params_student = [p for n, p in self.model.model_student.named_parameters() if not any(nd in n for nd in no_decay)]
+        params_student = [p for n, p in self.model.model_student.named_parameters() if
+                          not any(nd in n for nd in no_decay)]
 
         optimizer_grouped_parameters = params_teacher + params_student
-
 
         optimizer = AdamW(optimizer_grouped_parameters, lr=self.args.learning_rate, eps=self.args.adam_epsilon,weight_decay= self.args.weight_decay)
         scheduler = get_linear_schedule_with_warmup(
@@ -2179,7 +2180,7 @@ class GlobalTrainer:
         inputs = self._prepare_inputs(inputs, model)
 
         with torch.no_grad():
-            outputs = model(**inputs)
+            outputs = model([inputs,None])
             if has_labels:
                 loss, logits = outputs[:2]
                 loss = loss.mean().item()
@@ -2400,7 +2401,7 @@ class GlobalTrainer:
                 assert input_lex['labels'].tolist() == input_delex['labels'].tolist()
 
 
-                all_outputs = self.get_classification_output(model, input_lex, optimizer)
+                all_outputs = self.get_classification_output_1student_1teacher(model, input_lex, input_delex, optimizer)
                 training_losses_all_models = self.get_classification_losses(all_outputs)
                 #combined_classification_losses=self.combine_all_losses(training_losses_all_models)  #todo: manually add instead of in a loop and confirm you get the same values
                 combined_classification_losses= training_losses_all_models[0] + training_losses_all_models[1]  #todo: manually add instead of in a loop and confirm you get the same values
@@ -2431,8 +2432,8 @@ class GlobalTrainer:
 
                     logger.debug("just got done with combined_loss.backward()")
 
-                tr_loss_lex_float += tr_loss_lex.item()
-                tr_loss_delex_float += tr_loss_delex.item()
+                tr_loss_lex_float += training_losses_all_models[0].item()
+                tr_loss_delex_float += training_losses_all_models[1].item()
 
                 if (step + 1) % self.args.gradient_accumulation_steps == 0 or (
                         # last step in epoch but step is always smaller than gradient_accumulation_steps
@@ -2444,152 +2445,95 @@ class GlobalTrainer:
                     if self.args.fp16:
                         torch.nn.utils.clip_grad_norm_(amp.master_params(optimizer), self.args.max_grad_norm)
                     else:
-                        if (flag_run_both):
-                            torch.nn.utils.clip_grad_norm_(model_student.parameters(), self.args.max_grad_norm)
-                            torch.nn.utils.clip_grad_norm_(model.parameters(), self.args.max_grad_norm)
-
-                        else:
-                            if (flag_run_teacher_alone):
-                                torch.nn.utils.clip_grad_norm_(model.parameters(), self.args.max_grad_norm)
-                            else:
-                                if (flag_run_student_alone):
-                                    torch.nn.utils.clip_grad_norm_(model_student.parameters(), self.args.max_grad_norm)
+                        torch.nn.utils.clip_grad_norm_(model.parameters(), self.args.max_grad_norm)
 
                     logger.debug("just done with grad clipping)")
 
+                if is_torch_tpu_available():
+                    xm.optimizer_step(optimizer)
+                else:
+                    optimizer.step()
+                    logger.debug("just done withn optimixer.step)")
+                scheduler.step()
+                # self.update_ema_variables(model, model_teacher_ema, self.args.weight_decay,
+                    #                           self.global_step)
+
+                model.zero_grad()
+
+
+
+
+                self.global_step += 1
+                self.epoch = epoch + (step + 1) / len(epoch_iterator)
+
+                if (self.args.logging_steps > 0 and self.global_step % self.args.logging_steps == 0) or (
+                        self.global_step == 1 and self.args.logging_first_step
+                ):
+                    logs: Dict[str, float] = {}
+                    logs["loss"] = (tr_loss_lex_float - logging_loss) / self.args.logging_steps
+                    # backward compatibility for pytorch schedulers
+                    logs["learning_rate"] = (
+                        scheduler.get_last_lr()[0]
+                        if version.parse(torch.__version__) >= version.parse("1.4")
+                        else scheduler.get_lr()[0]
+                    )
+                    logging_loss = tr_loss_lex_float
+
+                    self.log(logs)
+
+                    # if self.args.evaluate_during_training:
+                    #     self.evaluate()
+
+                if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0:
+                    # In all cases (even distributed/parallel), self.model is always a reference
+                    # to the model we want to save.
+                    # update: in student teacher setting since there are way too many model words going on, we will ezxplicitly pass the model to save
+
+
+                    if hasattr(model, "module"):
+                        assert model.module is self.lex_teacher_model.module
+                        assert model_teacher_ema.module is self.lex_teacher_model_ema.module
+                        assert model_student.module is self.delex_student_model.module
+
+                    else:
+                        assert model is self.lex_teacher_model
+                        assert model_teacher_ema is self.lex_teacher_model_ema
+                        assert model_student is self.delex_student_model
+
+                    self.model = model
+                    output_dir = os.path.join(self.args.output_dir,
+                                              f"model_teacher_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
+                    assert self.model is not None
+                    self.save_model(output_dir)
+
+
+
+
+
+                    # Save model checkpoint
+
+                    if self.is_world_master():
+                        self._rotate_checkpoints()
+
                     if is_torch_tpu_available():
-                        xm.optimizer_step(optimizer)
-                    else:
-                        optimizer.step()
-                        logger.debug("just done withn optimixer.step)")
-                    scheduler.step()
-                    self.update_ema_variables(model, model_teacher_ema, self.args.weight_decay,
-                                              self.global_step)
-
-                    if (flag_run_both):
-                        model.zero_grad()
-                        model_student.zero_grad()
-
-                    else:
-                        if (flag_run_teacher_alone):
-                            model.zero_grad()
-                        else:
-                            if (flag_run_student_alone):
-                                model_student.zero_grad()
-
-                    self.global_step += 1
-                    self.epoch = epoch + (step + 1) / len(epoch_iterator)
-
-                    if (self.args.logging_steps > 0 and self.global_step % self.args.logging_steps == 0) or (
-                            self.global_step == 1 and self.args.logging_first_step
-                    ):
-                        logs: Dict[str, float] = {}
-                        logs["loss"] = (tr_loss_lex_float - logging_loss) / self.args.logging_steps
-                        # backward compatibility for pytorch schedulers
-                        logs["learning_rate"] = (
-                            scheduler.get_last_lr()[0]
-                            if version.parse(torch.__version__) >= version.parse("1.4")
-                            else scheduler.get_lr()[0]
-                        )
-                        logging_loss = tr_loss_lex_float
-
-                        self.log(logs)
-
-                        # if self.args.evaluate_during_training:
-                        #     self.evaluate()
-
-                    if self.args.save_steps > 0 and self.global_step % self.args.save_steps == 0:
-                        # In all cases (even distributed/parallel), self.model is always a reference
-                        # to the model we want to save.
-                        # update: in student teacher setting since there are way too many model words going on, we will ezxplicitly pass the model to save
-
-                        if (flag_run_both):
-                            if hasattr(model, "module"):
-                                assert model.module is self.lex_teacher_model.module
-                                assert model_teacher_ema.module is self.lex_teacher_model_ema.module
-                                assert model_student.module is self.delex_student_model.module
-
-                            else:
-                                assert model is self.lex_teacher_model
-                                assert model_teacher_ema is self.lex_teacher_model_ema
-                                assert model_student is self.delex_student_model
-
-                            self.model = model
-                            output_dir = os.path.join(self.args.output_dir,
-                                                      f"model_teacher_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-                            assert self.model is not None
-                            self.save_model(output_dir)
-
-                            self.model = model_student
-                            output_dir = os.path.join(self.args.output_dir,
-                                                      f"model_student_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-                            assert self.model is not None
-                            self.save_model(output_dir)
-
-
-                        else:
-                            if (flag_run_teacher_alone):
-                                if hasattr(model, "module"):
-                                    assert model.module is self.lex_teacher_model.module
-                                    assert model_teacher_ema.module is self.lex_teacher_model_ema.module
-                                else:
-                                    assert model is self.lex_teacher_model
-                                    assert model_teacher_ema.module is self.lex_teacher_model_ema.module
-                                self.model = model
-                                output_dir = os.path.join(self.args.output_dir,
-                                                          f"model_teacher_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-                                self.save_model(output_dir)
-                            else:
-                                if (flag_run_student_alone):
-                                    if hasattr(model, "module"):
-                                        assert model_student.module is self.delex_student_model.module
-                                    else:
-                                        assert model_student is self.delex_student_model
-                                self.model = model_student
-                                output_dir = os.path.join(self.args.output_dir,
-                                                          f"model_student_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-                                self.save_model(output_dir)
-
-                        # Save model checkpoint
-
-                        if hasattr(model_student, "module"):
-                            assert model_student.module is self.delex_student_model
-                        else:
-                            assert model_student is self.delex_student_model
-                        # Save model checkpoint
-
-                        if self.is_world_master():
-                            self._rotate_checkpoints()
-
-                        if is_torch_tpu_available():
-                            xm.rendezvous("saving_optimizer_states")
-                            xm.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
-                            xm.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
-                        elif self.is_world_master():
-                            torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
-                            torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
+                        xm.rendezvous("saving_optimizer_states")
+                        xm.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
+                        xm.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
+                    elif self.is_world_master():
+                        torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
+                        torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
 
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
                     epoch_iterator.close()
                     break
 
-            trained_model = None
-            if (flag_run_both):
-                trained_model = model_student
-            else:
-                if (flag_run_teacher_alone):
-                    trained_model = model
-                else:
-                    if (flag_run_student_alone):
-                        trained_model = model_student
 
-            assert trained_model is not None
 
             dev_partition_evaluation_result, plain_text, gold_labels, predictions = self._intermediate_eval(
                 datasets=self.eval_dataset,
                 epoch=epoch,
                 output_eval_file=dev_partition_evaluation_output_file_path,
-                description="dev_partition", model_to_test_with=trained_model)
+                description="dev_partition", model_to_test_with=model)
 
             test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = self._intermediate_eval(
                 datasets=self.test_dataset,
@@ -2864,7 +2808,7 @@ class GlobalTrainer:
             self, model: nn.Module, inputs: Dict[str, torch.Tensor], optimizer: torch.optim.Optimizer
     ) -> float:
         '''
-        returns losses of the model (even if the model is internally combined)
+        returns output of the model (even if the model is internally combined)
         Args:
             model:
             inputs:
@@ -2875,8 +2819,31 @@ class GlobalTrainer:
         for k, v in inputs.items():
             inputs[k] = v.to(self.args.device)
 
-        outputs = model(**inputs)
-        return outputs
+        outputs_teacher, outputs_student = model(**inputs)
+        return outputs_teacher, outputs_student
+
+
+
+    def get_classification_output_1student_1teacher(
+            self, model: nn.Module, input_teacher: Dict[str, torch.Tensor], input_student: Dict[str, torch.Tensor],optimizer: torch.optim.Optimizer
+    ) -> float:
+        '''
+        returns output of the model (even if the model is internally combined)
+        Args:
+            model:
+            inputs:
+            optimizer:
+        Returns:loss
+        '''
+        model.train()
+        for k, v in input_teacher.items():
+            input_teacher[k] = v.to(self.args.device)
+        for k, v in input_student.items():
+            input_student[k] = v.to(self.args.device)
+        outputs_teacher, outputs_student = model([input_teacher, input_student])
+        return outputs_teacher, outputs_student
+
+
 
     def combine_all_losses(self, losses):
         '''
