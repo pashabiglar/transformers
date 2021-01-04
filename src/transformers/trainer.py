@@ -2180,15 +2180,16 @@ class GlobalTrainer:
         inputs = self._prepare_inputs(inputs, model)
 
         with torch.no_grad():
-            outputs = model([inputs,None])
+            outputs_teacher, outputs_student = model([None,inputs])
+            assert outputs_student is not None
             if has_labels:
-                loss, logits = outputs[:2]
+                loss, logits = outputs_student[:2]
                 loss = loss.mean().item()
             else:
                 loss = None
-                logits = outputs[0]
+                logits = outputs_student[0]
             if self.args.past_index >= 0:
-                self._past = outputs[self.args.past_index if has_labels else self.args.past_index - 1]
+                self._past = outputs_student[self.args.past_index if has_labels else self.args.past_index - 1]
 
         if prediction_loss_only:
             return (loss, None, None)
@@ -2538,7 +2539,7 @@ class GlobalTrainer:
             test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = self._intermediate_eval(
                 datasets=self.test_dataset,
                 epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",
-                model_to_test_with=trained_model)
+                model_to_test_with=model)
 
             fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
             accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
@@ -2556,7 +2557,7 @@ class GlobalTrainer:
                                                self.test_dataset)
 
                 # Save model checkpoint
-                self.model = trained_model
+                self.model = model
                 output_dir = os.path.join(self.args.output_dir)
                 self.save_model(output_dir)
 

@@ -1246,9 +1246,13 @@ class BertForFactVerficiationStudentTeacher(BertPreTrainedModel):
             If :obj:`config.num_labels > 1` a classification loss is computed (Cross-Entropy).
         """
 
+        outputs_teacher=None
+        outputs_student=None
+        if all_inputs[0] is not None:
+            outputs_teacher = self.model_teacher(**(all_inputs[0]))
+        if all_inputs[1] is not None:
+            outputs_student = self.model_teacher(**(all_inputs[1]))
 
-        outputs_teacher = self.model_teacher(**(all_inputs[0]))
-        outputs_student = self.model_student(**(all_inputs[1]))
 
         return outputs_teacher, outputs_student
 
