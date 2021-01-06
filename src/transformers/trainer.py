@@ -1923,13 +1923,25 @@ class GlobalTrainer:
         # Prepare optimizer and schedule (linear warmup and decay)
         no_decay = ["bias", "LayerNorm.weight"]
 
-        params_teacher = [p for n, p in self.model.model_teacher.named_parameters() if
-                          not any(nd in n for nd in no_decay)]
+        # add both params instead of grouping so that weights are updated together for both models
+        # params_teacher = [p for n, p in self.model.model_teacher.named_parameters() if
+        #                   not any(nd in n for nd in no_decay)]
+        # params_student = [p for n, p in self.model.model_student.named_parameters() if
+        #                   not any(nd in n for nd in no_decay)]
+        # optimizer_grouped_parameters = params_teacher + params_student
 
-        params_student = [p for n, p in self.model.model_student.named_parameters() if
-                          not any(nd in n for nd in no_decay)]
-
-        optimizer_grouped_parameters = params_teacher + params_student
+        #group both parameters instead of adding them. as of jan 2021 we are not sure which is a better approach.
+        optimizer_grouped_parameters = [
+            {
+                "params": [p for n, p in self.model.model_teacher.named_parameters() if
+                           not any(nd in n for nd in no_decay)],
+                "weight_decay": self.args.weight_decay,
+            },
+            {
+                "params": [p for n, p in self.model.model_student.named_parameters() if any(nd in n for nd in no_decay)],
+                "weight_decay": 0.0,
+            }
+         ]
 
         optimizer = AdamW(optimizer_grouped_parameters, lr=self.args.learning_rate, eps=self.args.adam_epsilon,weight_decay= self.args.weight_decay)
         scheduler = get_linear_schedule_with_warmup(
@@ -2406,6 +2418,13 @@ class GlobalTrainer:
                 training_losses_all_models = self.get_classification_losses(all_outputs)
                 #combined_classification_losses=self.combine_all_losses(training_losses_all_models)  #todo: manually add instead of in a loop and confirm you get the same values
                 combined_classification_losses= training_losses_all_models[0] + training_losses_all_models[1]  #todo: manually add instead of in a loop and confirm you get the same values
+                print(f"classification loss of teacher:{training_losses_all_models[0]}")
+                logger.info(f"classification loss of teacher:{training_losses_all_models[0]}")
+                print(f"classification loss of student:{training_losses_all_models[1]}")
+                logger.info(f"classification loss of student:{training_losses_all_models[1]}")
+
+                import sys
+                sys.exit()
 
                 list_logits_all_models=self.get_logits(all_outputs)
 
