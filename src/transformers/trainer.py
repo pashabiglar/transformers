@@ -805,8 +805,8 @@ class StudentTeacherTrainer:
         # flag_run_both=True. Other two flags are to test by loading each of these models independently from within
         #the same trainer class
         flag_run_teacher_alone = False
-        flag_run_student_alone = True
-        flag_run_both = False
+        flag_run_student_alone = False
+        flag_run_both = True
 
 
 
@@ -994,6 +994,10 @@ class StudentTeacherTrainer:
                 tr_loss_lex_ema, outputs_lex_ema = self.get_classification_loss(model_teacher_ema, input_lex, optimizer)
                 tr_loss_delex,outputs_delex = self.get_classification_loss(model_student, input_delex, optimizer)
 
+                print(f"value of tr_loss_lex={tr_loss_lex}")
+                print(f"value of tr_loss_delex={tr_loss_delex}")
+                import sys
+                sys.exit(1)
 
                 if(flag_run_both):
                     combined_classification_loss=tr_loss_lex+tr_loss_delex
