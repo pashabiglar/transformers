@@ -127,7 +127,7 @@ export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME     
 
 ##test cases
 ##./run_training_tests.sh
-./run_loading_tests.sh
+#./run_loading_tests.sh
 
 
 

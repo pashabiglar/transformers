@@ -1237,7 +1237,7 @@ class BertForFactVerficiationStudentTeacher(BertPreTrainedModel):
 
 
     def forward(
-        self,all_inputs):
+        self,input_teacher, input_student):
         r"""
         labels (:obj:`torch.LongTensor` of shape :obj:`(batch_size,)`, `optional`, defaults to :obj:`None`):
             Labels for computing the sequence classification/regression loss.
@@ -1248,10 +1248,10 @@ class BertForFactVerficiationStudentTeacher(BertPreTrainedModel):
 
         outputs_teacher=None
         outputs_student=None
-        if all_inputs[0] is not None:
-            outputs_teacher = self.model_teacher(**(all_inputs[0]))
-        if all_inputs[1] is not None:
-            outputs_student = self.model_teacher(**(all_inputs[1]))
+        if input_teacher is not None:
+            outputs_teacher = self.model_teacher(**input_teacher)
+        if input_student is not None:
+            outputs_student = self.model_student(**input_student)
 
 
         return outputs_teacher, outputs_student
@@ -1298,6 +1298,10 @@ class BertForSequenceClassification(BertPreTrainedModel):
         """
 
         return_tuple = return_tuple if return_tuple is not None else self.config.use_return_tuple
+
+
+        print(f"value of input_ids is {input_ids}")
+        print(f"value of input_emb is {inputs_embeds}")
 
         outputs = self.bert(
             input_ids,

@@ -1697,7 +1697,7 @@ class GlobalTrainer:
         self.eval_compute_metrics = eval_compute_metrics
         self.compute_metrics = None
         self.args = args
-        self.default_data_collator = default_data_collator
+        self.default_data_collator = collate_batch_parallel_datasets
         self.data_collator = collate_batch_parallel_datasets
         self.train_dataset_combined = train_datasets.get("combined")
         self.eval_dataset = eval_dataset
@@ -1909,7 +1909,7 @@ class GlobalTrainer:
 
         return data_loader
 
-    def get_optimizers_teacher_student(
+    def get_optimizers_for_student_teacher(
             self, num_training_steps: int) -> Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]:
         """
         Setup the optimizer and the learning rate scheduler.
@@ -2258,7 +2258,8 @@ class GlobalTrainer:
         optimizer = None
         scheduler = None
 
-        optimizer, scheduler = self.get_optimizers_teacher_student(num_training_steps=self.args.lr_max_value)
+        #lr_max_value is now used as a static value inside the scheduler. Earlier it was a dynamic value based on number of training steps, which was messing up accuracy after eveyr epoch
+        optimizer, scheduler = self.get_optimizers_for_student_teacher(num_training_steps=self.args.lr_max_value)
         assert optimizer is not None
         assert scheduler is not None
 
@@ -2278,7 +2279,7 @@ class GlobalTrainer:
             if not is_apex_available():
                 raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
             model, optimizer = amp.initialize(model, optimizer, opt_level=self.args.fp16_opt_level)
-            model_student, optimizer = amp.initialize(model_student, optimizer, opt_level=self.args.fp16_opt_level)
+
 
         # multi-gpu training (should be after apex fp16 initialization)
         if self.args.n_gpu > 1:
@@ -2288,7 +2289,7 @@ class GlobalTrainer:
             sys.exit()
 
             model = torch.nn.DataParallel(model)
-            model_student = torch.nn.DataParallel(model_student)
+
 
         # Distributed training (should be after apex fp16 initialization)
         if self.args.local_rank != -1:
@@ -2860,7 +2861,7 @@ class GlobalTrainer:
             input_teacher[k] = v.to(self.args.device)
         for k, v in input_student.items():
             input_student[k] = v.to(self.args.device)
-        outputs_teacher, outputs_student = model([input_teacher, input_student])
+        outputs_teacher, outputs_student = model(input_teacher, input_student)
         return outputs_teacher, outputs_student
 
 
