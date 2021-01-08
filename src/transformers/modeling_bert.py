@@ -1234,6 +1234,7 @@ class BertForFactVerficiationStudentTeacher(BertPreTrainedModel):
         super().__init__(config)
         self.model_teacher=BertForSequenceClassification(config)
         self.model_student = BertForSequenceClassification(config)
+        self.init_weights()
 
 
     def forward(
