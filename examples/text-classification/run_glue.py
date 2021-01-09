@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
-
+from src.transformers.modeling_student_teacher import OneTeacherOneStudent
 
 import dataclasses
 import logging
@@ -174,41 +174,15 @@ def run_training(model_args, data_args, training_args):
         tokenizer_type="delex"
     )
 
-    if (training_args.do_train_1student_1teacher == True):
-        model_combined_student_teacher = AutoModelForSequenceClassification.from_pretrained(
-        model_args.model_name_or_path,
-        from_tf=bool(".ckpt" in model_args.model_name_or_path),
-        config=config,
-        cache_dir=model_args.cache_dir,
-        )
+    #model_combined_student_teacher = AutoModelForSequenceClassification.from_pretrained =   BertForFactVerficiationStudentTeacher()
 
-        # detach so as to have no backpropagation in lex. instead
 
-    #     model_teacher_ema = AutoModelForSequenceClassification.from_pretrained(
-    #         model_args.model_name_or_path,
-    #         from_tf=bool(".ckpt" in model_args.model_name_or_path),
-    #         config=config,
-    #         cache_dir=model_args.cache_dir,
-    #     )
-    #
-    #
-    #     for param in model_teacher_ema.bert.parameters():
-    #         param.requires_grad = False
-    #
-    #     model_student = AutoModelForSequenceClassification.from_pretrained(
-    #     model_args.model_name_or_path,
-    #     from_tf=bool(".ckpt" in model_args.model_name_or_path),
-    #     config=config,
-    #     cache_dir=model_args.cache_dir,
-    #     )
-    #
-    # else:
-    #     model = AutoModelForSequenceClassification.from_pretrained(
-    #         model_args.model_name_or_path,
-    #         from_tf=bool(".ckpt" in model_args.model_name_or_path),
-    #         config=config,
-    #         cache_dir=model_args.cache_dir,
-    #     )
+
+
+    model_combined_student_teacher=OneTeacherOneStudent(config,
+        model_args.model_name_or_path)
+
+
 
     # Get datasets
 

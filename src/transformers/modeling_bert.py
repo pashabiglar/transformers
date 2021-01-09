@@ -1229,12 +1229,13 @@ class BertForNextSentencePrediction(BertPreTrainedModel):
 )
 
 
-class BertForFactVerficiationStudentTeacher(BertPreTrainedModel):
+class BertForFactVerficiationStudentTeacher(PreTrainedModel):
     def __init__(self, config):
-        super().__init__(config)
-        self.model_teacher=BertForSequenceClassification(config)
+        super(BertForFactVerficiationStudentTeacher,self).__init__()
+        self.model_teacher = BertForSequenceClassification(config)
         self.model_student = BertForSequenceClassification(config)
-        self.init_weights()
+
+
 
 
     def forward(
@@ -1252,9 +1253,7 @@ class BertForFactVerficiationStudentTeacher(BertPreTrainedModel):
         if input_teacher is not None:
             outputs_teacher = self.model_teacher(**input_teacher)
         if input_student is not None:
-            outputs_student = self.model_student(**input_student)
-
-
+            outputs_student = self.model_student(**input_teacher)
         return outputs_teacher, outputs_student
 
 
@@ -1263,11 +1262,9 @@ class BertForSequenceClassification(BertPreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
         self.num_labels = config.num_labels
-
         self.bert = BertModel(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.classifier = nn.Linear(config.hidden_size, config.num_labels)
-
         self.init_weights()
 
     @add_start_docstrings_to_callable(BERT_INPUTS_DOCSTRING.format("(batch_size, sequence_length)"))
