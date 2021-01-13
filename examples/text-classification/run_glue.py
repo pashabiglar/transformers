@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
-from src.transformers.modeling_student_teacher import OneTeacherOneStudent
+from transformers.modeling_student_teacher import OneTeacherOneStudent
 
 import dataclasses
 import logging

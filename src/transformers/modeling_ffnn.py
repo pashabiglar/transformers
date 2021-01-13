@@ -40,7 +40,7 @@ scheduler=torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer,patienc
 
 def train(model):
     model.train()
-    for epochs in range(10):
+    for epochs in range(100):
         optimizer.zero_grad()
         output=model(input)
         values, indices=output.topk(1)
