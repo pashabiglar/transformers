@@ -1,7 +1,7 @@
 from torch import nn
 from transformers.modeling_auto import AutoModel
 from torch.nn import CrossEntropyLoss
-
+import sys
 
 class OneTeacherOneStudent(nn.Module):
     def __init__(self,config,model_name_or_path):
@@ -37,9 +37,12 @@ class OneTeacherOneStudent(nn.Module):
         tencoded_dropout=self.dropout(tencoded)
         sencoded_dropout = self.dropout(sencoded)
 
-        rt = self.model_teacher(tencoded_dropout, teacher_data['labels'])
-        rs = self.model_student(sencoded_dropout,student_data['labels'])
-        return rt,rs
+        loss_teacher, logits_teacher = self.model_teacher(tencoded_dropout, teacher_data['labels'])
+        loss_student, logits_student = self.model_student(sencoded_dropout,student_data['labels'])
+
+        out={"output_teacher":[loss_teacher,logits_teacher],
+             "output_student":[loss_student,logits_student]}
+        return out
 
 class Teacher(nn.Module):
     def __init__(self,config):
@@ -48,10 +51,9 @@ class Teacher(nn.Module):
         self.num_labels = config.num_labels
 
     def forward(self,input_teacher,labels):
-        outputs=self.classifier(input_teacher)
+        logits=self.classifier(input_teacher)
         loss_fct = CrossEntropyLoss()
-        loss_output = loss_fct(outputs, labels)
-        logits= loss_output
+        loss_output = loss_fct(logits, labels)
         return loss_output, logits
 
 class Student(nn.Module):
@@ -61,8 +63,7 @@ class Student(nn.Module):
         self.num_labels = config.num_labels
 
     def forward(self,input_student,labels):
-        outputs=self.classifier(input_student)
+        logits=self.classifier(input_student)
         loss_fct = CrossEntropyLoss()
-        loss_output = loss_fct(outputs, labels)
-        logits= loss_output
+        loss_output = loss_fct(logits, labels)
         return loss_output, logits

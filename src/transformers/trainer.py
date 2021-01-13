@@ -2400,13 +2400,13 @@ class GlobalTrainer:
                 parallel_loader = pl.ParallelLoader(train_dataloader, [self.args.device]).per_device_loader(
                     self.args.device
                 )
-                epoch_iterator = tqdm(parallel_loader, desc="batches", disable=not self.is_local_master())
+                batch_iterator = tqdm(parallel_loader, desc="batches", disable=not self.is_local_master())
             else:
                 logger.debug("found that is_torch_tpu_available is false")
-                epoch_iterator = tqdm(train_dataloader, desc="batches", disable=not self.is_local_master())
+                batch_iterator = tqdm(train_dataloader, desc="batches", disable=not self.is_local_master())
 
             # for each batch
-            for step, (input_lex, input_delex) in enumerate(epoch_iterator):
+            for step, (input_lex, input_delex) in enumerate(batch_iterator):
                 logger.debug("just got inside for step in enumerate epoch_iterator. i.e for each batch")
 
                 # Skip past any already trained steps if resuming training
@@ -2415,24 +2415,22 @@ class GlobalTrainer:
                     continue
                 assert input_lex['labels'].tolist() == input_delex['labels'].tolist()
 
+                output_all_models = self.get_classification_output_1student_1teacher(model, input_lex, input_delex, optimizer)
+                combined_classification_losses=torch.zeros(1)
+                for model_name,output in output_all_models.items():
+                    combined_classification_losses += output[0]
 
-                all_outputs = self.get_classification_output_1student_1teacher(model, input_lex, input_delex, optimizer)
-                training_losses_all_models = self.get_classification_losses(all_outputs)
-                #combined_classification_losses=self.combine_all_losses(training_losses_all_models)  #todo: manually add instead of in a loop and confirm you get the same values
-                combined_classification_losses= training_losses_all_models[0] + training_losses_all_models[1]  #todo: manually add instead of in a loop and confirm you get the same values
-                print(f"classification loss of teacher:{training_losses_all_models[0]}")
-                logger.info(f"classification loss of teacher:{training_losses_all_models[0]}")
-                print(f"classification loss of student:{training_losses_all_models[1]}")
-                logger.info(f"classification loss of student:{training_losses_all_models[1]}")
 
-                import sys
-                sys.exit()
 
-                list_logits_all_models=self.get_logits(all_outputs)
+
 
                 #in this particular case we have teacher as the first model and student as the second. will change based on teh architectujre
-                logits_lex_teacher = list_logits_all_models[0]
-                logits_delex_student = list_logits_all_models[1]
+                logits_lex_teacher = output_all_models['output_teacher'][1]
+                logits_delex_student = output_all_models['output_student'][1]
+
+                logger.info(f"logits_lex_teacher={logits_lex_teacher}")
+                logger.info(f"logits_delex_student={logits_delex_student}")
+
 
                 #find how far is student from the teacher and minimixe that also
                 consistency_loss = self.get_consistency_loss(logits_lex_teacher, logits_delex_student, "mse")
@@ -2454,13 +2452,14 @@ class GlobalTrainer:
 
                     logger.debug("just got done with combined_loss.backward()")
 
-                tr_loss_lex_float += training_losses_all_models[0].item()
-                tr_loss_delex_float += training_losses_all_models[1].item()
+                #get the loss value as float for logging purposes
+                tr_loss_lex_float += output_all_models['output_teacher'][0].item()
+                tr_loss_delex_float += output_all_models['output_student'][0].item()
 
                 if (step + 1) % self.args.gradient_accumulation_steps == 0 or (
                         # last step in epoch but step is always smaller than gradient_accumulation_steps
-                        len(epoch_iterator) <= self.args.gradient_accumulation_steps
-                        and (step + 1) == len(epoch_iterator)
+                        len(batch_iterator) <= self.args.gradient_accumulation_steps
+                        and (step + 1) == len(batch_iterator)
                 ):
                     logger.debug("got inside if condition for if(step+1. i.e last step in epoch)")
 
@@ -2486,7 +2485,7 @@ class GlobalTrainer:
 
 
                 self.global_step += 1
-                self.epoch = epoch + (step + 1) / len(epoch_iterator)
+                self.epoch = epoch + (step + 1) / len(batch_iterator)
 
                 if (self.args.logging_steps > 0 and self.global_step % self.args.logging_steps == 0) or (
                         self.global_step == 1 and self.args.logging_first_step
@@ -2546,7 +2545,7 @@ class GlobalTrainer:
                         torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
 
                 if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
-                    epoch_iterator.close()
+                    batch_iterator.close()
                     break
 
 
@@ -2862,8 +2861,8 @@ class GlobalTrainer:
             input_teacher[k] = v.to(self.args.device)
         for k, v in input_student.items():
             input_student[k] = v.to(self.args.device)
-        outputs_teacher, outputs_student = model(input_teacher, input_student)
-        return outputs_teacher, outputs_student
+        output = model(input_teacher, input_student)
+        return output
 
 
 
