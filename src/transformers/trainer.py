@@ -1698,8 +1698,10 @@ class GlobalTrainer:
         self.eval_compute_metrics = eval_compute_metrics
         self.compute_metrics = None
         self.args = args
-        self.default_data_collator = collate_batch_parallel_datasets
-        self.data_collator = collate_batch_parallel_datasets
+        #in the student teacher architechture we pass both lexicalized and delexicalized version of the dataset as a "parallel" dataset
+        #where every data point has two parts.      Also typically you need the parallel dataset only for training.
+        self.serial_data_collator =      default_data_collator
+        self.parallel_dataset_data_collator =  collate_batch_parallel_datasets
         self.train_dataset_combined = train_datasets.get("combined")
         self.eval_dataset = eval_dataset
         self.compute_metrics = None
@@ -1730,8 +1732,8 @@ class GlobalTrainer:
             # We'll find a more elegant and not need to do this in the future.
             self.model.config.xla_device = True
 
-        if not callable(self.data_collator) and callable(getattr(self.data_collator, "collate_batch", None)):
-            self.data_collator = self.data_collator.collate_batch
+        if not callable(self.parallel_dataset_data_collator) and callable(getattr(self.parallel_dataset_data_collator, "collate_batch", None)):
+            self.parallel_dataset_data_collator = self.parallel_dataset_data_collator.collate_batch
             warnings.warn(
                 (
                         "The `data_collator` should now be a simple callable (function, class with `__call__`), classes "
@@ -1843,7 +1845,7 @@ class GlobalTrainer:
             self.train_dataset_combined,
             batch_size=self.args.train_batch_size,
             sampler=train_sampler,
-            collate_fn=self.data_collator.collate_batch,
+            collate_fn=self.parallel_dataset_data_collator.collate_batch,
         )
         return data_loader
 
@@ -1862,7 +1864,7 @@ class GlobalTrainer:
             self.train_dataset_combined,
             batch_size=self.args.train_batch_size,
             sampler=train_sampler,
-            collate_fn=self.data_collator,
+            collate_fn=self.parallel_dataset_data_collator,
         )
         return data_loader
 
@@ -1885,7 +1887,7 @@ class GlobalTrainer:
             eval_dataset,
             sampler=sampler,
             batch_size=self.args.eval_batch_size,
-            collate_fn=self.default_data_collator
+            collate_fn=self.serial_data_collator
         )
 
         return data_loader
@@ -1905,7 +1907,7 @@ class GlobalTrainer:
             test_dataset,
             sampler=sampler,
             batch_size=self.args.eval_batch_size,
-            collate_fn=self.default_data_collator,
+            collate_fn=self.serial_data_collator,
         )
 
         return data_loader
@@ -2428,8 +2430,7 @@ class GlobalTrainer:
                 logits_lex_teacher = output_all_models['output_teacher'][1]
                 logits_delex_student = output_all_models['output_student'][1]
 
-                logger.info(f"logits_lex_teacher={logits_lex_teacher}")
-                logger.info(f"logits_delex_student={logits_delex_student}")
+
 
 
                 #find how far is student from the teacher and minimixe that also
@@ -2971,6 +2972,13 @@ class GlobalTrainer:
         if self.args.past_index >= 0:
             self._past = None
         plain_text_full = []
+        print(dataloader)
+
+        
+
+        # for each batch
+        #for step, (input_lex, input_delex) in enumerate(batch_iterator):
+
         for inputs in tqdm(dataloader, desc=description):
             plain_text_batch = self.delex_tokenizer.batch_decode(inputs['input_ids'])
             plain_text_full.extend(plain_text_batch)
