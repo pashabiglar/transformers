@@ -43,6 +43,7 @@ cd /home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training/code/ex
 pip install -r requirements.txt
 pip install transformers
 pip install wget
+pip install stop-words
 
 cd /home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training/code/mithun_scripts
 
