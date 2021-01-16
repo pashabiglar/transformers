@@ -2195,16 +2195,20 @@ class GlobalTrainer:
         inputs = self._prepare_inputs(inputs, model)
 
         with torch.no_grad():
-            outputs_teacher, outputs_student = model([None,inputs])
-            assert outputs_student is not None
+            output_all_models = model(None,inputs)
+            #the outputs_teacher will be none since we are not passing any input for it.
+            assert output_all_models is not None
             if has_labels:
-                loss, logits = outputs_student[:2]
+                logits= output_all_models['output_student'][1]
+                loss = output_all_models['output_student'][0]
                 loss = loss.mean().item()
             else:
                 loss = None
-                logits = outputs_student[0]
-            if self.args.past_index >= 0:
-                self._past = outputs_student[self.args.past_index if has_labels else self.args.past_index - 1]
+                logits = output_all_models['output_student'][1]
+
+        #not sure wqhat this does. whatever it does it will fail for student teacher arch- mithun jan2021
+        if self.args.past_index >= 0:
+            self._past = output_all_models[self.args.past_index if has_labels else self.args.past_index - 1]
 
         if prediction_loss_only:
             return (loss, None, None)
@@ -2423,14 +2427,9 @@ class GlobalTrainer:
                     combined_classification_losses += output[0]
 
 
-
-
-
                 #in this particular case we have teacher as the first model and student as the second. will change based on teh architectujre
                 logits_lex_teacher = output_all_models['output_teacher'][1]
                 logits_delex_student = output_all_models['output_student'][1]
-
-
 
 
                 #find how far is student from the teacher and minimixe that also

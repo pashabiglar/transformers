@@ -14,17 +14,25 @@ class OneTeacherOneStudent(nn.Module):
 
 
     def forward(self, teacher_data, student_data):
-        _, tencoded = self.bert(teacher_data.get('input_ids',None),
-                        attention_mask = teacher_data.get('attention_mask',None),
-                        token_type_ids = teacher_data.get('token_type_ids',None),
-                        position_ids = teacher_data.get('position_ids',None),
-                        head_mask = teacher_data.get('head_mask',None),
-                        inputs_embeds = teacher_data.get('inputs_embeds',None),
-                        output_attentions = teacher_data.get('output_attentions',None),
-                        output_hidden_states = teacher_data.get('output_hidden_states',None),
-                        return_tuple = teacher_data.get('return_tuple',None)
-        )
-        _, sencoded = self.bert(student_data.get('input_ids', None),
+        loss_student=logits_student=loss_teacher=logits_teacher=None
+
+        #at the evaluation phase, teacher_data will be None
+        if(teacher_data) is not None:
+            _, tencoded = self.bert(teacher_data.get('input_ids',None),
+                            attention_mask = teacher_data.get('attention_mask',None),
+                            token_type_ids = teacher_data.get('token_type_ids',None),
+                            position_ids = teacher_data.get('position_ids',None),
+                            head_mask = teacher_data.get('head_mask',None),
+                            inputs_embeds = teacher_data.get('inputs_embeds',None),
+                            output_attentions = teacher_data.get('output_attentions',None),
+                            output_hidden_states = teacher_data.get('output_hidden_states',None),
+                            return_tuple = teacher_data.get('return_tuple',None)
+            )
+            tencoded_dropout = self.dropout(tencoded)
+
+            loss_teacher, logits_teacher = self.model_teacher(tencoded_dropout, teacher_data['labels'])
+        if (student_data) is not None:
+            _, sencoded = self.bert(student_data.get('input_ids', None),
                                 attention_mask=student_data.get('attention_mask', None),
                                 token_type_ids=student_data.get('token_type_ids', None),
                                 position_ids=student_data.get('position_ids', None),
@@ -34,11 +42,10 @@ class OneTeacherOneStudent(nn.Module):
                                 output_hidden_states=student_data.get('output_hidden_states', None),
                                 return_tuple=student_data.get('return_tuple', None)
                                 )
-        tencoded_dropout=self.dropout(tencoded)
-        sencoded_dropout = self.dropout(sencoded)
 
-        loss_teacher, logits_teacher = self.model_teacher(tencoded_dropout, teacher_data['labels'])
-        loss_student, logits_student = self.model_student(sencoded_dropout,student_data['labels'])
+            sencoded_dropout = self.dropout(sencoded)
+
+            loss_student, logits_student = self.model_student(sencoded_dropout,student_data['labels'])
 
         out={"output_teacher":[loss_teacher,logits_teacher],
              "output_student":[loss_student,logits_student]}
