@@ -2524,8 +2524,11 @@ class GlobalTrainer:
                     self.model = model
                     output_dir = os.path.join(self.args.output_dir,
                                               f"model_teacher_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-                    assert self.model is not None
-                    self.save_model(output_dir)
+
+
+                    #not saving during training since we are saving the best model every time it gets better on dev
+                    # assert self.model is not None
+                    #self.save_model(output_dir)
 
 
 
@@ -2742,8 +2745,10 @@ class GlobalTrainer:
         logger.info("Saving model checkpoint to %s", output_dir)
         # Save a trained model and configuration using `save_pretrained()`.
         # They can then be reloaded using `from_pretrained()`
-        if not isinstance(self.model, PreTrainedModel):
-            raise ValueError("Trainer.model appears to not be a PreTrainedModel")
+
+        #commenting this out since in student teacher architecture our class is not inherited from pretrained model- even though we still load a pretrained model. we just bypassed that class since it was too complicated to inherit
+        # if not isinstance(self.model, PreTrainedModel):
+        #     raise ValueError("Trainer.model appears to not be a PreTrainedModel")
         self.model.save_pretrained(output_dir)
 
         # Good practice: save your training arguments together with the trained model
