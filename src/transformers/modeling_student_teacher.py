@@ -79,8 +79,14 @@ class OneTeacherOneStudent(nn.Module):
 
         #at the evaluation phase, teacher_data will be None
         if(teacher_data) is not None:
+            input_ids=teacher_data.get('input_ids',None)[0]
+            inputs_embeds = teacher_data.get('inputs_embeds', None),
+            device = input_ids.device if input_ids is not None else inputs_embeds.device
+            attention_mask = teacher_data.get('attention_mask', None)
+            if attention_mask is None:
+                attention_mask = torch.ones(input_ids[0].shape(), device=device)
             _, tencoded = self.bert(teacher_data.get('input_ids',None),
-                            attention_mask = teacher_data.get('attention_mask',None),
+                                    attention_mask=attention_mask,
                             token_type_ids = teacher_data.get('token_type_ids',None),
                             position_ids = teacher_data.get('position_ids',None),
                             head_mask = teacher_data.get('head_mask',None),
@@ -93,8 +99,14 @@ class OneTeacherOneStudent(nn.Module):
 
             loss_teacher, logits_teacher = self.model_teacher(tencoded_dropout, teacher_data['labels'])
         if (student_data) is not None:
+            input_ids = student_data.get('input_ids', None)[0]
+            inputs_embeds = student_data.get('inputs_embeds', None),
+            device = input_ids.device if input_ids is not None else inputs_embeds.device
+            attention_mask = student_data.get('attention_mask', None)
+            if attention_mask is None:
+                attention_mask = torch.ones(input_ids[0].shape(), device=device)
             _, sencoded = self.bert(student_data.get('input_ids', None),
-                                attention_mask=student_data.get('attention_mask', None),
+                                attention_mask=attention_mask,
                                 token_type_ids=student_data.get('token_type_ids', None),
                                 position_ids=student_data.get('position_ids', None),
                                 head_mask=student_data.get('head_mask', None),
