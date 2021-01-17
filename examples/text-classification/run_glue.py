@@ -180,7 +180,7 @@ def run_training(model_args, data_args, training_args):
 
 
     model_combined_student_teacher=OneTeacherOneStudent(config,
-        model_args.model_name_or_path)
+        model_args.model_name_or_path).to(training_args.device)
 
 
 
