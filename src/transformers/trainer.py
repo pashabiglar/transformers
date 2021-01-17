@@ -2422,7 +2422,7 @@ class GlobalTrainer:
                 assert input_lex['labels'].tolist() == input_delex['labels'].tolist()
 
                 output_all_models = self.get_classification_output_1student_1teacher(model, input_lex, input_delex, optimizer)
-                combined_classification_losses=torch.zeros(1)
+                combined_classification_losses=torch.zeros(1).to(device=self.args.device)
                 for model_name,output in output_all_models.items():
                     combined_classification_losses += output[0]
 
