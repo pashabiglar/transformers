@@ -265,6 +265,75 @@ def _glue_convert_pair_examples_to_features(
 
     return features
 
+#created:jan2021.
+# this is a generic function which will take any list of data pairs and convert all them and return them back as tuples
+# this is useful when using multiple teachers and 3 or 4 datasets neeed to be read in parallel
+def _glue_convert_list_of_example_pairs_to_features(
+    all_examples: List[List[InputExample]],
+    tokenizer_lex: PreTrainedTokenizer,
+    tokenizer_delex: PreTrainedTokenizer,
+    max_length: Optional[int] = None,
+    task=None,
+    label_list=None,
+    output_mode=None,
+):
+    if max_length is None:
+        max_length = tokenizer_lex.max_len
+
+    if task is not None:
+        processor = glue_processors[task]()
+        if label_list is None:
+            label_list = processor.get_labels()
+            logger.info("Using label list %s for task %s" % (label_list, task))
+        if output_mode is None:
+            output_mode = glue_output_modes[task]
+            logger.info("Using output mode %s for task %s" % (output_mode, task))
+
+    label_map = {label: i for i, label in enumerate(label_list)}
+
+    def label_from_example(example: InputExample) -> Union[int, float, None]:
+        if example.label is None:
+            return None
+        if output_mode == "classification":
+            return label_map[example.label]
+        elif output_mode == "regression":
+            return float(example.label)
+        raise KeyError(output_mode)
+
+    list_of_lists_of_labels=[]
+    for each_pair in all_examples:
+        labels = [label_from_example(example) for example in each_pair]
+        length_labels = len(labels)
+        list_of_lists_of_labels.append(labels)
+
+    #todo: assert/check length of all label lists are same and first few values are same
+
+    batch_encoding_lex = tokenizer_lex.batch_encode_plus(
+        [(example.text_a, example.text_b) for example in examples1], max_length=max_length, pad_to_max_length=True,
+    )
+    batch_encoding_delex = tokenizer_delex.batch_encode_plus(
+        [(example.text_a, example.text_b) for example in examples2], max_length=max_length, pad_to_max_length=True,
+    )
+    assert len(examples1)==len(examples2)
+    features = []
+    for i in range(len(examples1)):
+        inputs1 = {k: batch_encoding_lex[k][i] for k in batch_encoding_lex}
+        inputs2 = {k: batch_encoding_delex[k][i] for k in batch_encoding_delex}
+
+        feature1 = InputFeatures(**inputs1, label=labels1[i])
+        feature2 = InputFeatures(**inputs2, label=labels2[i])
+        feature=(feature1,feature2)
+
+        #feature = InputFeatures(**inputs, label=labels[i])
+        features.append(feature)
+
+    for i, example in enumerate(examples1[:5]):
+        logger.info("*** Example ***")
+        logger.info("guid: %s" % (example.guid))
+        #logger.info("features: %s" % features[0][i])
+
+    return features
+
 
 class OutputMode(Enum):
     classification = "classification"

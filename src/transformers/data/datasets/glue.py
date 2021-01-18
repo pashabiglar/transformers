@@ -170,7 +170,7 @@ class GlueDataset(Dataset):
 
 
 
-class ReadDatasetsParallely(Dataset):
+class Read3DatasetsParallely(Dataset):
     """
     Same as GlueDataset, but here you can read 3 datasets together. For example you can read the lexicalixed
      2 delexicalized versions(each delexicalized differently) of the same datasets, with each data point corresponding
@@ -256,9 +256,11 @@ class ReadDatasetsParallely(Dataset):
                 if limit_length is not None:
                     examples1 = examples1[:limit_length]
                     examples2 = examples2[:limit_length]
+                    examples3 = examples3[:limit_length]
                 self.features = glue_convert_pair_examples_to_features(
                     examples1,
                     examples2,
+                    examples3,
                     tokenizer_lex,
                     tokenizer_delex,
                     max_length=args.max_seq_length,

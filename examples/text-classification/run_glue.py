@@ -39,7 +39,7 @@ from transformers import (
     set_seed,
 )
 import math
-from transformers.data.datasets import ParallelDataDataset
+from transformers.data.datasets import ParallelDataDataset,Read3DatasetsParallely
 
 
 def get_git_info():
@@ -162,6 +162,10 @@ def run_training(model_args, data_args, training_args):
 
     #when in student-teacher mode, you need two tokenizers, one for lexicalized data, and one for the delexicalized data
     # the regular tokenizer_lex will be used for lexicalized data and special one for delexicalized
+    #delex tokenizer reads from specialized handcrafted vocabulary which understands symbols like personC1..rather symbols like C1,C2 etc
+    #update@jan2021: when using multiple delexicalized dataset, we will use same delex vocabulary for all different types of delexicalization.
+    #  this is because even though there are different tokens (like personC1 for oaner and actorc1 for figerspecific) ultimately we want it to be split into
+    # person and c1- which any delex vocab will do
     tokenizer_delex = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
@@ -203,11 +207,11 @@ def run_training(model_args, data_args, training_args):
     # The one to one mapping is taken care of inside the ParallelDataDataset
     if (training_args.do_train_1student_1teacher == True):
         # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
-        assert training_args.task_type == "combined"
+        assert (training_args.task_type == "combined" or training_args.task_type=="2t1s")
         assert tokenizer_lex is not None
         assert tokenizer_delex is not None
         train_dataset = (
-            ParallelDataDataset(args=data_args, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex, data_type_1="lex", data_type_2="delex",
+            Read3DatasetsParallely(args=data_args, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex, data_type_1="lex", data_type_2="delex",
                                 cache_dir=model_args.cache_dir) if training_args.do_train else None
         )
     else:
