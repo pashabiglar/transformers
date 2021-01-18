@@ -25,7 +25,7 @@ from ...file_utils import is_tf_available
 from ...tokenization_utils import PreTrainedTokenizer
 from .utils import DataProcessor, InputExample, InputFeatures
 import nltk
-from stop_words import get_stop_words
+#from stop_words import get_stop_words
 from nltk.corpus import stopwords
 
 
@@ -185,7 +185,10 @@ def _glue_convert_examples_to_features(
 
     examples_no_stopwords=[]
     if(remove_stop_words==True):
-        stop_words = get_stop_words('english')
+
+        #giving error on hpc. not able to donwload.
+        #stop_words = get_stop_words('english')
+        stop_words = []
         #manually adding nltk stop words since it was getting dificcult to download this on the fly on the hpc machine
         nltk_stop_words= ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', "you're", "you've",
                         "you'll", "you'd", 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself',
