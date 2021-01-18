@@ -19,8 +19,8 @@ from ..processors.utils import InputFeatures
 
 logger = logging.getLogger(__name__)
 
-import spacy
-nlp = spacy.load("en_core_web_sm")
+# import spacy
+# nlp = spacy.load("en_core_web_sm")
 
 @dataclass
 class GlueDataTrainingArguments:
@@ -146,15 +146,16 @@ class GlueDataset(Dataset):
                 logger.info(f"going to get into function glue_convert_examples_to_features")
 
                 #finding all NER entities. this is needed in attention calculations for bert
-                if(task_type == "lex"):
-                    all_ner={}
-                    for x in examples:
-                        combined=x.text_a+x.text_b
-                        #todo: replace spacy with processors ner tagger.
-                        doc = nlp(combined)
-                        for ent in doc.ents:
-                            all_ner[ent.text]=1
-                    self.ner_tags=all_ner
+                #update:commenting in jan 2021 since not able to install spacy on hpc
+                # if(task_type == "lex"):
+                #     all_ner={}
+                #     for x in examples:
+                #         combined=x.text_a+x.text_b
+                #         #todo: replace spacy with processors ner tagger.
+                #         doc = nlp(combined)
+                #         for ent in doc.ents:
+                #             all_ner[ent.text]=1
+                #     self.ner_tags=all_ner
 
                 self.features = glue_convert_examples_to_features(
                     examples,
