@@ -46,16 +46,6 @@ class OneTeacherOneStudent(nn.Module):
 
             output_model_file = os.path.join(save_directory, model_file_name)
 
-            # if getattr(self.config, "xla_device", False):
-            #     import torch_xla.core.xla_model as xm
-            #
-            #     if xm.is_master_ordinal():
-            #         # Save configuration file
-            #         model_to_save.config.save_pretrained(save_directory)
-            #     # xm.save takes care of saving only from master
-            #     xm.save(model_to_save.state_dict(), output_model_file)
-            # else:
-            #     model_to_save.config.save_pretrained(save_directory)
             torch.save(model_to_save.state_dict(), output_model_file)
 
             logger.info("Model weights saved in {}".format(output_model_file))
