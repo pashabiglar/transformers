@@ -20,8 +20,8 @@ from ..processors.utils import InputFeatures
 logger = logging.getLogger(__name__)
 
 import spacy
-
 nlp = spacy.load("en_core_web_sm")
+
 @dataclass
 class GlueDataTrainingArguments:
     """
