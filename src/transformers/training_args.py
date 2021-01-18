@@ -252,8 +252,12 @@ class TrainingArguments:
         metadata={"help": "If >=0, uses the corresponding part of the output as the past state for next step."},)
 
 
-    task_type: Optional[str] = field(default="mod1", metadata={"help": "Types of task for fact verification. Options include mod1, mod2 etc."})
-    subtask_type: Optional[str] = field(default="figerspecific", metadata={
+    task_type: Optional[str] = field(default="lex", metadata={"help": "Types of task for fact verification. Options include lex, delex etc."})
+    
+    #multiple subtasktypes when we use multipel teachers 
+    subtask_type1: Optional[str] = field(default="figerspecific", metadata={
+        "help": "Types of subtasks used in the delexicalization of data. Options include figerspecific,figerabstract, oaneretc."})
+    subtask_type2: Optional[str] = field(default="oa", metadata={
         "help": "Types of subtasks used in the delexicalization of data. Options include figerspecific,figerabstract, oaneretc."})
 
     machine_to_run_on: Optional[str] = field(default="hpc", metadata={
