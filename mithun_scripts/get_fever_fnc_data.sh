@@ -234,6 +234,7 @@ FILE="$DATA_DIR/train2.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
+    #this is the training partition of fever delexicalized using figer specific techique
     wget https://osf.io/8shu4/download -O $FILE
 fi
 
@@ -242,6 +243,7 @@ FILE="$DATA_DIR/train3.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
+    #this is the training partition of fever delexicalized using oaner techique
     wget https://osf.io/jqhk7/download -O $FILE
 fi
 

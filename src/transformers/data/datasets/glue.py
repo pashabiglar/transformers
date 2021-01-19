@@ -13,7 +13,7 @@ from ...tokenization_bart import BartTokenizer, BartTokenizerFast
 from ...tokenization_roberta import RobertaTokenizer, RobertaTokenizerFast
 from ...tokenization_utils import PreTrainedTokenizer
 from ...tokenization_xlm_roberta import XLMRobertaTokenizer
-from ..processors.glue import glue_convert_examples_to_features, glue_output_modes, glue_processors,glue_convert_pair_examples_to_features
+from ..processors.glue import glue_convert_examples_to_features, glue_output_modes, glue_processors,glue_convert_pair_examples_to_features,glue_convert_examples_from_list_of_datasets_to_features
 from ..processors.utils import InputFeatures
 
 
@@ -244,23 +244,23 @@ class Read3DatasetsParallely(Dataset):
                     #when using parallel datasets get two features of examples and pass it to glue_convert_pair_examples_to_features
                     #which in turn creates features and combines them both
                     #update: will use 3 teachers each having a different
-                    examples1 = self.processor.get_train_examples_set1(args.data_dir)
-                    examples2 = self.processor.get_train_examples_set2(args.data_dir)
-                    examples3 = self.processor.get_train_examples_set2(args.data_dir)
+                    dataset1 = self.processor.get_train_examples_set1(args.data_dir)
+                    dataset2 = self.processor.get_train_examples_set2(args.data_dir)
+                    dataset3 = self.processor.get_train_examples_set3(args.data_dir)
 
                     # assert both datasets are congruent
-                    for index,(x, y) in enumerate(zip(examples1, examples2)):
+                    for index,(x, y) in enumerate(zip(dataset1, dataset2)):
                         assert x.label == y.label
                         assert x.guid == y.guid
 
                 if limit_length is not None:
-                    examples1 = examples1[:limit_length]
-                    examples2 = examples2[:limit_length]
-                    examples3 = examples3[:limit_length]
-                self.features = glue_convert_pair_examples_to_features(
-                    examples1,
-                    examples2,
-                    examples3,
+                    dataset1 = dataset1[:limit_length]
+                    dataset2 = dataset2[:limit_length]
+                    dataset3 = dataset3[:limit_length]
+
+                list_all_datasets=[dataset1,dataset2,dataset3]
+                self.features = glue_convert_examples_from_list_of_datasets_to_features(
+                    list_all_datasets,
                     tokenizer_lex,
                     tokenizer_delex,
                     max_length=args.max_seq_length,
