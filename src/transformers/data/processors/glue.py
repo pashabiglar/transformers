@@ -268,8 +268,9 @@ def _glue_convert_pair_examples_to_features(
 #created:jan2021.
 # this is a generic function which will take any list of data pairs and convert all them and return them back as tuples
 # this is useful when using multiple teachers and 3 or 4 datasets neeed to be read in parallel
+# Eg:In List[List[InputExample]] List[0] is lexicalized dataset, List[0][0] is the first datapoint ( a claim evidence pair) in lex dataset
 def _glue_convert_list_of_example_pairs_to_features(
-    all_examples: List[List[InputExample]],
+    all_datasets: List[List[InputExample]],
     tokenizer_lex: PreTrainedTokenizer,
     tokenizer_delex: PreTrainedTokenizer,
     max_length: Optional[int] = None,
@@ -277,6 +278,10 @@ def _glue_convert_list_of_example_pairs_to_features(
     label_list=None,
     output_mode=None,
 ):
+
+    total_no_of_datapoints=len(all_datasets[0])
+
+
     if max_length is None:
         max_length = tokenizer_lex.max_len
 
@@ -301,31 +306,52 @@ def _glue_convert_list_of_example_pairs_to_features(
         raise KeyError(output_mode)
 
     list_of_lists_of_labels=[]
-    for each_pair in all_examples:
-        labels = [label_from_example(example) for example in each_pair]
+    for each_dataset in all_datasets:
+        assert len(each_dataset)== total_no_of_datapoints
+        labels = [label_from_example(example) for example in each_dataset]
         length_labels = len(labels)
         list_of_lists_of_labels.append(labels)
 
-    #todo: assert/check length of all label lists are same and first few values are same
+    assert length_labels > 0
+    #todo: assert/check first few labels are same for all label lists
+    for each_list in list_of_lists_of_labels:
+        assert len(each_list) == length_labels
 
+    all_encoded_datasets=[]
+
+    #encode each claim evidence pair (example) in each dataset using the respective tokenizer provided.
+    # Note: only the first dataset, lex, will be tokenized using a lexicalized tokenizer while rest of the datasets
+    # will be tokenized using a delexicalized dataset
     batch_encoding_lex = tokenizer_lex.batch_encode_plus(
-        [(example.text_a, example.text_b) for example in examples1], max_length=max_length, pad_to_max_length=True,
+        [(example.text_a, example.text_b) for example in all_datasets[0]], max_length=max_length, pad_to_max_length=True,
     )
-    batch_encoding_delex = tokenizer_delex.batch_encode_plus(
-        [(example.text_a, example.text_b) for example in examples2], max_length=max_length, pad_to_max_length=True,
-    )
-    assert len(examples1)==len(examples2)
+
+    all_encoded_datasets.append(batch_encoding_lex)
+
+    #encode rest of them using delexicalized tokenizer
+    for x in range(1,all_datasets):
+        batch_encoding_delex = tokenizer_delex.batch_encode_plus(
+        [(example.text_a, example.text_b) for example in all_datasets[x]], max_length=max_length, pad_to_max_length=True,
+        )
+        all_encoded_datasets.append(batch_encoding_delex)
+
+    assert len(all_encoded_datasets) > 0
+    assert len(all_encoded_datasets) == len(all_datasets)
+
+
     features = []
+
+    #go through each datapoint (aka example) in both datasets parallely, encode them , and keep adding them to a list of tuples
     for i in range(len(examples1)):
-        inputs1 = {k: batch_encoding_lex[k][i] for k in batch_encoding_lex}
-        inputs2 = {k: batch_encoding_delex[k][i] for k in batch_encoding_delex}
+        for k in all_encoded_datasets:
+            inputs1 = {k: batch_encoding_lex[k][i] for k in batch_encoding_lex}
 
-        feature1 = InputFeatures(**inputs1, label=labels1[i])
-        feature2 = InputFeatures(**inputs2, label=labels2[i])
-        feature=(feature1,feature2)
 
-        #feature = InputFeatures(**inputs, label=labels[i])
-        features.append(feature)
+            feature1 = InputFeatures(**inputs1, label=labels1[i])
+            feature2 = InputFeatures(**inputs2, label=labels2[i])
+            feature=(feature1,feature2)
+
+            features.append(feature)
 
     for i, example in enumerate(examples1[:5]):
         logger.info("*** Example ***")
