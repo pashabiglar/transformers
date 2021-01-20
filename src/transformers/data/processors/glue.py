@@ -388,33 +388,40 @@ def _glue_convert_list_of_example_pairs_to_features(
     # stitch them all together as a single tuple of (datapoint_lex, datapoint_delex_figers, datapoint_delex_oaner)
     # and also wrap them in the class InputFeatures
 
-    #update@18thjan2021. todo:i am not able to correctly read 3 datapoints parallely
+    #i is the nth data point and k is the 3 fields (input_ids, token_typeids, attention_mask)
+    # features_for_all_datapoints_from_all_datasets=[]
+    # for i in range(total_no_of_datapoints):
+    #     features_from_alldatasets_for_this_datapoint=[]
+    #     for each_dataset_index in range(len(all_encoded_datasets)):
+    #         inputs = {k: all_encoded_datasets[0][k][i] for k in all_encoded_datasets[each_dataset_index]}
+    #         feature = InputFeatures(**inputs, label=list_of_lists_of_labels[0][i])
+    #
+    #         # inputs1 = {k: all_encoded_datasets[0][k][i] for k in all_encoded_datasets[0]}
+    #         #
+    #         #
+    #         # inputs2 = {k: all_encoded_datasets[1][k][i] for k in all_encoded_datasets[1]}
+    #         # inputs3 = {k: all_encoded_datasets[2][k][i] for k in all_encoded_datasets[2]}
+    #         #
+    #         # feature1 = InputFeatures(**inputs1, label=list_of_lists_of_labels[0][i])
+    #         # feature2 = InputFeatures(**inputs2, label=list_of_lists_of_labels[0][i])
+    #         # feature3 = InputFeatures(**inputs3, label=list_of_lists_of_labels[0][i])
+    #         features_from_alldatasets_for_this_datapoint.append(feature)
+    #     features_for_all_datapoints_from_all_datasets.append(features_from_alldatasets_for_this_datapoint)
+    #
+    # features_for_all_datapoints_from_all_datasets = []
+
+    #todo:replace this with a generic function which automatically finds the total number of various types of datasets and creates feature per data point accordingly
     for i in range(total_no_of_datapoints):
-        for each_encoded_dataset in all_encoded_datasets:
 
-            for each_datapoint in each_encoded_dataset:
-                inputs1 = {each_datapoint: batch_encoding_lex[each_datapoint][i]}
-                feature1 = InputFeatures(**inputs1, label=list_of_lists_of_labels[0][i])
-
-
-            inputs1 = {k: batch_encoding_lex[k][i] for k in all_encoded_datasets[0]}
-
-
-            inputs2 = {k: batch_encoding_lex[k][i] for k in all_encoded_datasets[1]}
-            inputs3 = {k: batch_encoding_lex[k][i] for k in all_encoded_datasets[2]}
+            inputs1 = {k: all_encoded_datasets[0][k][i] for k in all_encoded_datasets[0]}
+            inputs2 = {k: all_encoded_datasets[1][k][i] for k in all_encoded_datasets[1]}
+            inputs3 = {k: all_encoded_datasets[2][k][i] for k in all_encoded_datasets[2]}
 
             feature1 = InputFeatures(**inputs1, label=list_of_lists_of_labels[0][i])
             feature2 = InputFeatures(**inputs2, label=list_of_lists_of_labels[0][i])
             feature3 = InputFeatures(**inputs3, label=list_of_lists_of_labels[0][i])
-
             feature=(feature1,feature2,feature3)
-
             features.append(feature)
-
-    for i, example in enumerate(examples1[:5]):
-        logger.info("*** Example ***")
-        logger.info("guid: %s" % (example.guid))
-        #logger.info("features: %s" % features[0][i])
 
     return features
 
