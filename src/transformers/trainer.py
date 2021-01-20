@@ -554,12 +554,10 @@ class StudentTeacherTrainer:
         wandb.init(project=os.getenv("WANDB_PROJECT", "huggingface"), config=vars(self.args))
         # keep track of model topology and gradients
         if os.getenv("WANDB_WATCH") != "false":
-            wandb.watch(
-                self.lex_teacher_model, log=os.getenv("WANDB_WATCH", "gradients"), log_freq=max(100, self.args.logging_steps)
-            )
-            wandb.watch(
-                self.delex_student_model, log=os.getenv("WANDB_WATCH", "gradients"), log_freq=max(100, self.args.logging_steps)
-            )
+            for each_model in self.list_all_models:
+                wandb.watch(
+                    each_model, log=os.getenv("WANDB_WATCH", "gradients"), log_freq=max(100, self.args.logging_steps)
+                )
 
 
 
