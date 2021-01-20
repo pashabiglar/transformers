@@ -135,10 +135,10 @@ def glue_convert_examples_from_list_of_datasets_to_features(
         a list of task-specific ``InputFeatures`` which can be fed to the model.
 
     """
-    if is_tf_available() and isinstance(examples1, tf.data.Dataset):
+    if is_tf_available() and isinstance(all_datasets[0], tf.data.Dataset):
         if task is None:
             raise ValueError("When calling glue_convert_examples_to_features from TF, the task parameter is required.")
-        return _tf_glue_convert_examples_to_features(examples1, tokenizer_lex, max_length=max_length, task=task)
+        return _tf_glue_convert_examples_to_features(all_datasets[0], tokenizer_lex, max_length=max_length, task=task)
 
     return _glue_convert_list_of_example_pairs_to_features(
         all_datasets, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex, max_length=max_length, task=task, label_list=label_list, output_mode=output_mode
