@@ -197,13 +197,16 @@ class StudentTeacherTrainer:
     ):
 
         """
-        Trainer is a simple but feature-complete training and eval loop for PyTorch,
+        Trainer is a simple but feature-complete traininfg and eval loop for PyTorch,
         optimized for Transformers.
         Args:
             prediction_loss_only:
                 (Optional) in evaluation and prediction, only return the loss
         """
-        self.list_all_models=models
+        self.list_all_models=[]
+        for each_model in models:
+            self.list_all_models.append(each_model.to(args.device))
+        assert len(self.list_all_models)>0
         self.eval_dataset = eval_dataset
         self.lex_tokenizer=tokenizer_lex
         self.delex_tokenizer = tokenizer_delex
