@@ -174,7 +174,7 @@ def run_training(model_args, data_args, training_args):
 
     if (training_args.do_train_student_teacher == True):
         list_all_models = []
-        for x in range(training_args.no_of_teacher_models):
+        for x in range(training_args.total_no_of_models_including_student_and_its_teachers):
             model_stu_teacher = AutoModelForSequenceClassification.from_pretrained(
             model_args.model_name_or_path,
             from_tf=bool(".ckpt" in model_args.model_name_or_path),
@@ -200,10 +200,10 @@ def run_training(model_args, data_args, training_args):
         assert (training_args.task_type == "combined" or training_args.task_type=="2t1s")
         assert tokenizer_lex is not None
         assert tokenizer_delex is not None
-        #todo:passing cache_dir="" to temporarily force code to create features always.change cache_dir back to =model_args.cache_dir
+        #todo: remove overwrite_cache from args passed in run_all.sh
         train_dataset = (
             Read3DatasetsParallely(args=data_args, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex, data_type_1="lex", data_type_2="delex",
-                                cache_dir="") if training_args.do_train else None
+                                cache_dir=model_args.cache_dir) if training_args.do_train else None
         )
     else:
         if(training_args.task_type=="lex"):

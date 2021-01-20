@@ -18,7 +18,7 @@ from torch.utils.data.dataset import Dataset
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.sampler import RandomSampler, Sampler, SequentialSampler
 from tqdm.auto import tqdm, trange
-from .data.data_collator import DataCollator, default_data_collator, collate_batch_parallel_datasets
+from .data.data_collator import DataCollator, default_data_collator, collate_batch_parallel_datasets,collate_batch_for_3_datasets
 from .file_utils import is_apex_available, is_torch_tpu_available
 from .modeling_utils import PreTrainedModel
 from .optimization import AdamW, get_linear_schedule_with_warmup
@@ -221,7 +221,7 @@ class StudentTeacherTrainer:
 
         self.args = args
         self.default_data_collator = default_data_collator
-        self.data_collator = collate_batch_parallel_datasets
+        self.data_collator = collate_batch_for_3_datasets
         self.train_dataset_combined = train_datasets.get("combined")
         self.eval_dataset = eval_dataset
         self.compute_metrics = None
@@ -1403,6 +1403,8 @@ class StudentTeacherTrainer:
 
                 all_inputs=[input_model1,input_model2,input_model3]
 
+                assert len(all_inputs) == len(self.list_all_models)
+
 
                 combined_classification_loss= torch.zeros(1)
                 all_models_outputs=[]
@@ -1411,11 +1413,15 @@ class StudentTeacherTrainer:
                     tr_classification_loss, outputs_model = self.get_classification_loss(each_model, all_inputs[index], optimizer)
                     combined_classification_loss += tr_classification_loss
                     all_models_outputs.append(outputs_model)
+                assert index == (len(self.list_all_models)-1)
 
                 # calculate consistency loss:
                 # consistency loss is the loss between logits of student model(model 1) and logits of other models
-                logits_student = all_models_outputs[1]
+                # we are considering the second model (the one which reads data delexicalized in figerspecific format as the student model. ideally this could have been any). hence all_models_outputs[1]
+                # the second [1] is because logits are the second entry in any output returned by this model
+                logits_student = all_models_outputs[1][1]
                 combined_consistency_loss=torch.zeros(1)
+                assert len(all_models_outputs) > 0
                 for index,each_model_output in enumerate(all_models_outputs):
                     if not index ==1:
                         # outputs contains in that order # (loss), logits, (hidden_states), (attentions)-src/transformers/modeling_bert.py
@@ -1424,9 +1430,11 @@ class StudentTeacherTrainer:
                         consistency_loss = self.get_consistency_loss(logits_teacher, logits_student, "mse")
                         combined_consistency_loss += consistency_loss
 
+                assert combined_classification_loss.item() > 0
+                assert combined_consistency_loss.item() > 0
                 #overall loss is a weighteed sum of classification and consistency losses
                 combined_loss = (weight_classification_loss * combined_classification_loss) + (
-                                weight_consistency_loss * consistency_loss)
+                                weight_consistency_loss * combined_consistency_loss)
                 combined_loss.backward()
                 optimizer.step()
                 scheduler.step()
