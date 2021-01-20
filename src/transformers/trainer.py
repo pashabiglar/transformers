@@ -1409,7 +1409,8 @@ class StudentTeacherTrainer:
                 assert len(all_inputs) == len(self.list_all_models)
 
 
-                combined_classification_loss= torch.zeros(1)
+
+                combined_classification_loss = torch.zeros(1).to(device=self.args.device)
                 all_models_outputs=[]
                 for index,each_model in enumerate(self.list_all_models):
                     # model returns # (loss), logits, (hidden_states), (attentions)
@@ -1423,7 +1424,9 @@ class StudentTeacherTrainer:
                 # we are considering the second model (the one which reads data delexicalized in figerspecific format as the student model. ideally this could have been any). hence all_models_outputs[1]
                 # the second [1] is because logits are the second entry in any output returned by this model
                 logits_student = all_models_outputs[1][1]
-                combined_consistency_loss=torch.zeros(1)
+                
+                combined_consistency_loss = torch.zeros(1).to(device=self.args.device)
+
                 assert len(all_models_outputs) > 0
                 for index,each_model_output in enumerate(all_models_outputs):
                     if not index ==1:
