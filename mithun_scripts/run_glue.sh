@@ -25,7 +25,7 @@ fi
 if [ "$TASK_TYPE" = "2t1s" ] ; then
  echo $DATA_DIR
  echo "task type is combined"
- args="$args --do_train_1student_1teacher"
+ args="$args --do_train_student_teacher"
 fi
 
 

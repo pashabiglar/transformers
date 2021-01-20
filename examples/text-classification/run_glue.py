@@ -30,7 +30,6 @@ from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTok
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
 from transformers import (
     HfArgumentParser,
-    Trainer,
     TrainingArguments,
     StudentTeacherTrainer,
     glue_compute_metrics,
@@ -142,11 +141,11 @@ def run_training(model_args, data_args, training_args):
     except KeyError:
         raise ValueError("Task not found: %s" % (data_args.task_name))
 
-    # Load pretrained model_teacher and tokenizer_lex
+    # Load pretrained model_stu_teacher and tokenizer_lex
     #
     # Distributed training:
     # The .from_pretrained methods guarantee that only one local process can concurrently
-    # download model_teacher & vocab.
+    # download model_stu_teacher & vocab.
   
     config = AutoConfig.from_pretrained(
         model_args.config_name if model_args.config_name else model_args.model_name_or_path,
@@ -173,25 +172,16 @@ def run_training(model_args, data_args, training_args):
         tokenizer_type="delex"
     )
 
-    if (training_args.do_train_1student_1teacher == True):
-        model_teacher = AutoModelForSequenceClassification.from_pretrained(
-        model_args.model_name_or_path,
-        from_tf=bool(".ckpt" in model_args.model_name_or_path),
-        config=config,
-        cache_dir=model_args.cache_dir,
-        )
-        model_student = AutoModelForSequenceClassification.from_pretrained(
-        model_args.model_name_or_path,
-        from_tf=bool(".ckpt" in model_args.model_name_or_path),
-        config=config,
-        cache_dir=model_args.cache_dir,
-        )
-        model_student_not_combined = AutoModelForSequenceClassification.from_pretrained(
+    if (training_args.do_train_student_teacher == True):
+        list_all_models = []
+        for x in range(training_args.no_of_teacher_models):
+            model_stu_teacher = AutoModelForSequenceClassification.from_pretrained(
             model_args.model_name_or_path,
             from_tf=bool(".ckpt" in model_args.model_name_or_path),
             config=config,
             cache_dir=model_args.cache_dir,
-        )
+            )
+            list_all_models.append(model_stu_teacher)
     else:
         model = AutoModelForSequenceClassification.from_pretrained(
             model_args.model_name_or_path,
@@ -205,7 +195,7 @@ def run_training(model_args, data_args, training_args):
     # ParallelDataDataset is to be used in a student teacher model/architecture.
     # In this model teacher sees the lex data and student sees the delexicalized version of the same data
     # The one to one mapping is taken care of inside the ParallelDataDataset
-    if (training_args.do_train_1student_1teacher == True):
+    if (training_args.do_train_student_teacher == True):
         # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
         assert (training_args.task_type == "combined" or training_args.task_type=="2t1s")
         assert tokenizer_lex is not None
@@ -236,11 +226,11 @@ def run_training(model_args, data_args, training_args):
 
 
     # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
-    # combined model_teacher performs in a delexicalized dataset. This will serve as a verification point
+    # combined model_stu_teacher performs in a delexicalized dataset. This will serve as a verification point
     #to confirm the accuracy (we got 92.91% for fever delx in domain) if something goes wrong in the prediction phase below
 
 
-    if (training_args.do_train_1student_1teacher == True):
+    if (training_args.do_train_student_teacher == True):
         # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
         eval_dataset = (
             GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
@@ -268,8 +258,7 @@ def run_training(model_args, data_args, training_args):
 
 
 
-
-    if (training_args.do_train_1student_1teacher == True):
+    if (training_args.do_train_student_teacher == True):
         # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
         # in the student teacher mode the evaluation always happens in the delex cross domain dev data. here we are loading it as the test partition so that we can keep track of
         # progress across epochs
@@ -309,11 +298,12 @@ def run_training(model_args, data_args, training_args):
     dev_compute_metrics = build_compute_metrics_fn("feverindomain")
     test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
 
-    if training_args.do_train_1student_1teacher:
+    if training_args.do_train_student_teacher:
+        assert len(list_all_models)>1
         trainer = StudentTeacherTrainer(
             tokenizer_delex,
             tokenizer_lex,
-            models={"teacher": model_teacher, "student": model_student},
+            models=list_all_models,
             args=training_args,
             train_datasets={"combined": train_dataset},
             test_dataset=test_dataset,
@@ -339,8 +329,8 @@ def run_training(model_args, data_args, training_args):
         dev_partition_evaluation_result=None
         test_partition_evaluation_result=None
 
-        if (training_args.do_train_1student_1teacher == True):
-            dev_partition_evaluation_result,test_partition_evaluation_result=trainer.train_1teacher_1student(
+        if (training_args.do_train_student_teacher == True):
+            dev_partition_evaluation_result,test_partition_evaluation_result=trainer.train_multiple_teachers_1student(
                 model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
             )
         else:
@@ -350,7 +340,7 @@ def run_training(model_args, data_args, training_args):
 
 
         # For convenience, we also re-save the tokenizer_lex to the same directory,
-        # so that you can share your model_teacher easily on huggingface.co/models =)
+        # so that you can share your model_stu_teacher easily on huggingface.co/models =)
         if trainer.is_world_master():
             tokenizer_lex.save_pretrained(training_args.output_dir)
         assert dev_partition_evaluation_result is not None
