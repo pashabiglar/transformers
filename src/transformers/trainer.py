@@ -490,17 +490,27 @@ class StudentTeacherTrainer:
         # Prepare optimizer and schedule (linear warmup and decay)
         no_decay = ["bias", "LayerNorm.weight"]
         optimizer_grouped_parameters = []
+
+        #Weight decay ensures that the parameters don't explore/remain in a certain reasonable range. it is usually addeed to the loss function
+        # so that it can also be minimized with loss function.
+        # apply 0 weight decay (i.e dont decay if the parameter is bias or layer normalization term, for everything else do apply
+        #the specified weight decay.
+        #  )
         for each_model in self.list_all_models:
-            yes_weight_decay={
+            per_model_parameters=[]
+            parameters_that_use_weight_decay={
                 "params": [p for n, p in each_model.named_parameters() if not any(nd in n for nd in no_decay)],
                 "weight_decay": self.args.weight_decay,
             }
-            no_weight_decay={
+            parameters_that_wont_use_weight_decay={
                 "params": [p for n, p in each_model.named_parameters() if any(nd in n for nd in no_decay)],
                 "weight_decay": 0.0,
             }
-            optimizer_grouped_parameters.append(yes_weight_decay)
-            optimizer_grouped_parameters.append(no_weight_decay)
+            per_model_parameters.append(parameters_that_use_weight_decay)
+            per_model_parameters.append(parameters_that_wont_use_weight_decay)
+
+            #sum up all the parameters. This is needed since in student teacher model, we are sharing the loss/weights across all architectures
+            optimizer_grouped_parameters += per_model_parameters
 
         assert len(optimizer_grouped_parameters) > 0
         optimizer = AdamW(optimizer_grouped_parameters, lr=self.args.learning_rate, eps=self.args.adam_epsilon)
@@ -1424,7 +1434,6 @@ class StudentTeacherTrainer:
                 # we are considering the second model (the one which reads data delexicalized in figerspecific format as the student model. ideally this could have been any). hence all_models_outputs[1]
                 # the second [1] is because logits are the second entry in any output returned by this model
                 logits_student = all_models_outputs[1][1]
-                
                 combined_consistency_loss = torch.zeros(1).to(device=self.args.device)
 
                 assert len(all_models_outputs) > 0
