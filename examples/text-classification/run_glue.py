@@ -200,9 +200,9 @@ def run_training(model_args, data_args, training_args):
         assert (training_args.task_type == "combined" or training_args.task_type=="2t1s")
         assert tokenizer_lex is not None
         assert tokenizer_delex is not None
-        #todo: remove overwrite_cache from args passed in run_all.sh
+
         train_dataset = (
-            Read3DatasetsParallely(args=data_args, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex, data_type_1="lex", data_type_2="delex",
+            Read3DatasetsParallely(training_args,args=data_args, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex, data_type_1="lex", data_type_2="delex",
                                 cache_dir=model_args.cache_dir) if training_args.do_train else None
         )
     else:

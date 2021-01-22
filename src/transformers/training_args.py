@@ -273,7 +273,7 @@ class TrainingArguments:
         "help": "For testing. accuracy when the code was run earlier on a toy data of size 17 data points"})
 
     total_no_of_models_including_student_and_its_teachers: int = field(
-        default=3, metadata={"help": "in a student teacher model how many teachers will the student be learning from"}
+        default=4, metadata={"help": "in a student teacher model how many teachers will the student be learning from"}
     )
 
     def __iter__(self):

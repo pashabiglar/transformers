@@ -16,7 +16,7 @@ from ...tokenization_xlm_roberta import XLMRobertaTokenizer
 from ..processors.glue import glue_convert_examples_to_features, glue_output_modes, glue_processors,glue_convert_pair_examples_to_features,glue_convert_examples_from_list_of_datasets_to_features
 from ..processors.utils import InputFeatures
 
-
+from random import randrange
 logger = logging.getLogger(__name__)
 
 
@@ -184,7 +184,7 @@ class Read3DatasetsParallely(Dataset):
 
     def __init__(
         self,
-
+        training_args,
         args: GlueDataTrainingArguments,
         tokenizer_lex: PreTrainedTokenizer,
         tokenizer_delex: PreTrainedTokenizer,
@@ -244,21 +244,26 @@ class Read3DatasetsParallely(Dataset):
                     #when using parallel datasets get two features of examples and pass it to glue_convert_pair_examples_to_features
                     #which in turn creates features and combines them both
                     #update: will use 3 teachers each having a different
-                    dataset1 = self.processor.get_train_examples_set1(args.data_dir)
-                    dataset2 = self.processor.get_train_examples_set2(args.data_dir)
-                    dataset3 = self.processor.get_train_examples_set3(args.data_dir)
+                    list_all_datasets=[]
+                    for index in range(training_args.total_no_of_models_including_student_and_its_teachers):
+                        list_all_datasets.append(self.processor.get_train_examples_given_dataset_index(args.data_dir,index))
 
                     # assert both datasets are congruent
-                    for index,(x, y) in enumerate(zip(dataset1, dataset2)):
-                        assert x.label == y.label
-                        assert x.guid == y.guid
+                    len_datasets=len(list_all_datasets[0])
+                    # pick a random value and assert they match in label and guid with that of the first dataset
+                    rand_index = randrange(0, len_datasets)
+                    rand_label = list_all_datasets[0][rand_index].label
+                    rand_guid = list_all_datasets[0][rand_index].guid
 
-                if limit_length is not None:
-                    dataset1 = dataset1[:limit_length]
-                    dataset2 = dataset2[:limit_length]
-                    dataset3 = dataset3[:limit_length]
+                    for each_dataset in list_all_datasets:
+                        assert len(each_dataset) == len_datasets
+                        assert each_dataset[rand_index].label==rand_label
+                        assert each_dataset[rand_index].guid == rand_guid
 
-                list_all_datasets=[dataset1,dataset2,dataset3]
+                        if limit_length is not None:
+                            each_dataset = each_dataset[:limit_length]
+
+
                 self.features = glue_convert_examples_from_list_of_datasets_to_features(
                     list_all_datasets,
                     tokenizer_lex,

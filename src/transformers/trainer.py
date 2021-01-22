@@ -412,7 +412,7 @@ class StudentTeacherTrainer:
             batch_size=self.args.eval_batch_size,
             collate_fn=self.default_data_collator
         )
-        
+
         return data_loader
 
 
@@ -1206,7 +1206,7 @@ class StudentTeacherTrainer:
 
             assert trained_model is not None
 
-           
+
             dev_partition_evaluation_result,plain_text,gold_labels,predictions = self._intermediate_eval(datasets=self.eval_dataset,
                                                                       epoch=epoch,
                                                                       output_eval_file=dev_partition_evaluation_output_file_path,
@@ -1405,14 +1405,22 @@ class StudentTeacherTrainer:
 
             # for each batch
             #todo: dont hardcode the number 3. this should work for n models
-            for step, (input_model1, input_model2, input_model3) in enumerate(epoch_iterator):
+            list_inputs=[]
+            for each_input in self.train_dataset_combined:
+                list_inputs.append(each_input)
+            assert len(list_inputs)>0
+            t_inputs=tuple(list_inputs)
+            for step,  in enumerate(epoch_iterator):
+                    #for step, (input_model1, input_model2, input_model3) in enumerate(epoch_iterator):
                 logger.debug("just got inside for step in enumerate epoch_iterator. i.e for each batch")
 
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:
                     steps_trained_in_current_epoch -= 1
                     continue
-                assert input_model1['labels'].tolist() == input_model2['labels'].tolist() == input_model3['labels'].tolist()
+                labels_input1=input_model1['labels'].tolist()
+                for each_input in list(t_inputs):
+                    assert each_input['labels'].tolist() == labels_input1
 
                 all_inputs=[input_model1,input_model2,input_model3]
 
