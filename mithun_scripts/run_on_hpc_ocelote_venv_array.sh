@@ -37,6 +37,7 @@ export CUDA_VISIBLE_DEVICES=0
 
 pip install --upgrade pip
 pip install -U spacy
+pip install stop-words
 python -m spacy download en_core_web_sm
 
    

@@ -18,10 +18,7 @@ from ..processors.utils import InputFeatures
 
 
 logger = logging.getLogger(__name__)
-#
-# import spacy
-#
-# nlp = spacy.load("en_core_web_sm")
+
 @dataclass
 class GlueDataTrainingArguments:
     """
@@ -147,6 +144,7 @@ class GlueDataset(Dataset):
 
                 #finding all NER entities. this is needed in attention calculations for bert
                 #spacy causing issues in hpc. commenting out temporarily on jan 2021 since i am doing only training now and dont need this
+
                 # if(task_type == "lex"):
                 #     all_ner={}
                 #     for x in examples:
