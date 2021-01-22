@@ -234,8 +234,8 @@ FILE="$DATA_DIR/train2.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    #this is the training partition of fever delexicalized using figer specific techique
-    wget https://osf.io/8shu4/download -O $FILE
+    #this is the training partition of fever delexicalized using oaner specific techique
+    https://osf.io/uwcxs/download -O $FILE
 fi
 
 
@@ -243,7 +243,7 @@ FILE="$DATA_DIR/train3.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    #this is the training partition of fever delexicalized using oaner techique
+    #this is the training partition of fever delexicalized using figerspecific techique
     wget https://osf.io/jqhk7/download -O $FILE
 fi
 
@@ -254,14 +254,14 @@ else
     wget https://osf.io/r5pz3/download -O $FILE
 fi
 
-#note that we are already replacing the file to be tested as test file. this way during run time you have to just
-# load all files as is e.g #if do_predict is true load from folder fevercrossdomain/delex/test.tsv- which the code already does.
+#note that we are loading the cross domain's dev partition as test partition here
+# note: we are loading the dev partition of fnc dataset here..(which will be found in my osf.io account folder: student_teacher_fact_verification/all_input_files/fnc/in_domain/figerspecifid/dev.tsv)
 
 FILE="$DATA_DIR/test.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
-     wget https://osf.io/jentp/download -O $FILE
+     wget https://osf.io/jx32m//download -O $FILE
 fi
 
 fi
