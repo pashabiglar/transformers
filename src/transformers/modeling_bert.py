@@ -1227,15 +1227,44 @@ class BertForNextSentencePrediction(BertPreTrainedModel):
     the pooled output) e.g. for GLUE tasks. """,
     BERT_START_DOCSTRING,
 )
+
+
+class BertForFactVerficiationStudentTeacher(PreTrainedModel):
+    def __init__(self, config):
+        super(BertForFactVerficiationStudentTeacher,self).__init__()
+        self.model_teacher = BertForSequenceClassification(config)
+        self.model_student = BertForSequenceClassification(config)
+
+
+
+
+    def forward(
+        self,input_teacher, input_student):
+        r"""
+        labels (:obj:`torch.LongTensor` of shape :obj:`(batch_size,)`, `optional`, defaults to :obj:`None`):
+            Labels for computing the sequence classification/regression loss.
+            Indices should be in :obj:`[0, ..., config.num_labels - 1]`.
+            If :obj:`config.num_labels == 1` a regression loss is computed (Mean-Square loss),
+            If :obj:`config.num_labels > 1` a classification loss is computed (Cross-Entropy).
+        """
+
+        outputs_teacher=None
+        outputs_student=None
+        if input_teacher is not None:
+            outputs_teacher = self.model_teacher(**input_teacher)
+        if input_student is not None:
+            outputs_student = self.model_student(**input_teacher)
+        return outputs_teacher, outputs_student
+
+
+
 class BertForSequenceClassification(BertPreTrainedModel):
     def __init__(self, config):
         super().__init__(config)
         self.num_labels = config.num_labels
-
         self.bert = BertModel(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.classifier = nn.Linear(config.hidden_size, config.num_labels)
-
         self.init_weights()
 
     @add_start_docstrings_to_callable(BERT_INPUTS_DOCSTRING.format("(batch_size, sequence_length)"))
@@ -1267,6 +1296,10 @@ class BertForSequenceClassification(BertPreTrainedModel):
         """
 
         return_tuple = return_tuple if return_tuple is not None else self.config.use_return_tuple
+
+
+        print(f"value of input_ids is {input_ids}")
+        print(f"value of input_emb is {inputs_embeds}")
 
         outputs = self.bert(
             input_ids,

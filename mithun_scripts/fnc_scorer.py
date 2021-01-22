@@ -7,6 +7,8 @@ LABELS = ['disagree', 'agree', 'discuss', 'unrelated']
 LABELS_RELATED = ['unrelated','related']
 RELATED = LABELS[0:3]
 
+
+
 def score_submission(gold_labels, test_labels):
     score = 0.0
     cm = [[0, 0, 0, 0],
@@ -14,7 +16,10 @@ def score_submission(gold_labels, test_labels):
           [0, 0, 0, 0],
           [0, 0, 0, 0]]
 
+    gold_label_spread = {}
+
     for i, (g, t) in enumerate(zip(gold_labels, test_labels)):
+        gold_label_spread[g]= gold_label_spread.get(g, 0) + 1
         g_stance, t_stance = g, t
         if g_stance == t_stance:
             score += 0.25
@@ -25,7 +30,7 @@ def score_submission(gold_labels, test_labels):
 
         cm[LABELS.index(g_stance)][LABELS.index(t_stance)] += 1
 
-    return score, cm
+    return score, cm, gold_label_spread
 
 def convert_labels_from_string_to_index(label_list):
 
@@ -59,15 +64,15 @@ def simple_accuracy(preds, gold):
     return (total_right*100)/len(preds)
 
 def report_score(actual,predicted):
-    score,cm = score_submission(actual,predicted)
-    best_score, _ = score_submission(actual,actual)
-
+    score,cm,gold_label_spread  = score_submission(actual,predicted)
+    best_score, _,gold_label_spread = score_submission(actual,actual)
+    print_gold_label_distribution(gold_label_spread)
     print_confusion_matrix(cm)
     print("Score: " +str(score) + " out of " + str(best_score) + "\t("+str(score*100/best_score) + "%)")
     return score*100/best_score
 
 #read tsv predictions from sandeeps tensorflow code
-test_prediction_logits=pd.read_csv("predictions/predictions_on_test_partition_using_epoch1_model_out_of_helpfulvortex1002.txt",sep="\t",header=None)
+test_prediction_logits=pd.read_csv("predictions/predictions_on_test_partition_aed5a7.txt",sep="\t",header=None)
 test_gold=pd.read_csv("predictions/fnc_dev_gold.tsv",sep="\t",header=None)
 
 
@@ -89,6 +94,9 @@ for (pred,actual_row) in zip(test_prediction_logits.values,test_gold.values):
     gold_labels.append(actual_row[1])
 
 
+def print_gold_label_distribution(gold_label_spread):
+    for x in gold_label_spread.items():
+        print(x)
 
 print(len(pred_labels))
 

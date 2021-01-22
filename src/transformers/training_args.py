@@ -186,7 +186,7 @@ class TrainingArguments:
     max_grad_norm: float = field(default=1.0, metadata={"help": "Max gradient norm."})
 
 
-
+ 
 
     lr_max_value: int = field(default=200000.0, metadata={"help": "This is a value used in the function "
                                                                     "get_linear_schedule_with_warmup inside optimization"
@@ -215,7 +215,7 @@ class TrainingArguments:
         },
     )
     no_cuda: bool = field(default=False, metadata={"help": "Do not use CUDA even when it is available"})
-    seed: int = field(default=42, metadata={"help": "random seed for initialization"})
+    seed: int = field(default=3082, metadata={"help": "random seed for initialization"})
 
     fp16: bool = field(
         default=False,
@@ -240,6 +240,8 @@ class TrainingArguments:
         metadata={"help": "Deprecated, the use of `--debug` is preferred. TPU: Whether to print debug metrics"},
     )
     debug: bool = field(default=False, metadata={"help": "Whether to print debug metrics on TPU"})
+    remove_stop_words: bool = field(default=False, metadata={"help": "While loading a trained model and predicting/trying to find"
+                                                                     "attention weights of bert system, remove stop words"})
     use_trained_model: bool = field(default=False, metadata={"help": "Whether to print debug metrics on TPU"})
 
     dataloader_drop_last: bool = field(
@@ -272,9 +274,15 @@ class TrainingArguments:
     fever_cross_domain_fncscore_on_toy_data_17_datapoints: float = field(default=1.0, metadata={
         "help": "For testing. accuracy when the code was run earlier on a toy data of size 17 data points"})
 
+
     total_no_of_models_including_student_and_its_teachers: int = field(
         default=3, metadata={"help": "in a student teacher model how many teachers will the student be learning from"}
     )
+
+    hidden_dropout_prob: float = field(default=0.1, metadata={
+        "help": "dropout for ffnn layers of bert. . refer src/transformers/configuration_bert.py"})
+    attention_dropout: float = field(default=0.5, metadata={
+        "help": "you can use this to change the dropout probability of attention layers in bert. refer src/transformers/configuration_bert.py"})
 
     def __iter__(self):
         ''' Returns the Iterator object '''

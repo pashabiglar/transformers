@@ -82,17 +82,18 @@ def report_score(actual,predicted):
 #dtypes = [np.int64, 'str', 'object', 'str','str']
 dtypes={'a': np.float64, 'b': np.int32, 'c': 'Int64','d': 'Int64','e': 'Int64'}
 
-combined_model_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_lex_wandbgraphNameQueithaze806_eoch2_accuracy6750_fncscore6458.txt", sep="\t", dtype=dtypes)
-delex_model_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_epoch1_model_out_of_helpfulvortex1002.txt", sep="\t", dtype=dtypes)
-lex_model_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_lex_cdaccuracy6908_wandbGraphSweetWater1001.txt", sep="\t", dtype=dtypes)
+
+model1_predictions=pd.read_csv("predictions/predictions_fnc2fever_by_lex_model.txt", sep="\t", dtype=dtypes)
+model2_predictions=pd.read_csv("predictions/predictions_on_test_partition_7b2f40_legendary_voice_best_figerspecific_7474acc_6344fncs.txt", sep="\t", dtype=dtypes)
+model3_predictions=pd.read_csv("predictions/predictions_on_test_partition_using_lex_cdaccuracy6908_wandbGraphSweetWater1001.txt", sep="\t", dtype=dtypes)
 gold=pd.read_csv("predictions/fnc_dev_gold.tsv", sep="\t")
 
 
 # are the lengths different?
-assert len(gold) == len(combined_model_predictions)
-assert len(gold) == len(delex_model_predictions)
-assert len(combined_model_predictions) == len(delex_model_predictions)
-assert len(combined_model_predictions) == len(lex_model_predictions)
+assert len(gold) == len(model1_predictions)
+assert len(gold) == len(model2_predictions)
+assert len(model1_predictions) == len(model2_predictions)
+assert len(model1_predictions) == len(model3_predictions)
 
 model1_predicted_labels_string=[]
 model2_predicted_labels_string=[]
@@ -104,7 +105,7 @@ model3_sf=[]
 
 #get labels and softmaxes into its own lists
 #column order in raw data: index	 gold	prediction_logits	 prediction_label	plain_text
-for (mod1, mod2, mod3) in zip(combined_model_predictions.values, delex_model_predictions.values, lex_model_predictions.values):
+for (mod1, mod2, mod3) in zip(model1_predictions.values, model2_predictions.values, model3_predictions.values):
     model1_predicted_labels_string.append(mod1[3])
     model2_predicted_labels_string.append(mod2[3])
     model3_predicted_labels_string.append(mod3[3])
@@ -148,16 +149,16 @@ def two_model_voting(model1_predicted_labels, model2_predicted_labels, model1_so
 
         else:
             #if the labels dont match, find who has higher confidence scorediffer_counter
-            differ_counter+=1
-            predictions_post_voting.append(pred_model1)
-            # sf1_list=convert_sf_string_to_lists(sf1)
-            # sf2_list = convert_sf_string_to_lists(sf2)
-            # highest_confidence_model1=max(sf1_list)
-            # highest_confidence_model2 = max(sf2_list)
-            # if highest_confidence_model1>highest_confidence_model2:
-            #     predictions_post_voting.append(pred_model1)
-            # else:
-            #     predictions_post_voting.append(pred_model2)
+            # differ_counter+=1
+            # predictions_post_voting.append(pred_model1)
+            sf1_list=convert_sf_string_to_lists(sf1)
+            sf2_list = convert_sf_string_to_lists(sf2)
+            highest_confidence_model1=max(sf1_list)
+            highest_confidence_model2 = max(sf2_list)
+            if highest_confidence_model1>highest_confidence_model2:
+                predictions_post_voting.append(pred_model1)
+            else:
+                predictions_post_voting.append(pred_model2)
 
     print(f"differcounter={differ_counter}")
     print(f"both_match_counter={both_match_counter}")
@@ -241,10 +242,11 @@ def three_model_voting_any_two_models_agree(model1_predicted_labels, model2_pred
                     if (pred_student_teacher == pred_delex_stand_alone):
                         predictions_post_voting.append(pred_delex_stand_alone)
                     else:
-                        # if all 3 labels dont match, pick -----
-                        #predictions_post_voting.append(pred_lex_stand_alone)
-                        # predictions_post_voting.append(pred_student_teacher)
-                        # continue
+                        # if all 3 labels dont match, pick ______________
+                        #predictions_post_voting.append(pred_student_teacher)
+                        #predictions_post_voting.append(pred_delex_stand_alone)
+                        # predictions_post_voting.append(pred_lex_stand_alone)
+                        #continue
 
                         #if all 3 labels dont match, find who has higher confidence score
                         how_many_times_do_all_3_models_disagree_with_each_other+=1
@@ -327,10 +329,10 @@ def simple_accuracy(preds, gold):
     return (total_right*100)/len(preds)
 
 
-#predictions_post_voting=two_model_voting(model1_predicted_labels_string, model2_predicted_labels_string, model1_sf, model2_sf,gold_labels)
-#predictions_post_voting=three_model_voting_two_model_agrees_but_one_is_lex(model1_predicted_labels_string, model2_predicted_labels_string, model3_predicted_labels_string,model1_sf, model2_sf, model3_sf)
-predictions_post_voting=three_model_voting_any_two_models_agree(model1_predicted_labels_string, model2_predicted_labels_string, model3_predicted_labels_string, gold_labels,model1_sf, model2_sf, model3_sf)
-#predictions_post_voting=three_model_voting_cieling(model1_predicted_labels_string, model2_predicted_labels_string, model3_predicted_labels_string, gold_labels,model1_sf, model2_sf, model3_sf)
+predictions_post_voting=two_model_voting(model1_predicted_labels_string, model2_predicted_labels_string, model1_sf, model2_sf,gold_labels)
+#predictions_post_voting=three_model_voting_two_model_agrees_but_one_is_lex(delex_model_predicted_labels_string, model2_predicted_labels_string, model3_predicted_labels_string,model1_sf, model2_sf, model3_sf)
+#predictions_post_voting=three_model_voting_any_two_models_agree(delex_model_predicted_labels_string, model2_predicted_labels_string, model3_predicted_labels_string, gold_labels,model1_sf, model2_sf, model3_sf)
+#predictions_post_voting=three_model_voting_cieling(delex_model_predicted_labels_string, model2_predicted_labels_string, model3_predicted_labels_string, gold_labels,model1_sf, model2_sf, model3_sf)
 
 assert len(predictions_post_voting)==len(gold_labels)
 report_score(gold_labels,predictions_post_voting)
