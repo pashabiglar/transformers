@@ -144,7 +144,7 @@ class TrainingArguments:
     )
 
     do_train: bool = field(default=False, metadata={"help": "Whether to run training."})
-    do_train_1student_1teacher: bool = field(default=False, metadata={"help": "Whether to run training the "
+    do_train_student_teacher: bool = field(default=False, metadata={"help": "Whether to run training the "
                                                                               "teacher student model as opposed to one model alone."})
 
     do_eval: bool = field(default=False, metadata={"help": "Whether to run eval on the dev set."})
@@ -254,8 +254,12 @@ class TrainingArguments:
         metadata={"help": "If >=0, uses the corresponding part of the output as the past state for next step."},)
 
 
-    task_type: Optional[str] = field(default="mod1", metadata={"help": "Types of task for fact verification. Options include mod1, mod2 etc."})
-    subtask_type: Optional[str] = field(default="figerspecific", metadata={
+    task_type: Optional[str] = field(default="lex", metadata={"help": "Types of task for fact verification. Options include lex, delex etc."})
+    
+    #multiple subtasktypes when we use multipel teachers 
+    subtask_type1: Optional[str] = field(default="figerspecific", metadata={
+        "help": "Types of subtasks used in the delexicalization of data. Options include figerspecific,figerabstract, oaneretc."})
+    subtask_type2: Optional[str] = field(default="oa", metadata={
         "help": "Types of subtasks used in the delexicalization of data. Options include figerspecific,figerabstract, oaneretc."})
 
     machine_to_run_on: Optional[str] = field(default="hpc", metadata={
@@ -270,11 +274,15 @@ class TrainingArguments:
     fever_cross_domain_fncscore_on_toy_data_17_datapoints: float = field(default=1.0, metadata={
         "help": "For testing. accuracy when the code was run earlier on a toy data of size 17 data points"})
 
+
+    total_no_of_models_including_student_and_its_teachers: int = field(
+        default=3, metadata={"help": "in a student teacher model how many teachers will the student be learning from"}
+    )
+
     hidden_dropout_prob: float = field(default=0.1, metadata={
         "help": "dropout for ffnn layers of bert. . refer src/transformers/configuration_bert.py"})
     attention_dropout: float = field(default=0.5, metadata={
         "help": "you can use this to change the dropout probability of attention layers in bert. refer src/transformers/configuration_bert.py"})
-
 
     def __iter__(self):
         ''' Returns the Iterator object '''

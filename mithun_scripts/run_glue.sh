@@ -21,16 +21,19 @@ if [ "$TASK_TYPE" = "lex" ] ; then
  echo "task type is lex"
 fi
 
-if [ "$TASK_TYPE" = "combined" ] ; then
+
+if [ "$TASK_TYPE" = "2t1s" ] ; then
  echo $DATA_DIR
  echo "task type is combined"
- args="$args --do_train_1student_1teacher"
+ args="$args --do_train_student_teacher"
 fi
 
-echo "data_dir is $DATA_DIR"
+
+echo "TASK_TYPE is $TASK_TYPE"
 
 
 echo $args
+
 
 mkdir -p OUTPUT_DIR
 

@@ -6,8 +6,7 @@
 
 
 
-
-#######fevercrossdomain mod1 (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
+#######fevercrossdomain lex (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
 if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUB_TASK_TYPE" = "figerspecific" ]; then
 
 echo "found task type is lex and task name as fever cross domain"
@@ -45,9 +44,9 @@ else
 
 fi
 fi
-########fevercrossdomain mod2 where delexicalization was done using overlap aware (oa) technique (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
+########fevercrossdomain delex where delexicalization was done using overlap aware (oa) technique (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
 if [ "$TASK_TYPE" = "delex" ] && [ "$TASK_NAME" = "fevercrossdomain" ]  && [ "$SUB_TASK_TYPE" = "oa" ]; then
-echo "found task type is mod1 and task name as fever cross domain and SUB_TASK_TYPE is oa"
+echo "found task type is lex and task name as fever cross domain and SUB_TASK_TYPE is oa"
 echo $DATA_DIR
 mkdir -p $DATA_DIR
 
@@ -68,7 +67,7 @@ else
 fi
 
 #note that we are already replacing the file to be tested as test file. this way during run time you have to just
-# load all files as is e.g #if do_predict is true load from folder fevercrossdomain/mod2/test.tsv- which the code already does.
+# load all files as is e.g #if do_predict is true load from folder fevercrossdomain/delex/test.tsv- which the code already does.
 
 FILE=$DATA_DIR/test.tsv
 if test -f "$FILE";then
@@ -79,10 +78,10 @@ fi
 fi
 
 
-########fevercrossdomain mod2 where delexicalixation was done with figer-specific technique (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
+########fevercrossdomain delex where delexicalixation was done with figer-specific technique (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
 if [ "$TASK_TYPE" = "delex" ] && [ "$TASK_NAME" = "fevercrossdomain" ]  && [ "$SUB_TASK_TYPE" = "figerspecific" ]; then
 
-echo "found task type is mod2 and task name as fever cross domain and sub task type ==figerspecific"
+echo "found task type is delex and task name as fever cross domain and sub task type ==figerspecific"
 echo $DATA_DIR
 mkdir -p $DATA_DIR
 
@@ -112,7 +111,7 @@ fi
 fi
 
 
-####################################for cross domain student teacher, there will be two training files.-one for mod1 and another for mod2
+####################################for cross domain student teacher, there will be two training files.-one for lex and another for delex
 
 
 if [ "$TASK_TYPE" = "combined" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUB_TASK_TYPE" = "figerspecific" ]; then
@@ -225,14 +224,20 @@ if test -f "$FILE";then
 echo "$FILE exists"
 else
 
-      wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/figer-abstract/dev.tsv -O $FILE
+      #uncomment this if you want to feed dev and test as lex. this is used when you want to check if lex model alone works fine from within student teacher
+      #wget https://storage.googleapis.com/fact_ve®©rification_mithun_files/TSV/FNC/in-domain/lex/dev.tsv -O $FILE
+      wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/figer_specific/dev.tsv   -O $FILE
+
 
 
 fi
 
 fi
 
-####################################for cross domain student teacher, when mod2 files are delexicalized with oa
+
+
+####################################for cross domain student teacher, when delex files are delexicalized with oa
+
 
 
 
@@ -266,13 +271,73 @@ else
 fi
 
 #note that we are already replacing the file to be tested as test file. this way during run time you have to just
-# load all files as is e.g #if do_predict is true load from folder fevercrossdomain/mod2/test.tsv- which the code already does.
+# load all files as is e.g #if do_predict is true load from folder fevercrossdomain/delex/test.tsv- which the code already does.
 
 FILE="$DATA_DIR/test.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
     wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/oa/dev.tsv -O $FILE
+fi
+
+fi
+
+
+
+####################################for 2 teachers one student, where
+# teacher1 : sees data in lexicalized form/(train1.tsv)
+# student : sees data delexicalized with figerspecific (train2.tsv)
+# teacher2 : sees data delexicalized with oa (overlap aware) ner technique (train3.tsv)
+
+
+
+
+if [ "$TASK_TYPE" = "2t1s" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUB_TASK_TYPE1" = "figerspecific" ] && [ "$SUB_TASK_TYPE2" = "oa" ]; then
+    echo "found task type to be 2t1s, taskname to be feverCrossDomain and subtasktypes to be figerspecific and oa"
+
+echo $DATA_DIR
+mkdir -p $DATA_DIR
+
+FILE="$DATA_DIR/train1.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+     wget https://osf.io/r6mdz/download  -O $FILE
+fi
+
+
+FILE="$DATA_DIR/train2.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    #this is the training partition of fever delexicalized using figer specific techique
+    wget https://osf.io/8shu4/download -O $FILE
+fi
+
+
+FILE="$DATA_DIR/train3.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    #this is the training partition of fever delexicalized using oaner techique
+   wget https://osf.io/uwcxs/download -O $FILE
+fi
+
+FILE="$DATA_DIR/dev.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://osf.io/r5pz3/download -O $FILE
+fi
+
+#note that we are loading the cross domain's dev partition as test partition here
+# note: we are loading the dev partition of fnc dataset here..(which will be found in my osf.io account folder: student_teacher_fact_verification/all_input_files/fnc/in_domain/figerspecifid/dev.tsv)
+
+FILE="$DATA_DIR/test.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+     wget https://osf.io/jx32m//download -O $FILE
 fi
 
 fi

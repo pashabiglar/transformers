@@ -103,9 +103,52 @@ def glue_convert_pair_examples_to_features(
         if task is None:
             raise ValueError("When calling glue_convert_examples_to_features from TF, the task parameter is required.")
         return _tf_glue_convert_examples_to_features(examples1, tokenizer_lex, max_length=max_length, task=task)
+
     return _glue_convert_pair_examples_to_features(
         examples1,examples2, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex, max_length=max_length, task=task, label_list=label_list, output_mode=output_mode
     )
+
+
+
+
+def glue_convert_examples_from_list_of_datasets_to_features(
+    all_datasets,
+    tokenizer_lex: PreTrainedTokenizer,
+    tokenizer_delex: PreTrainedTokenizer,
+    max_length: Optional[int] = None,
+    task=None,
+    label_list=None,
+    output_mode=None,
+):
+    """
+    Loads a data (where data comes in pairs/parallel datasets) file into a list of ``InputFeatures``
+    note
+
+
+    Args:
+        examples: List of ``InputExamples`` or ``tf.data.Dataset`` containing the examples.
+        tokenizer_lex: Instance of a tokenizer that will tokenize the examples
+        max_length: Maximum example length. Defaults to the tokenizer's max_len
+        task: GLUE task
+        label_list: List of labels. Can be obtained from the processor using the ``processor.get_labels()`` method
+        output_mode: String indicating the output mode. Either ``regression`` or ``classification``
+
+    Returns:
+        If the ``examples`` input is a ``tf.data.Dataset``, will return a ``tf.data.Dataset``
+        containing the task-specific features. If the input is a list of ``InputExamples``, will return
+        a list of task-specific ``InputFeatures`` which can be fed to the model.
+
+    """
+    if is_tf_available() and isinstance(all_datasets[0], tf.data.Dataset):
+        if task is None:
+            raise ValueError("When calling glue_convert_examples_to_features from TF, the task parameter is required.")
+        return _tf_glue_convert_examples_to_features(all_datasets[0], tokenizer_lex, max_length=max_length, task=task)
+
+    return _glue_convert_list_of_example_pairs_to_features(
+        all_datasets, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex, max_length=max_length, task=task, label_list=label_list, output_mode=output_mode
+    )
+
+
 if is_tf_available():
 
     def _tf_glue_convert_examples_to_features(
@@ -257,9 +300,76 @@ def _glue_convert_examples_to_features(
 
     return features
 
-def _glue_convert_pair_examples_to_features(
-    examples1: List[InputExample],
-    examples2: List[InputExample],
+    def _glue_convert_pair_examples_to_features(
+        examples1: List[InputExample],
+        examples2: List[InputExample],
+        tokenizer_lex: PreTrainedTokenizer,
+        tokenizer_delex: PreTrainedTokenizer,
+        max_length: Optional[int] = None,
+        task=None,
+        label_list=None,
+        output_mode=None,
+    ):
+        if max_length is None:
+            max_length = tokenizer_lex.max_len
+
+        if task is not None:
+            processor = glue_processors[task]()
+            if label_list is None:
+                label_list = processor.get_labels()
+                logger.info("Using label list %s for task %s" % (label_list, task))
+            if output_mode is None:
+                output_mode = glue_output_modes[task]
+                logger.info("Using output mode %s for task %s" % (output_mode, task))
+
+        label_map = {label: i for i, label in enumerate(label_list)}
+
+        def label_from_example(example: InputExample) -> Union[int, float, None]:
+            if example.label is None:
+                return None
+            if output_mode == "classification":
+                return label_map[example.label]
+            elif output_mode == "regression":
+                return float(example.label)
+            raise KeyError(output_mode)
+
+        labels1 = [label_from_example(example) for example in examples1]
+        labels2 = [label_from_example(example) for example in examples2]
+
+        assert labels1==labels2
+
+        batch_encoding_lex = tokenizer_lex.batch_encode_plus(
+            [(example.text_a, example.text_b) for example in examples1], max_length=max_length, pad_to_max_length=True,
+        )
+        batch_encoding_delex = tokenizer_delex.batch_encode_plus(
+            [(example.text_a, example.text_b) for example in examples2], max_length=max_length, pad_to_max_length=True,
+        )
+        assert len(examples1)==len(examples2)
+        features = []
+        for i in range(len(examples1)):
+            inputs1 = {k: batch_encoding_lex[k][i] for k in batch_encoding_lex}
+            inputs2 = {k: batch_encoding_delex[k][i] for k in batch_encoding_delex}
+
+            feature1 = InputFeatures(**inputs1, label=labels1[i])
+            feature2 = InputFeatures(**inputs2, label=labels2[i])
+            feature=(feature1,feature2)
+
+            #feature = InputFeatures(**inputs, label=labels[i])
+            features.append(feature)
+
+        for i, example in enumerate(examples1[:5]):
+            logger.info("*** Example ***")
+            logger.info("guid: %s" % (example.guid))
+            #logger.info("features: %s" % features[0][i])
+
+        return features
+
+#created:jan2021.
+# this is a generic function which will take any list of data pairs and convert all them and return them back as tuples
+# this is useful when using multiple teachers and 3 or 4 datasets neeed to be read in parallel
+# Eg:In List[List[InputExample]] List[0] is lexicalized dataset, List[0][0] is the first datapoint ( a claim evidence pair) in lex dataset
+def _glue_convert_list_of_example_pairs_to_features(
+    all_datasets: List[List[InputExample]],
     tokenizer_lex: PreTrainedTokenizer,
     tokenizer_delex: PreTrainedTokenizer,
     max_length: Optional[int] = None,
@@ -267,6 +377,10 @@ def _glue_convert_pair_examples_to_features(
     label_list=None,
     output_mode=None,
 ):
+
+    total_no_of_datapoints=len(all_datasets[0])
+
+
     if max_length is None:
         max_length = tokenizer_lex.max_len
 
@@ -290,34 +404,80 @@ def _glue_convert_pair_examples_to_features(
             return float(example.label)
         raise KeyError(output_mode)
 
-    labels1 = [label_from_example(example) for example in examples1]
-    labels2 = [label_from_example(example) for example in examples2]
+    list_of_lists_of_labels=[]
+    for each_dataset in all_datasets:
+        assert len(each_dataset)== total_no_of_datapoints
+        labels = [label_from_example(example) for example in each_dataset]
+        length_labels = len(labels)
+        list_of_lists_of_labels.append(labels)
 
-    assert labels1==labels2
+    assert length_labels > 0
+    #todo: assert/check first few labels are same for all label lists
+    for each_list in list_of_lists_of_labels:
+        assert len(each_list) == length_labels
 
+    all_encoded_datasets=[]
+
+    #encode each claim evidence pair (example) in each dataset using the respective tokenizer provided.
+    # Note: only the first dataset, lex, will be tokenized using a lexicalized tokenizer while rest of the datasets
+    # will be tokenized using a delexicalized dataset
     batch_encoding_lex = tokenizer_lex.batch_encode_plus(
-        [(example.text_a, example.text_b) for example in examples1], max_length=max_length, pad_to_max_length=True,
+        [(example.text_a, example.text_b) for example in all_datasets[0]], max_length=max_length, pad_to_max_length=True,
     )
-    batch_encoding_delex = tokenizer_delex.batch_encode_plus(
-        [(example.text_a, example.text_b) for example in examples2], max_length=max_length, pad_to_max_length=True,
-    )
-    assert len(examples1)==len(examples2)
+
+    all_encoded_datasets.append(batch_encoding_lex)
+
+    #encode rest of them using delexicalized tokenizer
+    for x in range(1,len(all_datasets)):
+        batch_encoding_delex = tokenizer_delex.batch_encode_plus(
+        [(example.text_a, example.text_b) for example in all_datasets[x]], max_length=max_length, pad_to_max_length=True,
+        )
+        all_encoded_datasets.append(batch_encoding_delex)
+
+    assert len(all_encoded_datasets) > 0
+    assert len(all_encoded_datasets) == len(all_datasets)
+
+
     features = []
-    for i in range(len(examples1)):
-        inputs1 = {k: batch_encoding_lex[k][i] for k in batch_encoding_lex}
-        inputs2 = {k: batch_encoding_delex[k][i] for k in batch_encoding_delex}
 
-        feature1 = InputFeatures(**inputs1, label=labels1[i])
-        feature2 = InputFeatures(**inputs2, label=labels2[i])
-        feature=(feature1,feature2)
+    #each data point (a combined sentence of claim and evidence) must have 3 forms now.
+    # stitch them all together as a single tuple of (datapoint_lex, datapoint_delex_figers, datapoint_delex_oaner)
+    # and also wrap them in the class InputFeatures
 
-        #feature = InputFeatures(**inputs, label=labels[i])
-        features.append(feature)
+    #i is the nth data point and k is the 3 fields (input_ids, token_typeids, attention_mask)
+    # features_for_all_datapoints_from_all_datasets=[]
+    # for i in range(total_no_of_datapoints):
+    #     features_from_alldatasets_for_this_datapoint=[]
+    #     for each_dataset_index in range(len(all_encoded_datasets)):
+    #         inputs = {k: all_encoded_datasets[0][k][i] for k in all_encoded_datasets[each_dataset_index]}
+    #         feature = InputFeatures(**inputs, label=list_of_lists_of_labels[0][i])
+    #
+    #         # inputs1 = {k: all_encoded_datasets[0][k][i] for k in all_encoded_datasets[0]}
+    #         #
+    #         #
+    #         # inputs2 = {k: all_encoded_datasets[1][k][i] for k in all_encoded_datasets[1]}
+    #         # inputs3 = {k: all_encoded_datasets[2][k][i] for k in all_encoded_datasets[2]}
+    #         #
+    #         # feature1 = InputFeatures(**inputs1, label=list_of_lists_of_labels[0][i])
+    #         # feature2 = InputFeatures(**inputs2, label=list_of_lists_of_labels[0][i])
+    #         # feature3 = InputFeatures(**inputs3, label=list_of_lists_of_labels[0][i])
+    #         features_from_alldatasets_for_this_datapoint.append(feature)
+    #     features_for_all_datapoints_from_all_datasets.append(features_from_alldatasets_for_this_datapoint)
+    #
+    # features_for_all_datapoints_from_all_datasets = []
 
-    for i, example in enumerate(examples1[:5]):
-        logger.info("*** Example ***")
-        logger.info("guid: %s" % (example.guid))
-        #logger.info("features: %s" % features[0][i])
+    #todo:replace this with a generic function which automatically finds the total number of various types of datasets and creates feature per data point accordingly
+    for i in range(total_no_of_datapoints):
+
+            inputs1 = {k: all_encoded_datasets[0][k][i] for k in all_encoded_datasets[0]}
+            inputs2 = {k: all_encoded_datasets[1][k][i] for k in all_encoded_datasets[1]}
+            inputs3 = {k: all_encoded_datasets[2][k][i] for k in all_encoded_datasets[2]}
+
+            feature1 = InputFeatures(**inputs1, label=list_of_lists_of_labels[0][i])
+            feature2 = InputFeatures(**inputs2, label=list_of_lists_of_labels[0][i])
+            feature3 = InputFeatures(**inputs3, label=list_of_lists_of_labels[0][i])
+            feature=(feature1,feature2,feature3)
+            features.append(feature)
 
     return features
 
@@ -394,6 +554,10 @@ class MnliProcessor(DataProcessor):
         """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "train2.tsv")), "train")
 
+    def get_train_examples_set3(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train3.tsv")), "train")
+
     def get_dev_examples(self, data_dir):
         """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev_matched.tsv")), "dev_matched")
@@ -443,6 +607,10 @@ class FeverInDomainProcessor(DataProcessor):
         """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "train2.tsv")), "train")
 
+    def get_train_examples_set3(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train3.tsv")), "train")
+
     def get_dev_examples(self, data_dir):
         """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
@@ -490,6 +658,10 @@ class FeverCrossDomainProcessor(DataProcessor):
     def get_train_examples_set2(self, data_dir):
         """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "train2.tsv")), "train")
+
+    def get_train_examples_set3(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train3.tsv")), "train")
     def get_dev_examples(self, data_dir):
         """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
