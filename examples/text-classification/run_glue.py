@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
-
+from transformers.modeling_student_teacher import OneTeacherOneStudent
 
 import dataclasses
 import logging
@@ -33,6 +33,7 @@ from transformers import (
     Trainer,
     TrainingArguments,
     StudentTeacherTrainer,
+    GlobalTrainer,
     glue_compute_metrics,
     glue_output_modes,
     glue_tasks_num_labels,
@@ -142,11 +143,11 @@ def run_training(model_args, data_args, training_args):
     except KeyError:
         raise ValueError("Task not found: %s" % (data_args.task_name))
 
-    # Load pretrained model_teacher and tokenizer_lex
+    # Load pretrained model_combined_student_teacher and tokenizer_lex
     #
     # Distributed training:
     # The .from_pretrained methods guarantee that only one local process can concurrently
-    # download model_teacher & vocab.
+    # download model_combined_student_teacher & vocab.
   
     config = AutoConfig.from_pretrained(
         model_args.config_name if model_args.config_name else model_args.model_name_or_path,
@@ -173,41 +174,15 @@ def run_training(model_args, data_args, training_args):
         tokenizer_type="delex"
     )
 
-    if (training_args.do_train_1student_1teacher == True):
-        model_teacher = AutoModelForSequenceClassification.from_pretrained(
-        model_args.model_name_or_path,
-        from_tf=bool(".ckpt" in model_args.model_name_or_path),
-        config=config,
-        cache_dir=model_args.cache_dir,
-        )
-
-        # detach so as to have no backpropagation in lex. instead
-
-        model_teacher_ema = AutoModelForSequenceClassification.from_pretrained(
-            model_args.model_name_or_path,
-            from_tf=bool(".ckpt" in model_args.model_name_or_path),
-            config=config,
-            cache_dir=model_args.cache_dir,
-        )
+    #model_combined_student_teacher = AutoModelForSequenceClassification.from_pretrained =   BertForFactVerficiationStudentTeacher()
 
 
-        for param in model_teacher_ema.bert.parameters():
-            param.requires_grad = False
 
-        model_student = AutoModelForSequenceClassification.from_pretrained(
-        model_args.model_name_or_path,
-        from_tf=bool(".ckpt" in model_args.model_name_or_path),
-        config=config,
-        cache_dir=model_args.cache_dir,
-        )
 
-    else:
-        model = AutoModelForSequenceClassification.from_pretrained(
-            model_args.model_name_or_path,
-            from_tf=bool(".ckpt" in model_args.model_name_or_path),
-            config=config,
-            cache_dir=model_args.cache_dir,
-        )
+    model_combined_student_teacher=OneTeacherOneStudent(config,
+        model_args.model_name_or_path).to(training_args.device)
+
+
 
     # Get datasets
 
@@ -245,7 +220,7 @@ def run_training(model_args, data_args, training_args):
 
 
     # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
-    # combined model_teacher performs in a delexicalized dataset. This will serve as a verification point
+    # combined model_combined_student_teacher performs in a delexicalized dataset. This will serve as a verification point
     #to confirm the accuracy (we got 92.91% for fever delx in domain) if something goes wrong in the prediction phase below
 
 
@@ -319,30 +294,18 @@ def run_training(model_args, data_args, training_args):
     test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
 
     if training_args.do_train_1student_1teacher:
-        trainer = StudentTeacherTrainer(
-
+        trainer = GlobalTrainer(
             tokenizer_delex,
-            tokenizer_lex,
-            models={"teacher": model_teacher, "teacher_ema":model_teacher_ema,"student": model_student},
+            model=model_combined_student_teacher,
             args=training_args,
             train_datasets={"combined": train_dataset},
-            test_dataset=test_dataset,
-            eval_dataset=eval_dataset,
-            eval_compute_metrics=dev_compute_metrics,
-            test_compute_metrics=test_compute_metrics
-        )
-    else:
-        trainer = Trainer(
-            tokenizer_delex,
-            tokenizer_lex,
-            model=model,
-            args=training_args,
-            train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             test_dataset=test_dataset,
-            eval_compute_metrics=dev_compute_metrics,
-            test_compute_metrics=test_compute_metrics
+            test_compute_metrics=test_compute_metrics,
+            eval_compute_metrics=dev_compute_metrics
+
         )
+
 
 
     if training_args.do_train:
@@ -350,7 +313,7 @@ def run_training(model_args, data_args, training_args):
         test_partition_evaluation_result=None
 
         if (training_args.do_train_1student_1teacher == True):
-            dev_partition_evaluation_result,test_partition_evaluation_result=trainer.train_1teacher_1student(
+            dev_partition_evaluation_result,test_partition_evaluation_result=trainer.train(
                 model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
             )
         else:
@@ -360,7 +323,7 @@ def run_training(model_args, data_args, training_args):
 
 
         # For convenience, we also re-save the tokenizer_lex to the same directory,
-        # so that you can share your model_teacher easily on huggingface.co/models =)
+        # so that you can share your model_combined_student_teacher easily on huggingface.co/models =)
         if trainer.is_world_master():
             tokenizer_lex.save_pretrained(training_args.output_dir)
         assert dev_partition_evaluation_result is not None

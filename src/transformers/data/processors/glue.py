@@ -166,6 +166,7 @@ def _glue_convert_examples_to_features(
     label_map = {label: i for i, label in enumerate(label_list)}
 
     logger.info(f"done with label mapping. labels are {label_map}")
+
     def label_from_example(example: InputExample) -> Union[int, float, None]:
         if example.label is None:
             return None

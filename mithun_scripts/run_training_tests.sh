@@ -33,17 +33,11 @@ echo "data_dir is $DATA_DIR"
 
 echo $args
 
-
-
 mkdir -p OUTPUT_DIR
 echo $PYTHONPATH
-
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         cd ../examples/tests/
         pytest -s test_training_mithun_factverification.py
-
-
-
 else
         wandb off
         cd ../examples/tests/

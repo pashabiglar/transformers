@@ -24,7 +24,9 @@ module load python/3.6/3.6.5
 #uncomment this if you don't want to reinstall venv- usually you just have to do this only once ever
 #rm -rf my_virtual_env
 #mkdir my_virtual_env
-python3 -m venv my_virtual_env
+#python3 -m venv my_virtual_env
+#####
+
 
 
 #this is the only line you need if you already have a virtual_env set up
@@ -44,6 +46,7 @@ cd /home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training/code/ex
 pip install -r requirements.txt
 pip install transformers
 pip install wget
+pip install stop-words  --no-cache-dir
 
 cd /home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training/code/mithun_scripts
 

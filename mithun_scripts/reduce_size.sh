@@ -32,7 +32,7 @@ else
     head -100  $complete_path > temp
     toy_data_full_path="$toy_data_path$FILE"
     mv temp $toy_data_full_path
-    echo "found that MACHINE_TO_RUN_ON is laptop . reduced size toy data created at to $toy_data_full_path"
+    echo "found that MACHINE_TO_RUN_ON is hpc . reduced size toy data created at to $toy_data_full_path"
 fi
 
 
