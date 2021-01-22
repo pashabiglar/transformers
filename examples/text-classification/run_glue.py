@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
-
+from transformers.modeling_student_teacher import OneTeacherOneStudent
 
 import dataclasses
 import logging
@@ -32,6 +32,7 @@ from transformers import (
     HfArgumentParser,
     TrainingArguments,
     StudentTeacherTrainer,
+    GlobalTrainer,
     glue_compute_metrics,
     glue_output_modes,
     glue_tasks_num_labels,
@@ -141,11 +142,7 @@ def run_training(model_args, data_args, training_args):
     except KeyError:
         raise ValueError("Task not found: %s" % (data_args.task_name))
 
-    # Load pretrained model_stu_teacher and tokenizer_lex
-    #
-    # Distributed training:
-    # The .from_pretrained methods guarantee that only one local process can concurrently
-    # download model_stu_teacher & vocab.
+
   
     config = AutoConfig.from_pretrained(
         model_args.config_name if model_args.config_name else model_args.model_name_or_path,
@@ -153,6 +150,10 @@ def run_training(model_args, data_args, training_args):
         finetuning_task=data_args.task_name,
         cache_dir=model_args.cache_dir,
     )
+    #manually overriding the default dropout of 0.1- just for tuning purposes
+    config.hidden_dropout_prob=training_args.hidden_dropout_prob
+    config.attention_dropout = training_args.attention_dropout
+
     tokenizer_lex = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
@@ -189,6 +190,7 @@ def run_training(model_args, data_args, training_args):
             config=config,
             cache_dir=model_args.cache_dir,
         )
+
 
     # Get datasets
 
@@ -227,7 +229,9 @@ def run_training(model_args, data_args, training_args):
 
 
     # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
+
     # combined model_stu_teacher performs in a delexicalized dataset. This will serve as a verification point
+
     #to confirm the accuracy (we got 92.91% for fever delx in domain) if something goes wrong in the prediction phase below
 
 
@@ -299,6 +303,7 @@ def run_training(model_args, data_args, training_args):
     dev_compute_metrics = build_compute_metrics_fn("feverindomain")
     test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
 
+
     if training_args.do_train_student_teacher:
         assert len(list_all_models)>1
         trainer = StudentTeacherTrainer(
@@ -307,23 +312,13 @@ def run_training(model_args, data_args, training_args):
             models=list_all_models,
             args=training_args,
             train_datasets={"combined": train_dataset},
-            test_dataset=test_dataset,
-            eval_dataset=eval_dataset,
-            eval_compute_metrics=dev_compute_metrics,
-            test_compute_metrics=test_compute_metrics
-        )
-    else:
-        trainer = Trainer(
-            tokenizer_delex,
-            tokenizer_lex,
-            model=model,
-            args=training_args,
-            train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             test_dataset=test_dataset,
-            eval_compute_metrics=dev_compute_metrics,
-            test_compute_metrics=test_compute_metrics
+            test_compute_metrics=test_compute_metrics,
+            eval_compute_metrics=dev_compute_metrics
+
         )
+
 
 
     if training_args.do_train:
@@ -332,6 +327,7 @@ def run_training(model_args, data_args, training_args):
 
         if (training_args.do_train_student_teacher == True):
             dev_partition_evaluation_result,test_partition_evaluation_result=trainer.train_multiple_teachers_1student(
+
                 model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
             )
         else:
@@ -340,8 +336,6 @@ def run_training(model_args, data_args, training_args):
             )
 
 
-        # For convenience, we also re-save the tokenizer_lex to the same directory,
-        # so that you can share your model_stu_teacher easily on huggingface.co/models =)
         if trainer.is_world_master():
             tokenizer_lex.save_pretrained(training_args.output_dir)
         assert dev_partition_evaluation_result is not None

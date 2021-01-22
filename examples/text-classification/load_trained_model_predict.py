@@ -167,7 +167,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
         force_download=True,
-        tokenizer_type="mod2"
+        tokenizer_type="delex"
     )
 
 
@@ -195,25 +195,25 @@ def run_loading_and_testing(model_args, data_args, training_args):
         )
 
     if (training_args.do_train_1student_1teacher == True):
-        # the task type must be combined, not mod1 or mod2. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
+        # the task type must be delex, . also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
         eval_dataset = (
-            GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="dev",
+            GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
                         cache_dir=model_args.cache_dir)
             if training_args.do_eval
             else None
         )
     else:
-        if (training_args.task_type == "mod1"):
+        if (training_args.task_type == "lex"):
             eval_dataset = (
-                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="mod1", mode="dev",
+                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="dev",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_eval
                 else None
             )
         else:
-            if (training_args.task_type == "mod2"):
+            if (training_args.task_type == "delex"):
                 eval_dataset = (
-                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="dev",
+                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_eval
                     else None
@@ -221,24 +221,24 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     if (training_args.do_train_1student_1teacher == True):
         test_dataset = (
-            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="test",
+            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
                         cache_dir=model_args.cache_dir)
             if training_args.do_predict
             else None
         )
     else:
-        if (training_args.task_type == "mod1"):
+        if (training_args.task_type == "lex"):
             test_dataset = (
-                GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="mod1", mode="test",
+                GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="lex", mode="test",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_predict
                 else None
             )
 
         else:
-            if (training_args.task_type == "mod2"):
+            if (training_args.task_type == "delex"):
                 test_dataset = (
-                    GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="mod2", mode="test",
+                    GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_predict
                     else None
@@ -284,17 +284,27 @@ def run_loading_and_testing(model_args, data_args, training_args):
             test_compute_metrics=test_compute_metrics
         )
 
-    #url = 'https://osf.io/twbmu/download' #best combined trained model-this model gave 59.31 cross domain fnc score and 69.21for cross domain accuracy
-    #url = 'https://osf.io/84sdz/download' #link to one of the three best trained lex trained models- quiet-haze-806. this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
-    url = 'https://osf.io/q6apm/download'  # link to best lex trained model- quiet-haze-806. this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
-    # url = 'https://osf.io/84sdz/download'  # link to best lex trained model- quiet-haze-806. this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
+    #best student teacher trained (aka combined) models
+    #url = 'https://osf.io/twbmu/download' # light-plasma combined trained model-this model gave 59.31 cross domain fnc score and 69.21for cross domain accuracy
+    #url = 'https://osf.io/vnyad//download' # legendary-voice-1016 combined trained model-this model gave 61.52  cross domain fnc score and  74.4 for cross domain accuracy- wandb graph name legendary-voice-1016
+    #url = 'https://osf.io/ht9gb/download'  # celestial-sun-1042 combined trained model- githubsha 21dabe wandb_celestial_sun1042 best_cd_acc_fnc_score_71.89_61.12
+
+
+    #best  models when trained on fever lexicalized data
+    #url = 'https://osf.io/q6apm/download'  # link to one of the best lex trained model- trained_model_lex_wandbGraphNameQuietHaze806_accuracy67point5_fncscore64point5_atepoch2.bin...this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
+    # url = 'https://osf.io/fus25/download' #trained_model_lex_sweet_water_1001_trained_model_afterepoch1_accuracy6907_fncscore6254.bin
+    url = 'https://osf.io/fp89k/download' #trained_model_lex_helpful_vortex_1002_trained_model_afterepoch1_accuracy70point21percent..bin
+
 
 
     #url = 'https://osf.io/uspm4/download'  # link to best delex trained model-this gave 55.69 in cross domain fnc score and 54.04 for cross domain accuracy
     # refer:https://tinyurl.com/y5dyshnh for further details regarding accuracies
 
 
-    model_path = wget.download(url)
+    #model_path = wget.download(url)
+
+    #uncomment and use this if you want to load the model from local disk.
+    model_path="/home/u11/mithunpaul/xdisk/huggingface_bert_fnc_to_fever_combined_attndropout0pt5classLossWeight0pt0875/output/fever/fnccrossdomain/lex/figerspecific/bert-base-cased/128/pytorch_model_b29119.bin"
     device = torch.device('cpu')
 
     if training_args.do_train_1student_1teacher:
@@ -309,7 +319,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #load the trained model and test it on dev partition (which in this case is indomain-dev, i.e fever-dev)
 
     output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
-    predictions_on_dev_file_path = output_dir_absolute_path + "predictions_on_dev_partition.txt"
+
+
+    predictions_on_dev_file_path = output_dir_absolute_path + "predictions_on_dev_partition"+ git_details['repo_short_sha'] + ".txt"
     dev_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_dev_partition_results.txt"
     # hardcoding the epoch value, since its needed down stream. that code was written assuming evaluation happens at the end of each epoch
     trainer.epoch = 1
@@ -325,7 +337,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     # load the trained model and test it on test partition (which in this case is fnc-dev)
     output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
-    predictions_on_test_file_path = output_dir_absolute_path + "predictions_on_test_partition.txt"
+
+    predictions_on_test_file_path = output_dir_absolute_path + "predictions_on_test_partition"+ git_details['repo_short_sha'] + ".txt"
     test_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_test_partition_results.txt"
 
     #hardcoding the epoch value, since its needed down stream. that code was written assuming evaluation happens at the end of each epoch

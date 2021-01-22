@@ -1,4 +1,9 @@
 #this was because when sandeep did figer conversion he somehow messed up line numbers..rather at each line he stored the actual line number of the coreresponding data point in lex, as a value called index.
+'''
+This code is used to match the delex data with lex counter part in the combined/student teacher architecture.
+had to do this because th TSV files sandeep created for figer* didnt match with lex order.
+
+'''
 
 import pandas
 import csv
