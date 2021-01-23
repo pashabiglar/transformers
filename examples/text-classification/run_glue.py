@@ -32,7 +32,6 @@ from transformers import (
     HfArgumentParser,
     TrainingArguments,
     StudentTeacherTrainer,
-    GlobalTrainer,
     glue_compute_metrics,
     glue_output_modes,
     glue_tasks_num_labels,

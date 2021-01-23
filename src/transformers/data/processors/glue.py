@@ -448,27 +448,28 @@ def _glue_convert_list_of_example_pairs_to_features(
 
 
     #todo:replace this with a generic function which automatically finds the total number of various types of datasets and creates feature per data point accordingly
-    # for i in range(total_no_of_datapoints):
-    #
-    #         inputs1 = {k: all_encoded_datasets[0][k][i] for k in all_encoded_datasets[0]}
-    #         inputs2 = {k: all_encoded_datasets[1][k][i] for k in all_encoded_datasets[1]}
-    #         inputs3 = {k: all_encoded_datasets[2][k][i] for k in all_encoded_datasets[2]}
-    #
-    #         feature1 = InputFeatures(**inputs1, label=list_of_lists_of_labels[0][i])
-    #         feature2 = InputFeatures(**inputs2, label=list_of_lists_of_labels[0][i])
-    #         feature3 = InputFeatures(**inputs3, label=list_of_lists_of_labels[0][i])
-    #         feature=(feature1,feature2,feature3)
-    #         features.append(feature)
-
-
     for i in range(total_no_of_datapoints):
-        list_features=[]
-        for each_dataset in all_encoded_datasets:
-            inputs = {k: each_dataset[k][i] for k in each_dataset}
-            feature = InputFeatures(**inputs, label=list_of_lists_of_labels[0][i])
-            list_features.append(feature)
-        tuple(list_features)
-        features.append(feature)
+            inputs1 = {k: all_encoded_datasets[0][k][i] for k in all_encoded_datasets[0]}
+            inputs2 = {k: all_encoded_datasets[1][k][i] for k in all_encoded_datasets[1]}
+            inputs3 = {k: all_encoded_datasets[2][k][i] for k in all_encoded_datasets[2]}
+            inputs4 = {k: all_encoded_datasets[3][k][i] for k in all_encoded_datasets[3]}
+
+            feature1 = InputFeatures(**inputs1, label=list_of_lists_of_labels[0][i])
+            feature2 = InputFeatures(**inputs2, label=list_of_lists_of_labels[0][i])
+            feature3 = InputFeatures(**inputs3, label=list_of_lists_of_labels[0][i])
+            feature4 = InputFeatures(**inputs4, label=list_of_lists_of_labels[0][i])
+            feature=(feature1,feature2,feature3,feature4)
+            features.append(feature)
+
+
+    # for i in range(total_no_of_datapoints):
+    #     list_features=[]
+    #     for each_dataset in all_encoded_datasets:
+    #         inputs = {k: each_dataset[k][i] for k in each_dataset}
+    #         feature = InputFeatures(**inputs, label=list_of_lists_of_labels[0][i])
+    #         list_features.append(feature)
+    #     tuple(list_features)
+    #     features.append(feature)
     return features
 
 
