@@ -296,10 +296,7 @@ MODEL_FOR_SEQUENCE_CLASSIFICATION_MAPPING = OrderedDict(
         (BartConfig, BartForSequenceClassification),
         (LongformerConfig, LongformerForSequenceClassification),
         (RobertaConfig, RobertaForSequenceClassification),
-        #mithun changing this on Dec 2020 to call another class, for studentteacher architecture, which encompasses BertForSequenceClassification
-        #original
-        #(BertConfig, BertForSequenceClassification),
-        (BertConfig, BertForFactVerficiationStudentTeacher),
+        (BertConfig, BertForSequenceClassification),
         (XLNetConfig, XLNetForSequenceClassification),
         (MobileBertConfig, MobileBertForSequenceClassification),
         (FlaubertConfig, FlaubertForSequenceClassification),
