@@ -18,7 +18,7 @@ from torch.utils.data.dataset import Dataset
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.sampler import RandomSampler, Sampler, SequentialSampler
 from tqdm.auto import tqdm, trange
-from .data.data_collator import DataCollator, default_data_collator, collate_batch_parallel_datasets,collate_batch_for_3_datasets
+from .data.data_collator import DataCollator, default_data_collator, collate_batch_parallel_datasets,collate_batch_for_3_datasets,collate_batch_for_4_datasets
 from .file_utils import is_apex_available, is_torch_tpu_available
 from .modeling_utils import PreTrainedModel
 from .optimization import AdamW, get_linear_schedule_with_warmup
@@ -218,13 +218,13 @@ class StudentTeacherTrainer:
         self.compute_metrics = None
 
         #even though we train using multiple models, finally there is only one THE model which is trained.- usually the one called as student model.
-        # It is called self.model. Rather, this will be the model which will finally be used to test on dev and test sets
-        # it is initiated as null for now, but after training is over, this will get assigned the trained model.
+        # We are assigning it here to self.model. Rather, this will be the model which will finally be used to test on dev and test sets
+        # Note: even though it is initiated as null for now, but after training is over, this will get assigned the trained model.
         self.model=None
 
         self.args = args
         self.default_data_collator = default_data_collator
-        self.data_collator = collate_batch_for_3_datasets
+        self.data_collator = collate_batch_for_4_datasets
         self.train_dataset_combined = train_datasets.get("combined")
         self.eval_dataset = eval_dataset
         self.compute_metrics = None
@@ -1406,7 +1406,13 @@ class StudentTeacherTrainer:
             # for each batch
             #todo: dont hardcode the number 3. this should work for n models
 
-            for step,(input_model1,input_model2,input_model3,input_model4)  in enumerate(batch_iterator):
+            all_inputs=[]
+            for x in range(self.args.total_no_of_models_including_student_and_its_teachers):
+                input_name="input_model"+str(x)
+                all_inputs.append(input_name)
+            tuple_all_inputs=tuple(all_inputs)
+
+            for step,(tuple_all_inputs)  in enumerate(batch_iterator):
                 logger.debug("just got inside for step in enumerate batch_iterator. i.e for each batch")
 
                 # Skip past any already trained steps if resuming training
@@ -1414,11 +1420,13 @@ class StudentTeacherTrainer:
                     steps_trained_in_current_epoch -= 1
                     continue
 
+                #compare all labels of all inputs are same. gold labels shouldnt change across datasets
+                labels=tuple_all_inputs[0]['labels'].tolist()
+                for each_input in tuple_all_inputs:
+                    assert each_input['labels'].tolist() == labels
 
-                assert input_model1['labels'].tolist() == input_model3['labels'].tolist()
-                assert input_model2['labels'].tolist() == input_model3['labels'].tolist()
+                # todo : check the input tokens differ atleast by one token across all datasets. this is a sanity check to ensure that we are not duplicating datasets.
 
-                all_inputs=[input_model1,input_model2,input_model3]
 
                 assert len(all_inputs) == len(self.list_all_models)
 
@@ -1428,7 +1436,7 @@ class StudentTeacherTrainer:
                 all_models_outputs=[]
                 for index,each_model in enumerate(self.list_all_models):
                     # model returns # (loss), logits, (hidden_states), (attentions)
-                    tr_classification_loss, outputs_model = self.get_classification_loss(each_model, all_inputs[index], optimizer)
+                    tr_classification_loss, outputs_model = self.get_classification_loss(each_model, tuple_all_inputs[index], optimizer)
                     combined_classification_loss += tr_classification_loss
                     all_models_outputs.append(outputs_model)
                 assert index == (len(self.list_all_models)-1)
@@ -1467,13 +1475,8 @@ class StudentTeacherTrainer:
                 self.global_step += 1
                 self.epoch = epoch + (step + 1) / len(batch_iterator)
 
-
-
-
-
             trained_model = self.list_all_models[1]
             self.model = self.list_all_models[1]
-
 
             assert trained_model is not None
             assert self.model is not None
