@@ -1441,21 +1441,26 @@ class StudentTeacherTrainer:
                     all_models_outputs.append(outputs_model)
                 assert index == (len(self.list_all_models)-1)
 
-                # calculate consistency loss:
-                # consistency loss is the loss between logits of student model(model 1) and logits of other models
-                # we are considering the second model (the one which reads data delexicalized in figerspecific format as the student model. ideally this could have been any). hence all_models_outputs[1]
-                # the second [1] is because logits are the second entry in any output returned by this model
-                logits_student = all_models_outputs[1][1]
-                combined_consistency_loss = torch.zeros(1).to(device=self.args.device)
 
+
+
+
+
+                all_logits=[]
                 assert len(all_models_outputs) > 0
-                for index,each_model_output in enumerate(all_models_outputs):
-                    if not index ==1:
+                for each_model_output in (all_models_outputs):
                         # outputs contains in that order # (loss), logits, (hidden_states), (attentions)-src/transformers/modeling_bert.py
                         #so logits will be output[1]
-                        logits_teacher = each_model_output[1]
-                        consistency_loss = self.get_consistency_loss(logits_teacher, logits_student, "mse")
-                        combined_consistency_loss += consistency_loss
+                        this_model_logit=each_model_output[1]
+                        all_logits.append(this_model_logit)
+
+                # calculate sum of all consistency losses:consistency loss is the loss between logits of all models
+                combined_consistency_loss = torch.zeros(1).to(device=self.args.device)
+                for index1,(x) in enumerate(all_logits):
+                    for index2,(y) in enumerate(all_logits):
+                        if not (index1 == index2):
+                            consistency_loss = self.get_consistency_loss(x, y, "mse")
+                            combined_consistency_loss += consistency_loss
 
                 assert combined_classification_loss.item() > 0
                 assert combined_consistency_loss.item() > 0
