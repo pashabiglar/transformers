@@ -1454,12 +1454,12 @@ class StudentTeacherTrainer:
                         this_model_logit=each_model_output[1]
                         all_logits.append(this_model_logit)
 
-                # calculate sum of all consistency losses:consistency loss is the loss between logits of all models
+                # calculate sum of all consistency losses:consistency loss is the loss between logits of all models (non repeating ..i.e AB=BA)
+                # so if there are 4 models,A,B,C,D`, the total combinations will be AB, AC, AD, BC, BD, CD
                 combined_consistency_loss = torch.zeros(1).to(device=self.args.device)
                 for index1,(x) in enumerate(all_logits):
-                    for index2,(y) in enumerate(all_logits):
-                        if not (index1 == index2):
-                            consistency_loss = self.get_consistency_loss(x, y, "mse")
+                    for y in range(index1 + 1, len(all_logits)):
+                            consistency_loss = self.get_consistency_loss(x, all_logits[y], "mse")
                             combined_consistency_loss += consistency_loss
 
                 assert combined_classification_loss.item() > 0
