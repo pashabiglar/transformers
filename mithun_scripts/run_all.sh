@@ -45,8 +45,8 @@ fi
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
 
 
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training_4models/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training_4models/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training_4models_classweight0.1/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training_4models_classweight0.1/data"
 else
         wandb off
         export DATA_DIR_BASE="/Users/mordor/research/huggingface/src/transformers/data/datasets"
