@@ -276,7 +276,7 @@ class TrainingArguments:
 
 
     total_no_of_models_including_student_and_its_teachers: int = field(
-        default=3, metadata={"help": "in a student teacher model how many teachers will the student be learning from"}
+        default=4, metadata={"help": "in a student teacher model how many teachers will the student be learning from"}
     )
 
     hidden_dropout_prob: float = field(default=0.1, metadata={

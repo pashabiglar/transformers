@@ -1297,10 +1297,6 @@ class BertForSequenceClassification(BertPreTrainedModel):
 
         return_tuple = return_tuple if return_tuple is not None else self.config.use_return_tuple
 
-
-        print(f"value of input_ids is {input_ids}")
-        print(f"value of input_emb is {inputs_embeds}")
-
         outputs = self.bert(
             input_ids,
             attention_mask=attention_mask,
