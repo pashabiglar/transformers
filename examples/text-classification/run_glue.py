@@ -108,7 +108,7 @@ def run_training(model_args, data_args, training_args):
     # Setup logging
     git_details=get_git_info()
 
-    log_file_name=git_details['repo_short_sha']+"_"+(training_args.task_type)+"_"+(training_args.subtask_type1)+"_"+(training_args.subtask_type2)+"_"+str(model_args.model_name_or_path).replace("-","_")+"_"+data_args.task_name+".log"
+    log_file_name=git_details['repo_short_sha']+"_"+(training_args.task_type)+"_"+(training_args.subtask_type1)+"_"+(training_args.subtask_type2)+"_"+"_"+data_args.task_name+".log"
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
@@ -149,7 +149,7 @@ def run_training(model_args, data_args, training_args):
         finetuning_task=data_args.task_name,
         cache_dir=model_args.cache_dir,
     )
-    #manually overriding the default dropout of 0.1- just for tuning purposes
+    #you can override herethe default dropout of 0.1-  for tuning purposes if you choose to
     config.hidden_dropout_prob=training_args.hidden_dropout_prob
     config.attention_dropout = training_args.attention_dropout
 
@@ -158,6 +158,8 @@ def run_training(model_args, data_args, training_args):
         cache_dir=model_args.cache_dir,
         force_download=True,
     )
+
+
 
     #when in student-teacher mode, you need two tokenizers, one for lexicalized data, and one for the delexicalized data
     # the regular tokenizer_lex will be used for lexicalized data and special one for delexicalized
