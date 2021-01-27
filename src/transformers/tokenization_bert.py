@@ -37,7 +37,8 @@ PRETRAINED_VOCAB_FILES_MAP = {
         #for uofa's student teacher model we use a vocab file built on top of bert-base-uncased-vocab.txt, but has mappings for mod2 tokens like PERSON-C1
         "bert-base-uncased-delex": "https://osf.io/zjrdv/download",
         "bert-base-cased-delex": "https://osf.io/3ubnh/download",
-        "bert-mini-uncased-delex":"https://osf.io/am492/",
+        "google/bert_uncased_L-12_H-128_A-2":"https://osf.io/r3sd5/download",
+        "google/bert_uncased_L-12_H-128_A-2-delex":"https://osf.io/am492/download",
         "bert-base-uncased": "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-vocab.txt",
         "bert-base-cased": "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-cased-vocab.txt",
 
@@ -82,6 +83,8 @@ PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
     "TurkuNLP/bert-base-finnish-cased-v1": 512,
     "TurkuNLP/bert-base-finnish-uncased-v1": 512,
     "wietsedv/bert-base-dutch-cased": 512,
+    #adding this on jan 2021 since we found that there is a light weight bert available. this one has 12 layers and 128 emb size
+    "google/bert_uncased_L-12_H-128_A-2":128
 }
 
 PRETRAINED_INIT_CONFIGURATION = {
