@@ -55,8 +55,8 @@ if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
 fi
 
 if [ $MACHINE_TO_RUN_ON == "clara" ]; then
-        export OUTPUT_DIR_BASE="/work/mithunpaul/huggingface_bertmini/output"
-        export DATA_DIR_BASE="/work/mithunpaul/huggingface_bertmini/data"
+        export OUTPUT_DIR_BASE="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v2/output"
+        export DATA_DIR_BASE="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v2/data"
 fi
 
 
