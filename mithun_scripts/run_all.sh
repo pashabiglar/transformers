@@ -43,17 +43,22 @@ fi
 
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
-
-
         export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training_4models_classweight0.1/output"
         export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training_4models_classweight0.1/data"
-else
+fi
+
+if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
         wandb off
         export DATA_DIR_BASE="/Users/mordor/research/huggingface/src/transformers/data/datasets"
         export OUTPUT_DIR_BASE="/Users/mordor/research/huggingface/mithun_scripts/output"
         export PYTHONPATH="/Users/mordor/research/huggingface/src/"
-
 fi
+
+if [ $MACHINE_TO_RUN_ON == "clara" ]; then
+        export OUTPUT_DIR_BASE="/work/mithunpaul/huggingface_bertmini/output"
+        export DATA_DIR_BASE="/work/mithunpaul/huggingface_bertmini/data"
+fi
+
 
 echo "MACHINE_TO_RUN_ON=$MACHINE_TO_RUN_ON"
 echo "OUTPUT_DIR_BASE=$OUTPUT_DIR_BASE"
