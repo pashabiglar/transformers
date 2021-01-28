@@ -69,6 +69,12 @@ export TASK_TYPE="combined" #options for task type include lex,delex,and combine
 export SUB_TASK_TYPE="figerspecific" #options for TASK_SUB_TYPE (usually used only for TASK_TYPEs :[delex,combined])  include [oa, figerspecific, figerabstract, oass, simplener]
 export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
 export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE"
+
+
+export TOY_DATA_DIR="toydata"
+export TOY_DATA_DIR_PATH="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE/$TOY_DATA_DIR/"
+
+
 export PYTHONPATH="../src"
 export BERT_MODEL_NAME="google/bert_uncased_L-12_H-128_A-2" #options include things like [bert-base-uncased,bert-base-cased] etc. refer src/transformers/tokenization_bert.py for more.
 export MAX_SEQ_LENGTH="128"
@@ -80,8 +86,6 @@ wandb online
 echo "OUTPUT_DIR=$OUTPUT_DIR"
 
 echo "value of epochs is $EPOCHS"
-echo "value of DATA_DIR is $DATA_DIR"
-
 
 
 echo "$DOWNLOAD_FRESH_DATA"
@@ -91,9 +95,16 @@ if [ $DOWNLOAD_FRESH_DATA == "true" ]; then
     ./get_fever_fnc_data.sh
     ./convert_to_mnli_format.sh
 fi
+echo "value of toy_data_path is $TOY_DATA_DIR_PATH"
 
 #create a small part of data as toy data. this will be used to run regresssion tests before the actual run starts
 ./reduce_size.sh  --data_path $TOY_DATA_DIR_PATH
+
+
+echo "value of DATA_DIR is $DATA_DIR"
+
+
+
 
 echo "done with data download  TOY_DATA_DIR_PATH now is $TOY_DATA_DIR_PATH"
 
@@ -108,10 +119,6 @@ fi
 echo "done with data download part . datapath now is $DATA_DIR"
 
 
-
-if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
-      ./reduce_size.sh  --data_path $DATA_DIR
-fi
 
 
 
