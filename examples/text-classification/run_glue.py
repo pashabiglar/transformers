@@ -201,7 +201,7 @@ def run_training(model_args, data_args, training_args):
     # The one to one mapping is taken care of inside the ParallelDataDataset
     if (training_args.do_train_student_teacher == True):
         # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
-        assert (training_args.task_type == "combined" or training_args.task_type=="2t1s")
+        assert (training_args.task_type == "combined" or training_args.task_type=="3t1s")
         assert tokenizer_lex is not None
         assert tokenizer_delex is not None
 

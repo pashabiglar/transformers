@@ -14,7 +14,6 @@ streamlit
 elasticsearch
 pandas
 nlp
-tensorflow
 pytest
 gitpython
 requests
@@ -22,6 +21,7 @@ filelock
 tqdm
 tokenizers
 wandb
+#do this based on your os:refer pytorch home page
 #conda install pytorch torchvision torchaudio -c pytorch
 ipython
 wget

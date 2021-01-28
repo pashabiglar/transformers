@@ -288,11 +288,12 @@ fi
 # teacher1 : sees data in lexicalized form/(train1.tsv)
 # student : sees data delexicalized with figerspecific (train2.tsv)
 # teacher2 : sees data delexicalized with oa (overlap aware) ner technique (train3.tsv)
+# teacher : sees data delexicalized with figerabstract technique (train4.tsv)
 
 
 
 
-if [ "$TASK_TYPE" = "2t1s" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUB_TASK_TYPE1" = "figerspecific" ] && [ "$SUB_TASK_TYPE2" = "oa" ]; then
+if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUB_TASK_TYPE1" = "figerspecific" ] && [ "$SUB_TASK_TYPE2" = "oa" ]; then
     echo "found task type to be 2t1s, taskname to be feverCrossDomain and subtasktypes to be figerspecific and oa"
 
 echo $DATA_DIR
