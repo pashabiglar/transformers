@@ -840,6 +840,16 @@ class StudentTeacherTrainer:
                     continue
                 assert input_lex['labels'].tolist()==input_delex['labels'].tolist()
 
+                if torch.cuda.is_available():
+                    for k,v in input_lex.items():
+                        k=k.cuda()
+                        v=v.cuda()
+                        input_lex[k]=v
+
+                    for k, v in input_delex.items():
+                        k = k.cuda()
+                        v = v.cuda()
+                        input_delex[k] = v
 
 
                 #model returns # (loss), logits, (hidden_states), (attentions)
