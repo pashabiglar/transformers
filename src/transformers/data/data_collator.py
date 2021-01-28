@@ -231,10 +231,10 @@ def collate_batch_for_4_datasets(features: List[InputDataClass]) -> Dict[str, to
             labels_teacher2 = []
             for f in features:
                 assert f[0].label==f[1].label
-                assert f[2].label == f[1].label
+
                 labels_teacher1.append(f[0].label)
                 labels_student.append(f[1].label)
-                labels_teacher2.append(f[2].label)
+                # labels_teacher2.append(f[2].label)
 
             assert labels_teacher1 == labels_student
             labels_lex_tf = torch.tensor(labels_teacher1, dtype=torch.long)
@@ -274,19 +274,20 @@ def collate_batch_for_4_datasets(features: List[InputDataClass]) -> Dict[str, to
         if k not in ("label", "label_ids") and v is not None and not isinstance(v, str):
             k_list_teacher1 = []
             k_list_student = []
-            k_list_teacher2 = []
-            k_list_teacher3 = []
+            # k_list_teacher2 = []
+            # k_list_teacher3 = []
             for tuple_feature in features:
                 k_list_teacher1.append(getattr(tuple_feature[0], k))
                 k_list_student.append(getattr(tuple_feature[1], k))
-                k_list_teacher2.append(getattr(tuple_feature[2], k))
-                k_list_teacher3.append(getattr(tuple_feature[3], k))
+                # k_list_teacher2.append(getattr(tuple_feature[2], k))
+                # k_list_teacher3.append(getattr(tuple_feature[3], k))
             batch_teacher1[k] = torch.tensor(k_list_teacher1, dtype=torch.long)
             batch_student[k] = torch.tensor(k_list_student, dtype=torch.long)
-            batch_teacher2[k] = torch.tensor(k_list_teacher2, dtype=torch.long)
-            batch_teacher3[k] = torch.tensor(k_list_teacher3, dtype=torch.long)
+            # batch_teacher2[k] = torch.tensor(k_list_teacher2, dtype=torch.long)
+            # batch_teacher3[k] = torch.tensor(k_list_teacher3, dtype=torch.long)
 
-    return (batch_teacher1, batch_student, batch_teacher2,batch_teacher3)
+    # return (batch_teacher1, batch_student, batch_teacher2, batch_teacher3)
+    return (batch_teacher1, batch_student)
 
 
 

@@ -451,14 +451,14 @@ def _glue_convert_list_of_example_pairs_to_features(
     for i in range(total_no_of_datapoints):
             inputs1 = {k: all_encoded_datasets[0][k][i] for k in all_encoded_datasets[0]}
             inputs2 = {k: all_encoded_datasets[1][k][i] for k in all_encoded_datasets[1]}
-            inputs3 = {k: all_encoded_datasets[2][k][i] for k in all_encoded_datasets[2]}
-            inputs4 = {k: all_encoded_datasets[3][k][i] for k in all_encoded_datasets[3]}
+            #inputs3 = {k: all_encoded_datasets[2][k][i] for k in all_encoded_datasets[2]}
+            #inputs4 = {k: all_encoded_datasets[3][k][i] for k in all_encoded_datasets[3]}
 
             feature1 = InputFeatures(**inputs1, label=list_of_lists_of_labels[0][i])
             feature2 = InputFeatures(**inputs2, label=list_of_lists_of_labels[0][i])
-            feature3 = InputFeatures(**inputs3, label=list_of_lists_of_labels[0][i])
-            feature4 = InputFeatures(**inputs4, label=list_of_lists_of_labels[0][i])
-            feature=(feature1,feature2,feature3,feature4)
+            #feature3 = InputFeatures(**inputs3, label=list_of_lists_of_labels[0][i])
+            #feature4 = InputFeatures(**inputs4, label=list_of_lists_of_labels[0][i])
+            feature=(feature1,feature2)
             features.append(feature)
 
 
