@@ -42,7 +42,7 @@ cd /home/u11/mithunpaul/xdisk/huggingface_bert_expt1/code/mithun_scripts
 bash run_all.sh --epochs_to_run 25 --machine_to_run_on hpc #options include [laptop, hpc,clara]
 
 
-
+#bash run_all.sh --epochs_to_run 25 --machine_to_run_on clara --use_toy_data false --download_fresh_data true
 
 
 
