@@ -88,6 +88,8 @@ PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
 }
 
 PRETRAINED_INIT_CONFIGURATION = {
+
+    "google/bert_uncased_L-12_H-128_A-2": {"do_lower_case": True},
     "bert-base-uncased": {"do_lower_case": True},
     "bert-large-uncased": {"do_lower_case": True},
     "bert-base-cased": {"do_lower_case": False},
