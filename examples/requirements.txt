@@ -27,3 +27,4 @@ ipython
 wget
 nltk
 stop-words
+sentencepiece
