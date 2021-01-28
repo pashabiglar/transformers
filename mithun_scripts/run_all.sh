@@ -25,6 +25,19 @@ fi
 
 
 
+if [ $# -gt 3 ]; then
+if [ $5 == "--use_toy_data" ]; then
+        export USE_TOY_DATA=$6
+fi
+fi
+
+
+if [ $# -gt 7 ]; then
+if [ $7 == "--download_fresh_data" ]; then
+        export DOWNLOAD_FRESH_DATA=$8
+fi
+fi
+
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training_4models_classweight0.1/output"
         export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training_4models_classweight0.1/data"
@@ -70,14 +83,26 @@ echo "value of DATA_DIR is $DATA_DIR"
 
 
 
-#get data fresh before every run
-echo ". going to download data"
-rm -rf $DATA_DIR
-./get_fever_fnc_data.sh
-./convert_to_mnli_format.sh
+echo "$DOWNLOAD_FRESH_DATA"
+if [ $DOWNLOAD_FRESH_DATA == "true" ]; then
+    echo "found DOWNLOAD_FRESH_DATA is true "
+    rm -rf $DATA_DIR
+    ./get_fever_fnc_data.sh
+    ./convert_to_mnli_format.sh
+fi
+
+#create a small part of data as toy data. this will be used to run regresssion tests before the actual run starts
+./reduce_size.sh  --data_path $TOY_DATA_DIR_PATH
+
+echo "done with data download  TOY_DATA_DIR_PATH now is $TOY_DATA_DIR_PATH"
 
 
+#use a smaller toy data to test
 
+if  [ "$USE_TOY_DATA" = true ]; then
+        DATA_DIR=$TOY_DATA_DIR_PATH
+        echo "found USE_TOY_DATA is true"
+fi
 
 echo "done with data download part . datapath now is $DATA_DIR"
 
