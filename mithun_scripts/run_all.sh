@@ -74,7 +74,7 @@ export BERT_MODEL_NAME="google/bert_uncased_L-12_H-128_A-2" #options include thi
 export MAX_SEQ_LENGTH="128"
 export OUTPUT_DIR="$OUTPUT_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE/$BERT_MODEL_NAME/$MAX_SEQ_LENGTH/"
 echo $OUTPUT_DIR
-
+wandb on
 
 echo "OUTPUT_DIR=$OUTPUT_DIR"
 
