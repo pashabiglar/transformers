@@ -125,8 +125,23 @@ def main():
     )
     logger.info("Training/evaluation parameters %s", training_args)
 
+    import torch
+    if torch.cuda.is_available():
+        cuda_to_use = "cuda:1"
+        device = torch.device(cuda_to_use)
+        if device.type == "cuda":
+            torch.cuda.set_device(device)
+            torch.cuda.device(device)
 
-
+    logger.warning(
+        "Process rank: %s, device: %s, n_gpu: %s, distributed training: %s, 16-bits training: %s",
+        training_args.local_rank,
+        training_args.device,
+        training_args.n_gpu,
+        bool(training_args.local_rank != -1),
+        training_args.fp16,
+    )
+    sys.exit()
 
     # Set seed
     set_seed(training_args.seed)

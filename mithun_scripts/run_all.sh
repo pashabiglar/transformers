@@ -98,7 +98,8 @@ echo "done with data download  TOY_DATA_DIR_PATH now is $TOY_DATA_DIR_PATH"
 
 
 #use a smaller toy data to test
-CUDA_VISIBLE_DEVICES=1
+export CUDA_VISIBLE_DEVICES=1
+env CUDA_VISIBLE_DEVICES=1
 if  [ "$USE_TOY_DATA" = true ]; then
         DATA_DIR=$TOY_DATA_DIR_PATH
         echo "found USE_TOY_DATA is true"
