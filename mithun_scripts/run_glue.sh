@@ -36,12 +36,12 @@ echo "data_dir is $DATA_DIR"
 echo $args
 mkdir -p OUTPUT_DIR
 
-env CUDA_VISIBLE_DEVICES=1
-export CUDA_VISIBLE_DEVICES=1
+env CUDA_VISIBLE_DEVICES=0,1,2
+export CUDA_VISIBLE_DEVICES=0,1,2
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
        python3.6 ../examples/text-classification/run_glue.py $args
 else
-       CUDA_VISIBLE_DEVICES=2 python3 ../examples/text-classification/run_glue.py $args
+       python3 ../examples/text-classification/run_glue.py $args
 fi
 
 

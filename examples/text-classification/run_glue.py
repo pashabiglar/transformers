@@ -16,7 +16,7 @@
 """ Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
 
 
-import dataclasses
+import torch
 import logging
 import os
 import sys
@@ -175,12 +175,20 @@ def main():
         config=config,
         cache_dir=model_args.cache_dir,
         )
+
+
         model_student = AutoModelForSequenceClassification.from_pretrained(
         model_args.model_name_or_path,
         from_tf=bool(".ckpt" in model_args.model_name_or_path),
         config=config,
         cache_dir=model_args.cache_dir,
         )
+
+        if torch.cuda.is_available():
+            model_student=model_student.cuda()
+            model_teacher= model_teacher.cuda()
+
+
     else:
         model = AutoModelForSequenceClassification.from_pretrained(
             model_args.model_name_or_path,
