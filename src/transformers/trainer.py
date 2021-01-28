@@ -831,7 +831,9 @@ class StudentTeacherTrainer:
             #for each batch
             for step, (input_lex,input_delex) in enumerate(epoch_iterator):
                 logger.debug("just got inside for step in enumerate epoch_iterator. i.e for each batch")
-
+                if torch.cuda.is_available():
+                    input_lex = input_lex.cuda()
+                    input_delex = input_delex.cuda()
 
 
                 # Skip past any already trained steps if resuming training
