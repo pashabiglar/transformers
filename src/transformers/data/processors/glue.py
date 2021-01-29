@@ -664,7 +664,7 @@ class FeverCrossDomainProcessor(DataProcessor):
 
     #in multiple teacher land, we will be using each trained model to test on corresponding dataset. So now
     # get data from the corresponding test dataset
-    def get_test_examples_given_dataset_index(self, data_dir, index):
+    def get_test_examples_given_dataset_index(self, data_dir, index=0):
         """See base class."""
         test_file_name="test"+str(index+1)+".tsv"
         #passing dev instead of test to make it read labels also.

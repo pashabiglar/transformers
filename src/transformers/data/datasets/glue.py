@@ -67,11 +67,11 @@ class GlueDataset(Dataset):
 
     def __init__(
         self,
-        training_args,
         args: GlueDataTrainingArguments,
         tokenizer: PreTrainedTokenizer,
-        task_type: Optional[str] = None,
         limit_length: Optional[int] = None,
+        task_type: Optional[str] = None,
+        index_in: Optional[int] = None,
         mode: Union[str, Split] = Split.train,
         cache_dir: Optional[str] = None,
             remove_stop_words_in=False
@@ -126,29 +126,13 @@ class GlueDataset(Dataset):
 
             else:
                 logger.info(f"found that no cache file exists. Creating features from dataset file at {args.data_dir}. value of mode is {mode}")
-
+                examples=None
 
                 if mode == Split.dev:
                     examples = self.processor.get_dev_examples(args.data_dir)
                     logger.info(f"Done readign dev data")
                 elif mode == Split.test:
-                    list_all_test_datasets = []
-                    for index in range(training_args.total_no_of_test_datasets):
-                        list_all_test_datasets.append(
-                            self.processor.get_test_examples_given_dataset_index(args.data_dir, index))
-
-                    # pick a random value and assert they match in label and guid with that of the first dataset
-                    len_datasets=len(list_all_test_datasets)
-                    rand_index = randrange(0, len_datasets)
-                    rand_label = list_all_test_datasets[0][rand_index].label
-                    rand_guid = list_all_test_datasets[0][rand_index].guid
-                    for each_dataset in list_all_test_datasets:
-                        assert len(each_dataset) == len_datasets
-                        assert each_dataset[rand_index].label==rand_label
-                        assert each_dataset[rand_index].guid == rand_guid
-
-
-
+                    examples = self.processor.get_test_examples_given_dataset_index(args.data_dir, index=index_in)
                     logger.info(f"Done readign test data")
                 else:
                     examples = self.processor.get_train_examples(args.data_dir)
@@ -171,7 +155,7 @@ class GlueDataset(Dataset):
                 #         for ent in doc.ents:
                 #             all_ner[ent.text]=1
                 #     self.ner_tags=all_ner
-
+                assert examples is not None
                 self.features = glue_convert_examples_to_features(
                     examples,
                     tokenizer,

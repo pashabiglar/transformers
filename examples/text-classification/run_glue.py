@@ -275,11 +275,12 @@ def run_training(model_args, data_args, training_args):
         list_test_datasets=[]
         for n in range(training_args.total_no_of_test_datasets):
             test_dataset = (
-                GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test", cache_dir=model_args.cache_dir)
+                GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test", cache_dir=model_args.cache_dir,index_in=n)
             )
 
             list_test_datasets.append(test_dataset)
         assert len(list_test_datasets) > 0
+        assert len(list_test_datasets) == training_args.total_no_of_test_datasets
     else:
         print("training_args.do_train_student_teacher is false. going to exit")
         sys.exit()
