@@ -168,7 +168,7 @@ class StudentTeacherTrainer:
     data_collator: DataCollator
     train_dataset: Optional[Dataset]
     eval_dataset: Optional[Dataset]
-    test_dataset =Optional[Dataset]
+    test_dataset =[]
     test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     eval_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
@@ -183,10 +183,10 @@ class StudentTeacherTrainer:
         tokenizer_delex,
         tokenizer_lex,
         models: [],
+        test_datasets: [],
         args: TrainingArguments,
         train_datasets: {},
         eval_dataset: Optional[Dataset] = None,
-        test_dataset: Optional[Dataset] = None,
         test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
         eval_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
         compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
@@ -211,8 +211,12 @@ class StudentTeacherTrainer:
         self.lex_tokenizer=tokenizer_lex
         self.delex_tokenizer = tokenizer_delex
 
-        ###for fnc score evaluation
-        self.test_dataset = test_dataset
+        ###evaluate each model in the corresponding dataset
+        self.list_test_datasets=[]
+        for each_test_dataset in test_datasets:
+            self.list_test_datasets.append(each_test_dataset.to(args.device))
+
+
         self.test_compute_metrics = test_compute_metrics
         self.eval_compute_metrics = eval_compute_metrics
         self.compute_metrics = None
@@ -1380,7 +1384,7 @@ class StudentTeacherTrainer:
         with open(predictions_on_test_file_path, "w") as writer:
             writer.write("")
 
-        best_fnc_score = 0
+
         best_acc = 0
 
         # for each epoch
@@ -1404,8 +1408,6 @@ class StudentTeacherTrainer:
 
 
             # for each batch
-            #todo: dont hardcode the number 3. this should work for n models
-
             all_inputs=[]
             for x in range(self.args.total_no_of_models_including_student_and_its_teachers):
                 input_name="input_model"+str(x)
@@ -1426,8 +1428,6 @@ class StudentTeacherTrainer:
                     assert each_input['labels'].tolist() == labels
 
                 # todo : check the input tokens differ atleast by one token across all datasets. this is a sanity check to ensure that we are not duplicating datasets.
-
-
                 assert len(all_inputs) == len(self.list_all_models)
 
 
@@ -1492,19 +1492,33 @@ class StudentTeacherTrainer:
                 output_eval_file=dev_partition_evaluation_output_file_path,
                 description="dev_partition", model_to_test_with=trained_model)
 
-            test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = self._intermediate_eval(
-                datasets=self.test_dataset,
-                epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",
-                model_to_test_with=trained_model)
+            #update @jan 28th 2021: now we are going to try predicting using each model on a correspondingly delexicalized dev partition of the cross domain dataset
+            assert len(self.list_test_datasets)== len(self.list_all_models)
+            all_accuracies_on_test_partition_by_all_models=[]
 
-            fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
-            accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
+            for each_test_dataset,each_trained_model in zip(self.list_test_datasets,self.list_all_models):
+                test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = self._intermediate_eval(
+                    datasets=each_test_dataset,
+                    epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",
+                    model_to_test_with=each_trained_model)
 
-            if fnc_score_test_partition > best_fnc_score:
-                best_fnc_score = fnc_score_test_partition
+                fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
+                accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
 
-                logger.info(f"found that the current fncscore:{fnc_score_test_partition} in epoch "
-                            f"{epoch} beats the bestfncscore so far i.e ={best_fnc_score}. going to prediction"
+                all_accuracies_on_test_partition_by_all_models.append(accuracy_test_partition)
+
+            best_accuracy_test_partition_amongst_all_models=max(all_accuracies_on_test_partition_by_all_models)
+            index_accuracy_test_partition_between_all_models=all_accuracies_on_test_partition_by_all_models.index(best_accuracy_test_partition_amongst_all_models)
+
+            logger.info(f"found that in epoch {epoch} out of all the {len(self.list_all_models)} models trained,"
+                        f"the model which gave highest accuracy was model number"
+                        f" {index_accuracy_test_partition_between_all_models} in epoch ")
+
+            if best_accuracy_test_partition_amongst_all_models > best_acc:
+                best_acc=best_accuracy_test_partition_amongst_all_models
+
+                logger.info(f"found that the current accuracy:{best_accuracy_test_partition_amongst_all_models} in epoch "
+                            f"{epoch} beats the beest accuracy so far i.e ={best_acc}. going to prediction"
                             f"on test partition and save that and model to disk")
                 # if the accuracy or fnc_score_test_partition beats the highest so far, write predictions to disk
 

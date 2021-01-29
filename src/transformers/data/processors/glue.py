@@ -662,6 +662,14 @@ class FeverCrossDomainProcessor(DataProcessor):
         """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
 
+    #in multiple teacher land, we will be using each trained model to test on corresponding dataset. So now
+    # get data from the corresponding test dataset
+    def get_test_examples_given_dataset_index(self, data_dir, index):
+        """See base class."""
+        test_file_name="test"+str(index+1)+".tsv"
+        #passing dev instead of test to make it read labels also.
+        # this is needed because we are using test partition to load cross domain dev dataset
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, test_file_name)), "dev")
 
 
     def get_test_examples(self, data_dir):

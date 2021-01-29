@@ -67,7 +67,7 @@ class GlueDataset(Dataset):
 
     def __init__(
         self,
-
+        training_args,
         args: GlueDataTrainingArguments,
         tokenizer: PreTrainedTokenizer,
         task_type: Optional[str] = None,
@@ -132,7 +132,23 @@ class GlueDataset(Dataset):
                     examples = self.processor.get_dev_examples(args.data_dir)
                     logger.info(f"Done readign dev data")
                 elif mode == Split.test:
-                    examples = self.processor.get_test_examples(args.data_dir)
+                    list_all_test_datasets = []
+                    for index in range(training_args.total_no_of_test_datasets):
+                        list_all_test_datasets.append(
+                            self.processor.get_test_examples_given_dataset_index(args.data_dir, index))
+
+                    # pick a random value and assert they match in label and guid with that of the first dataset
+                    len_datasets=len(list_all_test_datasets)
+                    rand_index = randrange(0, len_datasets)
+                    rand_label = list_all_test_datasets[0][rand_index].label
+                    rand_guid = list_all_test_datasets[0][rand_index].guid
+                    for each_dataset in list_all_test_datasets:
+                        assert len(each_dataset) == len_datasets
+                        assert each_dataset[rand_index].label==rand_label
+                        assert each_dataset[rand_index].guid == rand_guid
+
+
+
                     logger.info(f"Done readign test data")
                 else:
                     examples = self.processor.get_train_examples(args.data_dir)
@@ -143,6 +159,7 @@ class GlueDataset(Dataset):
                 logger.info(f"going to get into function glue_convert_examples_to_features")
 
                 #finding all NER entities. this is needed in attention calculations for bert
+                # this was used in finding attention weights allocated by bert across all layres and heads
                 #spacy causing issues in hpc. commenting out temporarily on jan 2021 since i am doing only training now and dont need this
 
                 # if(task_type == "lex"):

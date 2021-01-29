@@ -303,6 +303,7 @@ FILE="$DATA_DIR/train1.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
+    #this is the training with lexicalized/plain text version of fever
      wget https://osf.io/r6mdz/download  -O $FILE
 fi
 
@@ -334,8 +335,8 @@ else
 fi
 
 
-#
 
+#dev is dev partition of in-domain dataset, fever, delexicalized with figerspecific
 FILE="$DATA_DIR/dev.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
@@ -346,11 +347,48 @@ fi
 #note that we are loading the cross domain's dev partition as test partition here
 # note: we are loading the dev partition of fnc dataset here..(which will be found in my osf.io account folder: student_teacher_fact_verification/all_input_files/fnc/in_domain/figerspecifid/dev.tsv)
 
-FILE="$DATA_DIR/test.tsv"
+#update : trying to use each of the n models in n corresponding delexicalized veersions of the dataset.
+# each tst partition number will match to corresponding deeleexicalization used in training. so test1.tsv will be dev partition of cross domain plain text, test2.tsv will be figerspec version etc
+
+
+#plain text version of fnc-dev
+FILE="$DATA_DIR/test1.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
-     wget https://osf.io/jx32m//download -O $FILE
+     wget https://osf.io/jfpbv/download -O $FILE
 fi
 
+
+#figerspec delexicalized version of fnc-dev
+FILE="$DATA_DIR/test2.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+     wget https://osf.io/jx32m/download -O $FILE
+fi
+
+
+#fnc-dev delexicalized with oaner
+FILE="$DATA_DIR/test3.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+     wget https://osf.io/b4qau/download -O $FILE
+fi
+
+
+#fnc-dev delexicalized with figerabstract
+FILE="$DATA_DIR/test4.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+     wget https://osf.io/m4dzs/download -O $FILE
+fi
+
+
+
+
+
+#fi of if corresponding to 3t1s check
 fi
