@@ -1295,7 +1295,7 @@ class StudentTeacherTrainer:
             num_train_epochs = self.args.num_train_epochs
 
         weight_consistency_loss = 1
-        weight_classification_loss = 0.1
+        weight_classification_loss = 1
 
         optimizer = None
         scheduler = None
@@ -1512,6 +1512,8 @@ class StudentTeacherTrainer:
             logger.info(f"found that in epoch {epoch} out of all the {len(self.list_all_models)} models trained,"
                         f"the model which gave highest accuracy was model number"
                         f" {index_accuracy_test_partition_between_all_models} and that value is {best_accuracy_test_partition_amongst_all_models} ")
+
+            logger.info(f"accuracies of all 4 models are {all_accuracies_on_test_partition_by_all_models}")
 
             if best_accuracy_test_partition_amongst_all_models > best_acc:
                 best_acc=best_accuracy_test_partition_amongst_all_models
