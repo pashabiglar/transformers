@@ -56,8 +56,8 @@ fi
 
 if [ $MACHINE_TO_RUN_ON == "clara" ]; then
         wandb online
-        export OUTPUT_DIR_BASE="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v4/output"
-        export DATA_DIR_BASE="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v4/data"
+        export OUTPUT_DIR_BASE="/work/mithunpaul/huggingface_bertmini_1t1s_v1/output"
+        export DATA_DIR_BASE="/work/mithunpaul/huggingface_bertmini_1t1s_v1/data"
 fi
 
 
