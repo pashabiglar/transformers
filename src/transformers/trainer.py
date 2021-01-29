@@ -1516,11 +1516,14 @@ class StudentTeacherTrainer:
             logger.info(f"accuracies of all 4 models are {all_accuracies_on_test_partition_by_all_models}")
 
             if best_accuracy_test_partition_amongst_all_models > best_acc:
+                logger.info(
+                    f"found that the current accuracy:{best_accuracy_test_partition_amongst_all_models} in epoch "
+                    f"{epoch} beats the beest accuracy so far i.e ={best_acc}. going to prediction"
+                    f"on test partition and save that and model to disk")
+                
                 best_acc=best_accuracy_test_partition_amongst_all_models
 
-                logger.info(f"found that the current accuracy:{best_accuracy_test_partition_amongst_all_models} in epoch "
-                            f"{epoch} beats the beest accuracy so far i.e ={best_acc}. going to prediction"
-                            f"on test partition and save that and model to disk")
+
                 # if the accuracy or fnc_score_test_partition beats the highest so far, write predictions to disk
 
                 self.write_predictions_to_disk(plain_text, gold_labels, all_prediction_logits[index_accuracy_test_partition_between_all_models],
@@ -1543,8 +1546,6 @@ class StudentTeacherTrainer:
                     torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                     torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
 
-            if accuracy_test_partition > best_acc:
-                best_acc = accuracy_test_partition
 
             logger.info(
                 f"********************************end of epoch {epoch+1}************************************************************************")
