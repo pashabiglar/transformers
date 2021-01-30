@@ -1520,7 +1520,7 @@ class StudentTeacherTrainer:
                     f"found that the current accuracy:{best_accuracy_test_partition_amongst_all_models} in epoch "
                     f"{epoch} beats the beest accuracy so far i.e ={best_acc}. going to prediction"
                     f"on test partition and save that and model to disk")
-                
+
                 best_acc=best_accuracy_test_partition_amongst_all_models
 
 
