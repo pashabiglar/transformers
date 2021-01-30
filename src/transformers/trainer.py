@@ -1509,9 +1509,9 @@ class StudentTeacherTrainer:
             best_accuracy_test_partition_amongst_all_models=max(all_accuracies_on_test_partition_by_all_models)
             index_accuracy_test_partition_between_all_models=all_accuracies_on_test_partition_by_all_models.index(best_accuracy_test_partition_amongst_all_models)
 
-            logger.info(f"found that in epoch {epoch} out of all the {len(self.list_all_models)} models trained,"
+            logger.info(f"found that in epoch {epoch+1} out of all the {len(self.list_all_models)} models trained,"
                         f"the model which gave highest accuracy was model number"
-                        f" {index_accuracy_test_partition_between_all_models} and that value is {best_accuracy_test_partition_amongst_all_models} ")
+                        f" {index_accuracy_test_partition_between_all_models+1} and that value is {best_accuracy_test_partition_amongst_all_models} ")
 
             logger.info(f"accuracies of all 4 models are {all_accuracies_on_test_partition_by_all_models}")
 
