@@ -1071,7 +1071,7 @@ class StudentTeacherTrainer:
                 datasets=self.eval_dataset,
                 epoch=epoch,
                 output_eval_file=output_eval_file_path,
-                description="test_partition", model_to_test_with=trained_model)
+                description="dev_partition", model_to_test_with=trained_model)
 
             test_partition_evaluation_result, plain_text, gold_labels, predictions = self._intermediate_eval_from_multiple_teachers_branch(
                 datasets=self.test_dataset,
