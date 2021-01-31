@@ -392,3 +392,115 @@ fi
 
 #fi of if corresponding to 3t1s check
 fi
+
+
+
+
+######################multiple models of student teacher architecture in the other direction: train on fnc and test on fever
+#note: subtasktype1, subtasktype2 etc is vestigial from old code. now we are using 4 models each trained on as follows
+## model1:train1.tsv: fnc-train lexicalized data (3 labels)- [disagree, agree, nei]
+# model 2: train2.tsv fnc-train delexicalized using figerspecific
+# model 3: train3.tsv fnc-train delexicalized using oaner
+#model 4 : train4.tsv fnc-train delexicalised using figerabstract
+#------
+# dev: ideally we should be running over 4 dev partitions similarly. too  much pain. also dev/indomain is more like a sanity check. if atleast one of them is in late 80s early 90s accuracy its good
+#----
+#test
+## model1 will test on test1.tsv= fever-dev lexicalized data
+# model 2: test2.tsv fever-dev delexicalized using figerspecific
+# model 3: test3.tsv fever-dev delexicalized using oaner
+#model 4 : test4.tsv fever-dev delexicalised using figerabstract
+
+
+
+if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fnccrossdomain" ] && [ "$SUB_TASK_TYPE1" = "figerspecific" ] && [ "$SUB_TASK_TYPE2" = "oa" ]; then
+    echo "found task type to be 3t1s, taskname to be fnccrossdomain and subtasktypes to be figerspecific and oa"
+
+echo $DATA_DIR
+mkdir -p $DATA_DIR
+
+FILE="$DATA_DIR/train1.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+     wget https://osf.io/dwef7/download -O $FILE
+fi
+
+
+FILE="$DATA_DIR/train2.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://osf.io/f2g4k/download -O  $FILE
+fi
+
+
+FILE="$DATA_DIR/train3.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+
+   /download -O $FILE
+fi
+
+
+FILE="$DATA_DIR/train4.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+
+   wget hv/download -O $FILE
+fi
+
+
+
+#dev is dev partition of in-domain dataset, fever, delexicalized with figerspecific
+FILE="$DATA_DIR/dev.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://osf.io/r5pz3/download -O $FILE
+fi
+
+
+####test partitions aka cross domain dev partitions
+#plain text version of fever-dev
+FILE="$DATA_DIR/test1.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+     wget https://osf.io/xdbh6/download -O $FILE
+fi
+
+
+#figerspec delexicalized version of fever-dev
+FILE="$DATA_DIR/test2.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+     https://osf.io/4n7b6/download -O $FILE
+fi
+
+
+#fever-dev delexicalized with oaner
+FILE="$DATA_DIR/test3.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+      -O $FILE
+fi
+
+#fever dev delexicalized with figer abstract
+FILE="$DATA_DIR/test4.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+      -O $FILE
+fi
+
+
+
+
+
+#fi of if corresponding to 3t1s check
+fi
