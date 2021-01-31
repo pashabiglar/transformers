@@ -1058,16 +1058,20 @@ class StudentTeacherTrainer:
                         trained_model = model_student
 
             assert trained_model is not None
-            # save model at the end of each epoch
-            output_dir = os.path.join(self.args.output_dir,
-                                      f"model_teacher_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-            self.save_model(trained_model, output_dir)
 
 
 
             # self._intermediate_eval(datasets=self.eval_dataset,
             #                                 epoch=epoch, output_eval_file=output_eval_file_path,
             #                                 description="dev_partition",model_to_test_with=trained_model)
+
+
+
+            dev_partition_evaluation_result, plain_text, gold_labels, predictions = self._intermediate_eval_from_multiple_teachers_branch(
+                datasets=self.eval_dataset,
+                epoch=epoch,
+                output_eval_file=output_eval_file_path,
+                description="test_partition", model_to_test_with=trained_model)
 
             test_partition_evaluation_result, plain_text, gold_labels, predictions = self._intermediate_eval_from_multiple_teachers_branch(
                 datasets=self.test_dataset,
@@ -1076,8 +1080,6 @@ class StudentTeacherTrainer:
                 description="test_partition", model_to_test_with=trained_model)
 
 
-            # self._intermediate_eval(datasets=self.test_dataset,
-            #                         epoch=epoch, output_eval_file=output_eval_file_path, description="test_partition",model_to_test_with=trained_model)
 
             accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
 
@@ -1093,6 +1095,9 @@ class StudentTeacherTrainer:
                                            self.test_dataset)
 
                 best_acc = accuracy_test_partition
+
+                # save model if and when accuracy increases
+                self.save_model(trained_model, self.args.output_dir)
 
             logger.info(
                 f"********************************end of epoch {epoch+1}************************************************************************")

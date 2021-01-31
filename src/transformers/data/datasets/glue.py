@@ -259,6 +259,7 @@ class ParallelDataDataset(Dataset):
                     max_length=args.max_seq_length,
                     label_list=label_list,
                     output_mode=self.output_mode,
+                    task=args.task_name
                 )
                 start = time.time()
                 torch.save(self.features, cached_features_file)

@@ -160,44 +160,44 @@ fi
 ####################################for cross domain student teacher, when delex files are delexicalized with oa
 
 
+#this is used for plain text runs. on fnccrossdomain. i.e trained on fnc (with 3 labels) and tested on fever-dev (as test partition) which has 3 labels
 
-
-if [ "$TASK_TYPE" = "combined" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUB_TASK_TYPE" = "oa" ]; then
+if [ "$TASK_TYPE" = "combined" ] && [ "$TASK_NAME" = "fnccrossdomain" ] ;then
     echo "found task type to be combined, taskname to be feverCrossDomain and subtasktype to be oa"
 
 echo $DATA_DIR
 mkdir -p $DATA_DIR
 
+#this is fnc-train plain text
 FILE="$DATA_DIR/train1.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/lex/train.tsv     -O $FILE
+    wget https://osf.io/dwef7/download -O $FILE
 fi
 
-
+#this is fnc-train delexicalized using figerspec. however for fnc cross domain lex run, we wont use this. refer flag_run_teacher_alone in trainer.py
 FILE="$DATA_DIR/train2.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/oa/train.tsv -O $FILE
+    wget https://osf.io/f2g4k/download -O $FILE
 fi
 
+#fnc-dev plain text version
 FILE="$DATA_DIR/dev.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FEVER/cross-domain/oa/dev.tsv -O $FILE
+    wget https://osf.io/d9wnf/download  -O $FILE
 fi
 
-#note that we are already replacing the file to be tested as test file. this way during run time you have to just
-# load all files as is e.g #if do_predict is true load from folder fevercrossdomain/delex/test.tsv- which the code already does.
-
+#this is fever-dev plain text but with 3 labels. its called fever-in-domain since fever originally had only 3 labels, agree, disagree, nei
 FILE="$DATA_DIR/test.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
-    wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/oa/dev.tsv -O $FILE
+     wget https://osf.io/xdbh6/download -O $FILE
 fi
 
 fi
