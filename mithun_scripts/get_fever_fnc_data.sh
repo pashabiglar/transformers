@@ -460,7 +460,7 @@ FILE="$DATA_DIR/dev.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    
+
     wget https://osf.io/msxfg/download -O $FILE
 fi
 
