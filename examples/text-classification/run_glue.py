@@ -30,7 +30,6 @@ from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTok
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
 from transformers import (
     HfArgumentParser,
-    Trainer,
     TrainingArguments,
     StudentTeacherTrainer,
     glue_compute_metrics,
@@ -312,6 +311,8 @@ def main():
     test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
     if training_args.do_train_1student_1teacher:
         trainer = StudentTeacherTrainer(
+            tokenizer_delex,
+            tokenizer,
             models={"teacher": model_teacher, "student": model_student},
             args=training_args,
             train_datasets={"combined": train_dataset},

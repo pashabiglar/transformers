@@ -148,7 +148,7 @@ if test -f "$FILE";then
 echo "$FILE exists"
 else
       #uncomment this if you want to feed test as lex. this is to check if lex model alone works fine from within student teacher
-      # note that this is actually the dev partition of fnc.
+       #note that this is actually the dev partition of fnc.
        wget https://osf.io/jfpbv/download -O $FILE
       #wget https://storage.googleapis.com/fact_verification_mithun_files/TSV/FNC/in-domain/figer_specific/dev.tsv   -O $FILE
 
