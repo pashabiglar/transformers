@@ -434,16 +434,17 @@ else
     wget https://osf.io/f2g4k/download -O  $FILE
 fi
 
-
+# model 3: train3.tsv fnc-train delexicalized using oaner
 FILE="$DATA_DIR/train3.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
 
-   /download -O $FILE
+   wget https://osf.io/3bjpz/download -O $FILE
 fi
 
 
+#model 4 : train4.tsv fnc-train delexicalised using figerabstract (aka fnc cross domain with 3 labels)
 FILE="$DATA_DIR/train4.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
@@ -478,7 +479,7 @@ FILE="$DATA_DIR/test2.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
-     https://osf.io/4n7b6/download -O $FILE
+     wget https://osf.io/4n7b6/download -O $FILE
 fi
 
 
@@ -487,7 +488,7 @@ FILE="$DATA_DIR/test3.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
-      -O $FILE
+      wget https://osf.io/5qupx/download -O $FILE
 fi
 
 #fever dev delexicalized with figer abstract
@@ -495,7 +496,7 @@ FILE="$DATA_DIR/test4.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
-      -O $FILE
+      wget https://osf.io/khc9e/download -O $FILE
 fi
 
 
