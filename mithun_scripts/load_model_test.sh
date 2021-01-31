@@ -9,14 +9,14 @@
 echo "value of epochs in runglue.sh is $EPOCHS"
 
 echo "TASK_TYPE is $TASK_TYPE"
-if [ "$TASK_TYPE" = "mod2" ] ; then
+if [ "$TASK_TYPE" = "lex" ] ; then
  echo $DATA_DIR
  echo "task type is mod2"
 
 fi
 
 echo "TASK_TYPE is $TASK_TYPE"
-if [ "$TASK_TYPE" = "mod1" ] ; then
+if [ "$TASK_TYPE" = "delex" ] ; then
  echo $DATA_DIR
  echo "task type is mod1"
 fi
@@ -43,6 +43,6 @@ export CUDA_VISIBLE_DEVICES=0
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
        python3 ../examples/text-classification/load_trained_model_print_attention_weights.py -i $EXAMPLES_DIR_PATH -o $MACHINE_TO_RUN_ON
 else
-       python ../examples/text-classification/load_trained_model_print_attention_weights.py -i $EXAMPLES_DIR_PATH -o $MACHINE_TO_RUN_ON
+       python ../examples/text-classification/load_trained_model_predict.py -i $args
 fi
 

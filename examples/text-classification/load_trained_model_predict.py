@@ -30,7 +30,6 @@ from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTok
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
 from transformers import (
     HfArgumentParser,
-    Trainer,
     TrainingArguments,
     StudentTeacherTrainer,
     glue_compute_metrics,
@@ -110,7 +109,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     # Setup logging
     git_details=get_git_info()
 
-    log_file_name=git_details['repo_short_sha']+"_"+(training_args.task_type)+"_"+(training_args.subtask_type)+"_"+str(model_args.model_name_or_path).replace("-","_")+"_"+data_args.task_name+".log"
+    log_file_name=git_details['repo_short_sha']+"_"+(training_args.task_type)+"_"+(training_args.subtask_type1)+"_"+str(model_args.model_name_or_path).replace("-","_")+"_"+data_args.task_name+".log"
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
@@ -173,7 +172,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     # Get datasets
 
-    if (training_args.do_train_1student_1teacher == True):
+        if (training_args.do_train_1student_1teacher == True):
         model_teacher = AutoModelForSequenceClassification.from_pretrained(
             model_args.model_name_or_path,
             from_tf=bool(".ckpt" in model_args.model_name_or_path),
@@ -197,7 +196,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     if (training_args.do_train_1student_1teacher == True):
         # the task type must be delex, . also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
         eval_dataset = (
-            GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
+            GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="lex", mode="dev",
                         cache_dir=model_args.cache_dir)
             if training_args.do_eval
             else None
@@ -221,7 +220,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     if (training_args.do_train_1student_1teacher == True):
         test_dataset = (
-            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
+            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="lex", mode="test",
                         cache_dir=model_args.cache_dir)
             if training_args.do_predict
             else None
@@ -304,7 +303,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #model_path = wget.download(url)
 
     #uncomment and use this if you want to load the model from local disk.
-    model_path="/home/u11/mithunpaul/xdisk/huggingface_bert_fnc_to_fever_combined_attndropout0pt5classLossWeight0pt0875/output/fever/fnccrossdomain/lex/figerspecific/bert-base-cased/128/pytorch_model_b29119.bin"
+    model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/trained_model_lex_standalone_e61878be_acc6762.bin"
+
     device = torch.device('cpu')
 
     if training_args.do_train_1student_1teacher:
