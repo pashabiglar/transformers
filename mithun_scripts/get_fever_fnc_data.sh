@@ -450,17 +450,18 @@ if test -f "$FILE";then
     echo "$FILE exists"
 else
 
-   wget hv/download -O $FILE
+   wget https://osf.io/kzdpb/download -O $FILE
 fi
 
 
 
-#dev is dev partition of in-domain dataset, fever, delexicalized with figerspecific
+#dev is dev partition of in-domain dataset, fnc, delexicalized with figerspecific
 FILE="$DATA_DIR/dev.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    wget https://osf.io/r5pz3/download -O $FILE
+    
+    wget https://osf.io/msxfg/download -O $FILE
 fi
 
 
