@@ -304,13 +304,15 @@ fi
 
 
 
-#dev is dev partition of in-domain dataset, fever, delexicalized with figerspecific
-#loading lex version of fever-dev . this is because we are loading lex trained model on jan 30th 2021
+#in the middle of loading a model and testing with it.
+# for fever2fnc we will load dev as the corresponding fnc-dev- (indomain aka 4 labels) /itself. that way we can confirm on the fly that we have the right model
 FILE="$DATA_DIR/dev.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    wget https://osf.io/azf6t/download -O $FILE
+
+    #fnc-dev-lex aka plaintext (indomain aka 4 labels)
+     wget https://osf.io/jfpbv/download -O $FILE
 fi
 
 
