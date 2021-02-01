@@ -194,9 +194,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
         )
 
     if (training_args.do_train_student_teacher == True):
-        # the task type must be delex, . also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
+        # if you are testing using a model that will be trained on a delex train partition, the task type and tokenizer heremust be delex, else pass both as lex
         eval_dataset = (
-            GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="lex", mode="dev",
+            GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="dev",
                         cache_dir=model_args.cache_dir)
             if training_args.do_eval
             else None
@@ -220,7 +220,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     if (training_args.do_train_student_teacher == True):
         test_dataset = (
-            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="lex", mode="test",
+            GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="lex", mode="test",
                         cache_dir=model_args.cache_dir)
             if training_args.do_predict
             else None
