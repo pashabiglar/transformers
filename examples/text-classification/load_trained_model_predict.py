@@ -292,18 +292,24 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #best  models when trained on fever lexicalized data
     #url = 'https://osf.io/q6apm/download'  # link to one of the best lex trained model- trained_model_lex_wandbGraphNameQuietHaze806_accuracy67point5_fncscore64point5_atepoch2.bin...this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
     # url = 'https://osf.io/fus25/download' #trained_model_lex_sweet_water_1001_trained_model_afterepoch1_accuracy6907_fncscore6254.bin
-    url = 'https://osf.io/fp89k/download' #trained_model_lex_helpful_vortex_1002_trained_model_afterepoch1_accuracy70point21percent..bin
 
 
 
-    #url = 'https://osf.io/uspm4/download'  # link to best delex trained model-this gave 55.69 in cross domain fnc score and 54.04 for cross domain accuracy
+    #url = 'https://osf.io/fp89k/download' #trained_model_lex_helpful_vortex_1002_trained_model_afterepoch1_accuracy70point21percent..bin
+    # url = 'https://osf.io/uspm4/download'  # link to best delex trained model-this gave 55.69 in cross domain fnc score and 54.04 for cross domain accuracy
     # refer:https://tinyurl.com/y5dyshnh for further details regarding accuracies
 
 
-    #model_path = wget.download(url)
+    # update @jan30th2021: after training with multilple models this is the best model in lex that gave 6762 accuracy on fnc dev lex
+    url = 'https://osf.io/vx2cp/download'  # link to best delex trained model-this gave 55.69 in cross domain fnc score and 54.04 for cross domain accuracy
+
+
+
+
+    model_path = wget.download(url)
 
     #uncomment and use this if you want to load the model from local disk.
-    model_path = "/work/mithunpaul/huggingface_bertmini_lex_standalone/output/fever/fevercrossdomain/combined/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/model_teacher_checkpoint-7450/fever_lex_trained_model_bert_mini_acc_6762.bin"
+    #model_path = "/work/mithunpaul/huggingface_bertmini_lex_standalone/output/fever/fevercrossdomain/combined/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/model_teacher_checkpoint-7450/fever_lex_trained_model_bert_mini_acc_6762.bin"
 
     device = torch.device('cuda')
 
