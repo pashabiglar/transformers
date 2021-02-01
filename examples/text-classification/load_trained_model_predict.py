@@ -309,8 +309,10 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #model_path = wget.download(url)
 
     #uncomment and use this if you want to load the model from local disk.
-    model_path = "/work/mithunpaul/huggingface_bertmini_multiple_teachers_v1/output/fever/fevercrossdomain/3t1s/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/pytorch_model_e0c7ad.bin"
-
+    #model:with corresponding graph on wandb named:dulcet-thunder-1674
+    #model_path = "/work/mithunpaul/huggingface_bertmini_multiple_teachers_v1/output/fever/fevercrossdomain/3t1s/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/pytorch_model_e0c7ad.bin"
+    # model:with corresponding graph on wandb named:lilac-rain-1683
+    model_path="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v5/output/fever/fevercrossdomain/3t1s/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/pytorch_model_a21010.bin"
     device = torch.device(training_args.device)
 
     if training_args.do_train_student_teacher:

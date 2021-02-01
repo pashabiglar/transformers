@@ -287,8 +287,8 @@ fi
 ####################################for testing with a trained lex model
 
 
-if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUB_TASK_TYPE1" = "figerspecific" ] && [ "$SUB_TASK_TYPE2" = "oa" ]; then
-    echo "found task type to be 3t1s, taskname to be feverCrossDomain and subtasktypes to be figerspecific and oa"
+if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUB_TASK_TYPE1" = "lex" ] && [ "$SUB_TASK_TYPE2" = "lex" ]; then
+    echo "found task type to be 3t1s, taskname to be feverCrossDomain and subtasktypes to be lex and lex"
 
 
 echo $DATA_DIR
