@@ -303,7 +303,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #model_path = wget.download(url)
 
     #uncomment and use this if you want to load the model from local disk.
-    model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/trained_model_lex_standalone_e61878be_acc6762.bin"
+    model_path = "/work/mithunpaul/huggingface_bertmini_lex_standalone/output/fever/fevercrossdomain/combined/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/model_teacher_checkpoint-7450/fever_lex_trained_model_bert_mini_acc_6762.bin"
 
     device = torch.device('cpu')
 
