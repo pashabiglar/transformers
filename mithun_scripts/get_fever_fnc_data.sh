@@ -315,12 +315,17 @@ fi
 
 
 
-#plain text version of fnc-dev
+
 FILE="$DATA_DIR/test1.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
-     wget https://osf.io/jfpbv/download -O $FILE
+#plain text version of fever-test partition
+     #wget https://osf.io/85h4z/download -O $FILE
+
+     #plain text version of fever-dev partition
+     wget https://osf.io/azf6t/download -O $FILE
+
 fi
 
 #fi of if corresponding to 3t1s check
