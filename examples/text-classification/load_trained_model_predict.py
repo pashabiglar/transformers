@@ -300,11 +300,11 @@ def run_loading_and_testing(model_args, data_args, training_args):
     # refer:https://tinyurl.com/y5dyshnh for further details regarding accuracies
 
 
-    # update @jan30th2021: after training with multilple models this is the best model in lex that gave 6762 accuracy on fnc dev lex
-    url = 'https://osf.io/vx2cp/download'  # link to best delex trained model-this gave 55.69 in cross domain fnc score and 54.04 for cross domain accuracy
-
-
-
+    # update @jan30th2021: multiple models learning together
+    # after training with multilple models this is the best model in lex that gave 6762 accuracy on fnc dev lex
+    #url = 'https://osf.io/vx2cp/download'
+    # after training with multilple models this is the best model out of the 4 models combinedly trained. note that this was also a lex model but now enhanced by other models
+    url = 'https://osf.io/gzk3t/download'
 
     model_path = wget.download(url)
 
