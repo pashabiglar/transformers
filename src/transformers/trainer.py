@@ -1871,7 +1871,10 @@ class StudentTeacherTrainer:
         if self.args.past_index >= 0:
             self._past = None
         plain_text_full=[]
+
+
         for inputs in tqdm(dataloader, desc=description):
+            inputs = self._prepare_inputs(inputs, model)
             plain_text_batch = self.delex_tokenizer.batch_decode(inputs['input_ids'])
             plain_text_full.extend(plain_text_batch)
             loss, logits, labels = self.prediction_step(model, inputs, prediction_loss_only)
