@@ -1295,7 +1295,7 @@ class StudentTeacherTrainer:
             num_train_epochs = self.args.num_train_epochs
 
         weight_consistency_loss = 1
-        weight_classification_loss = 10
+        weight_classification_loss = 100
 
         optimizer = None
         scheduler = None
