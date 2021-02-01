@@ -287,8 +287,9 @@ fi
 ####################################for testing with a trained lex model
 
 
-if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUB_TASK_TYPE1" = "figerspecific" ] && [ "$SUB_TASK_TYPE2" = "oa" ]; then
-    echo "found task type to be 2t1s, taskname to be feverCrossDomain and subtasktypes to be figerspecific and oa"
+if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUB_TASK_TYPE1" = "figerspecific" ] && [ "$SUB_TASK_TYPE2" = "oa" ]; then
+    echo "found task type to be 3t1s, taskname to be feverCrossDomain and subtasktypes to be figerspecific and oa"
+
 
 echo $DATA_DIR
 mkdir -p $DATA_DIR
@@ -315,7 +316,7 @@ fi
 
 
 #plain text version of fnc-dev
-FILE="$DATA_DIR/test.tsv"
+FILE="$DATA_DIR/test1.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else

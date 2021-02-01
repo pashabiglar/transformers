@@ -29,12 +29,12 @@ if [ "$TASK_TYPE" = "3t1s" ] ; then
 fi
 
 
+
 echo "TASK_TYPE is $TASK_TYPE"
 
 
 echo $args
 
-exit
 
 mkdir -p OUTPUT_DIR
 

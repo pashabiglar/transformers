@@ -71,7 +71,7 @@ class GlueDataset(Dataset):
         tokenizer: PreTrainedTokenizer,
         limit_length: Optional[int] = None,
         task_type: Optional[str] = None,
-        index_in: Optional[int] = None,
+        index_in: Optional[int] = 0,
         mode: Union[str, Split] = Split.train,
         cache_dir: Optional[str] = None,
             remove_stop_words_in=False

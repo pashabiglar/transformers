@@ -109,7 +109,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     # Setup logging
     git_details=get_git_info()
 
-    log_file_name=git_details['repo_short_sha']+"_"+(training_args.task_type)+"_"+(training_args.subtask_type1)+"_"+str(model_args.model_name_or_path).replace("-","_")+"_"+data_args.task_name+".log"
+    log_file_name=git_details['repo_short_sha']+"_"+(training_args.task_type)+"_"+(training_args.subtask_type1)+"_"+data_args.task_name+".log"
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
@@ -172,7 +172,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     # Get datasets
 
-        if (training_args.do_train_1student_1teacher == True):
+    if (training_args.do_train_student_teacher == True):
         model_teacher = AutoModelForSequenceClassification.from_pretrained(
             model_args.model_name_or_path,
             from_tf=bool(".ckpt" in model_args.model_name_or_path),
@@ -193,7 +193,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
             cache_dir=model_args.cache_dir,
         )
 
-    if (training_args.do_train_1student_1teacher == True):
+    if (training_args.do_train_student_teacher == True):
         # the task type must be delex, . also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
         eval_dataset = (
             GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="lex", mode="dev",
@@ -218,7 +218,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
                     else None
                 )
 
-    if (training_args.do_train_1student_1teacher == True):
+    if (training_args.do_train_student_teacher == True):
         test_dataset = (
             GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="lex", mode="test",
                         cache_dir=model_args.cache_dir)
@@ -258,14 +258,14 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
 
 
-    if training_args.do_train_1student_1teacher:
+    if training_args.do_train_student_teacher:
         trainer = StudentTeacherTrainer(
             tokenizer_delex,
             tokenizer_lex,
             models={"teacher": model_teacher, "student": model_student},
             args=training_args,
             train_datasets={"combined": None},
-            test_dataset=test_dataset,
+            test_datasets=test_dataset,
             eval_dataset=eval_dataset,
             eval_compute_metrics=dev_compute_metrics,
             test_compute_metrics=test_compute_metrics
@@ -307,7 +307,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     device = torch.device('cpu')
 
-    if training_args.do_train_1student_1teacher:
+    if training_args.do_train_student_teacher:
         model=model_student
 
     assert model is not None
