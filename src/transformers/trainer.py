@@ -1872,6 +1872,8 @@ class StudentTeacherTrainer:
             self._past = None
         plain_text_full=[]
 
+        device = "cuda:0"
+        model = model.to(device)
 
         for inputs in tqdm(dataloader, desc=description):
             inputs = self._prepare_inputs(inputs, model)
