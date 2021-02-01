@@ -320,11 +320,9 @@ FILE="$DATA_DIR/test1.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
-#plain text version of fever-test partition
-     #wget https://osf.io/85h4z/download -O $FILE
+#plain text version of fnc-test partition with 4labels
+     wget https://osf.io/r5uvd/download -O $FILE
 
-     #plain text version of fever-dev partition
-     wget https://osf.io/azf6t/download -O $FILE
 
 fi
 
