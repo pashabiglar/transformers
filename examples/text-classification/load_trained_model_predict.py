@@ -304,12 +304,12 @@ def run_loading_and_testing(model_args, data_args, training_args):
     # after training with multilple models this is the best model in lex that gave 6762 accuracy on fnc dev lex
     #url = 'https://osf.io/vx2cp/download'
     # after training with multilple models this is the best model out of the 4 models combinedly trained. note that this was also a lex model but now enhanced by other models
-    url = 'https://osf.io/gzk3t/download'
+    #url = 'https://osf.io/gzk3t/download'
 
-    model_path = wget.download(url)
+    #model_path = wget.download(url)
 
     #uncomment and use this if you want to load the model from local disk.
-    #model_path = "/work/mithunpaul/huggingface_bertmini_lex_standalone/output/fever/fevercrossdomain/combined/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/model_teacher_checkpoint-7450/fever_lex_trained_model_bert_mini_acc_6762.bin"
+    model_path = "/work/mithunpaul/huggingface_bertmini_multiple_teachers_v1/output/fever/fevercrossdomain/3t1s/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/pytorch_model_e0c7ad.bin"
 
     device = torch.device(training_args.device)
 
