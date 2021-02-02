@@ -318,7 +318,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #url = 'https://osf.io/gm8dr/download'
 
     # charmed glitter..fnc2fever gave 78.42 on fever test.
-    url='https://osf.io/5zxv7/'
+    url='https://osf.io/5zxv7/download'
 
 
 
