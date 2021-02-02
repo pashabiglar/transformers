@@ -303,10 +303,14 @@ def run_loading_and_testing(model_args, data_args, training_args):
     # update @jan30th2021: multiple models learning together
     # after training with multilple models this is the best model in lex that gave 6762 accuracy on fnc dev lex
     #url = 'https://osf.io/vx2cp/download'
+
+
     # after training with multilple models this is the best model out of the 4 models combinedly trained. note that this was also a lex model but now enhanced by other models
     #url = 'https://osf.io/gzk3t/download'
+    # after training with lex model alone (in the multiple model context, this is the modeel from wandb graph revived shape which produced 67.62 on fnc-dev.)
+    url='https://osf.io/vx2cp/'
 
-    #model_path = wget.download(url)
+    model_path = wget.download(url)
 
     #uncomment and use this if you want to load the model from local disk.
     #model:with corresponding graph on wandb named:dulcet-thunder-1674
@@ -317,11 +321,13 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #model_path = "/work/mithunpaul/huggingface_bertmini_multiple_teachers_v2/output/fever/fevercrossdomain/3t1s/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/pytorch_model_423597.bin"
 
     # model:with corresponding graph on wandb named:olive-dawn-1721. this is a rerun of playful pond. we were saving wrong model till now.
-    model_path="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v1/output/fever/fevercrossdomain/3t1s/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/pytorch_model_55a068.bin"
+    #model_path="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v1/output/fever/fevercrossdomain/3t1s/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/pytorch_model_55a068.bin"
+
+
     device = torch.device(training_args.device)
 
-    if training_args.do_train_student_teacher:
-        model=model_student
+    # if training_args.do_train_student_teacher:
+    #     model=model_student
 
     assert model is not None
     model.load_state_dict(torch.load(model_path, map_location=device))
