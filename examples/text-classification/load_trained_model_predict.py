@@ -312,7 +312,11 @@ def run_loading_and_testing(model_args, data_args, training_args):
     # after training with multilple models this is the best model out of the 4 models combinedly trained.l from wandb graph lilac-rain at epoch2 which produced 70.41 on fnc-dev-plaintext and 72.6 on fnc-test-plain-text.)
 
     #lex fnc2fever hearty thunder
-    url="https://osf.io/n3js4/download"
+   # url="https://osf.io/n3js4/download"
+
+    # lex fnc2fever hearty thundev2
+    url = 'https://osf.io/gm8dr/download'
+
 
     model_path = wget.download(url)
 
