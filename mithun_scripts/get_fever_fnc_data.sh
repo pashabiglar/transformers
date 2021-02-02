@@ -412,8 +412,10 @@ else
     #wget https://osf.io/85h4z/download -O $FILE
 
      #plain text version of fever-test partition with 3labels. this is to calclulate for acl paper
-     wget https://osf.io/q38pn/download -O $FILE
+     #wget https://osf.io/q38pn/download -O $FILE
 
+#will load fnc-teest plain text with 3 labels(aka crossdomain)
+wget https://osf.io/64syf/download -O $FILE
 fi
 
 #fi of if corresponding to 3t1s check
