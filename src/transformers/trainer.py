@@ -1480,17 +1480,7 @@ class StudentTeacherTrainer:
                 self.global_step += 1
                 self.epoch = epoch + (step + 1) / len(batch_iterator)
 
-            trained_model = self.list_all_models[1]
-            self.model = self.list_all_models[1]
 
-            assert trained_model is not None
-            assert self.model is not None
-
-            dev_partition_evaluation_result, plain_text, gold_labels, predictions = self._intermediate_eval(
-                datasets=self.eval_dataset,
-                epoch=epoch,
-                output_eval_file=dev_partition_evaluation_output_file_path,
-                description="dev_partition", model_to_test_with=trained_model)
 
             #update @jan 28th 2021: now we are going to try predicting using each model on a correspondingly delexicalized dev partition of the cross domain dataset
             assert len(self.list_test_datasets)== len(self.list_all_models)
@@ -1514,7 +1504,17 @@ class StudentTeacherTrainer:
                         f" {index_accuracy_test_partition_between_all_models+1} and that value is {best_accuracy_test_partition_amongst_all_models} ")
 
             logger.info(f"accuracies of all 4 models are {all_accuracies_on_test_partition_by_all_models}")
+            trained_model = self.list_all_models[index_accuracy_test_partition_between_all_models]
+            self.model = self.list_all_models[index_accuracy_test_partition_between_all_models]
 
+            assert trained_model is not None
+            assert self.model is not None
+
+            dev_partition_evaluation_result, plain_text, gold_labels, predictions = self._intermediate_eval(
+                datasets=self.eval_dataset,
+                epoch=epoch,
+                output_eval_file=dev_partition_evaluation_output_file_path,
+                description="dev_partition", model_to_test_with=trained_model)
             if best_accuracy_test_partition_amongst_all_models > best_acc:
                 logger.info(
                     f"found that the current accuracy:{best_accuracy_test_partition_amongst_all_models} in epoch "
