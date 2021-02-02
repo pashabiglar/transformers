@@ -331,10 +331,15 @@ if test -f "$FILE";then
 echo "$FILE exists"
 else
 #plain text version of fnc-test partition with 4labels
-     wget https://osf.io/r5uvd/download -O $FILE
+     #wget https://osf.io/r5uvd/download -O $FILE
 
 #delex figerspecific version of fnc-test partition with 4labels
      #wget https://osf.io/jentp/download  -O $FILE
+
+#plain text version of fever-test partition with 4labels. this is to calclulate for acl paper
+
+
+wget https://osf.io/85h4z/download -O $FILE
 
 fi
 
