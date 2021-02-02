@@ -311,8 +311,10 @@ if test -f "$FILE";then
     echo "$FILE exists"
 else
 
+    #fever-test indomain figerspec to get indomain test value for paper
+    wget https://osf.io/xycv9/download -O $FILE
     #fnc-dev-lex aka plaintext (indomain aka 4 labels)
-     wget https://osf.io/jfpbv/download -O $FILE
+     #wget https://osf.io/jfpbv/download -O $FILE
 
     #fnc-dev-delex by figerspecific(indomain aka 4 labels)
     # wget https://osf.io/jx32m/download -O $FILE
