@@ -341,7 +341,7 @@ FILE="$DATA_DIR/dev.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    wget https://osf.io/r5pz3/download -O $FILE
+    wget https://osf.io/jx32m/download -O $FILE
 fi
 
 #note that we are loading the cross domain's dev partition as test partition here
@@ -365,7 +365,7 @@ FILE="$DATA_DIR/test2.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
-     wget https://osf.io/jx32m/download -O $FILE
+     wget https://osf.io/jentp/download -O $FILE
 fi
 
 
