@@ -330,7 +330,7 @@ FILE="$DATA_DIR/train4.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    #this is the training partition of fever delexicalized using oaner techique
+    #this is the training partition of fever delexicalized using figer abstract techique
    wget https://osf.io/mauqv/download -O $FILE
 fi
 
