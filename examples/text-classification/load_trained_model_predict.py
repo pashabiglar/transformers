@@ -308,7 +308,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     # after training with multilple models this is the best model out of the 4 models combinedly trained. note that this was also a lex model but now enhanced by other models
     #url = 'https://osf.io/gzk3t/download'
     # after training with lex model alone (in the multiple model context, this is the modeel from wandb graph revived shape which produced 67.62 on fnc-dev.)
-    url='https://osf.io/vx2cp/'
+    url='https://osf.io/vx2cp/download'
 
     model_path = wget.download(url)
 
