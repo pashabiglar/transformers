@@ -336,10 +336,8 @@ else
 #delex figerspecific version of fnc-test partition with 4labels
      #wget https://osf.io/jentp/download  -O $FILE
 
-#plain text version of fever-test partition with 4labels. this is to calclulate for acl paper
-
-
-wget https://osf.io/85h4z/download -O $FILE
+    #plain text version of fever-test partition with 4labels. this is to calclulate for acl paper
+    wget https://osf.io/85h4z/download -O $FILE
 
 fi
 
