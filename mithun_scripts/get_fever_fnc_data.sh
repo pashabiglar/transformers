@@ -313,6 +313,9 @@ else
 
     #fnc-dev-lex aka plaintext (indomain aka 4 labels)
      wget https://osf.io/jfpbv/download -O $FILE
+
+    #fnc-dev-delex by figerspecific(indomain aka 4 labels)
+     wget https://osf.io/jx32m/download -O $FILE
 fi
 
 
@@ -325,6 +328,8 @@ else
 #plain text version of fnc-test partition with 4labels
      wget https://osf.io/r5uvd/download -O $FILE
 
+#delex figerspecific version of fnc-test partition with 4labels
+     wget https://osf.io/jentp/download  -O $FILE
 
 fi
 
