@@ -326,8 +326,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     device = torch.device(training_args.device)
 
-    # if training_args.do_train_student_teacher:
-    #     model=model_student
+    if training_args.do_train_student_teacher:
+        model=model_student
 
     assert model is not None
     model.load_state_dict(torch.load(model_path, map_location=device))
