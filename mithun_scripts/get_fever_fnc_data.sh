@@ -349,3 +349,72 @@ fi
 
 #fi of if corresponding to 3t1s check
 fi
+
+
+
+
+####################################for testing with a trained lex model
+
+
+if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fnccrossdomain" ] && [ "$SUB_TASK_TYPE1" = "lex" ] && [ "$SUB_TASK_TYPE2" = "lex" ]; then
+    echo "found task type to be 3t1s, taskname to be feverCrossDomain and subtasktypes to be lex and lex"
+
+
+echo $DATA_DIR
+mkdir -p $DATA_DIR
+
+FILE="$DATA_DIR/train.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    #this is the training with lexicalized/plain text version of fever
+     wget https://osf.io/r6mdz/download  -O $FILE
+fi
+
+
+
+#in the middle of loading a model and testing with it.
+# for fever2fnc we will load dev as the corresponding fnc-dev- (indomain aka 4 labels) /itself. that way we can confirm on the fly that we have the right model
+FILE="$DATA_DIR/dev.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+
+    #fever-test indomain figerspec to get indomain test value for paper
+    #wget https://osf.io/xycv9/download -O $FILE
+
+    #fever-test indomain lex to get indomain test value for paper
+
+    #fnc-dev-lex aka plaintext (indomain aka 4 labels)
+    # wget https://osf.io/jfpbv/download -O $FILE
+
+    #fnc-dev-delex by figerspecific(indomain aka 4 labels)
+    # wget https://osf.io/jx32m/download -O $FILE
+
+    #plain text version of fever-dev partition with 3labels. this is to calclulate for acl paper
+    wget https://osf.io/xdbh6/download -O $FILE
+fi
+
+
+
+
+FILE="$DATA_DIR/test1.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+#plain text version of fnc-test partition with 4labels
+     #wget https://osf.io/r5uvd/download -O $FILE
+
+#delex figerspecific version of fnc-test partition with 4labels
+     #wget https://osf.io/jentp/download  -O $FILE
+
+    #plain text version of fever-test partition with 4labels. this is to calclulate for acl paper
+    #wget https://osf.io/85h4z/download -O $FILE
+
+     #plain text version of fever-test partition with 3labels. this is to calclulate for acl paper
+     wget https://osf.io/q38pn/download -O $FILE
+
+fi
+
+#fi of if corresponding to 3t1s check
+fi

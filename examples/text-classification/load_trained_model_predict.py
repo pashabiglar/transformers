@@ -196,7 +196,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     if (training_args.do_train_student_teacher == True):
         # if you are testing using a model that will be trained on a delex train partition, the task type and tokenizer heremust be delex, else pass both as lex
         eval_dataset = (
-            GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="dev",
+            GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="fnccrossdomain", mode="dev",
                         cache_dir=model_args.cache_dir)
             if training_args.do_eval
             else None
