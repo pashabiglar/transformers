@@ -415,7 +415,11 @@ else
      #wget https://osf.io/q38pn/download -O $FILE
 
 #will load fnc-teest plain text with 3 labels(aka crossdomain)
-wget https://osf.io/64syf/download -O $FILE
+#wget https://osf.io/64syf/download -O $FILE
+
+#will load fnc-teest oaner with 3 labels(aka crossdomain)
+wget https://osf.io/eywd2/download -O $FILE
+
 fi
 
 #fi of if corresponding to 3t1s check

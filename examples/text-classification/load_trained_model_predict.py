@@ -315,7 +315,11 @@ def run_loading_and_testing(model_args, data_args, training_args):
    # url="https://osf.io/n3js4/download"
 
     # lex fnc2fever hearty thundev2
-    url = 'https://osf.io/gm8dr/download'
+    #url = 'https://osf.io/gm8dr/download'
+
+    # charmed glitter..fnc2fever gave 78.42 on fever test.
+    url='https://osf.io/5zxv7/'
+
 
 
     model_path = wget.download(url)
