@@ -386,13 +386,13 @@ else
     #fever-test indomain lex to get indomain test value for paper
 
     #fnc-dev-lex aka plaintext (indomain aka 4 labels)
-    # wget https://osf.io/jfpbv/download -O $FILE
+    wget https://osf.io/jfpbv/download -O $FILE
 
     #fnc-dev-delex by figerspecific(indomain aka 4 labels)
     # wget https://osf.io/jx32m/download -O $FILE
 
     #plain text version of fever-dev partition with 3labels. this is to calclulate for acl paper
-    wget https://osf.io/xdbh6/download -O $FILE
+    #wget https://osf.io/xdbh6/download -O $FILE
 fi
 
 
@@ -409,7 +409,7 @@ else
      #wget https://osf.io/jentp/download  -O $FILE
 
     #plain text version of fever-test partition with 4labels. this is to calclulate for acl paper
-    #wget https://osf.io/85h4z/download -O $FILE
+    wget https://osf.io/85h4z/download -O $FILE
 
      #plain text version of fever-test partition with 3labels. this is to calclulate for acl paper
      #wget https://osf.io/q38pn/download -O $FILE
@@ -418,7 +418,7 @@ else
 #wget https://osf.io/64syf/download -O $FILE
 
 #will load fnc-teest oaner with 3 labels(aka crossdomain)
-wget https://osf.io/eywd2/download -O $FILE
+#wget https://osf.io/eywd2/download -O $FILE
 
 fi
 

@@ -321,8 +321,11 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #url='https://osf.io/5zxv7/download'
 
     #brisk fire
+    #url='https://osf.io/nv3ar/download'
 
-    url='https://osf.io/nv3ar/download'
+    #rosy lion
+    url = 'https://osf.io/ja9b6/download'
+
 
     model_path = wget.download(url)
 
