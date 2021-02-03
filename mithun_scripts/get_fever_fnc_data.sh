@@ -325,7 +325,7 @@ else
     #plain text version of fever-dev partition with 3labels. this is to calclulate for acl paper
     #wget https://osf.io/xdbh6/download -O $FILE
 
-    wget https://osf.io/azf6t/download -O #fever_dev_lex_4labels.txt
+    wget https://osf.io/azf6t/download -O $FILE #fever_dev_lex_4labels.txt
 fi
 
 
