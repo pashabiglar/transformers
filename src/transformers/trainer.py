@@ -263,13 +263,13 @@ class StudentTeacherTrainer:
 
         output = self.prediction_loop(eval_dataloader,model_to_test_with, description="Evaluation")
 
-        self.log(output.metrics)
+        self.log(output[0].metrics)
 
         if self.args.tpu_metrics_debug or self.args.debug:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
             xm.master_print(met.metrics_report())
 
-        return output.metrics
+        return output[0].metrics
 
     def _prepare_inputs(
         self, inputs: Dict[str, torch.Tensor], model: nn.Module
@@ -588,7 +588,7 @@ class StudentTeacherTrainer:
         for dataset in datasetss:
             eval_result = None
             if "dev" in description:
-                eval_result = self.evaluate(model_to_test_with,eval_dataset=dataset)
+                eval_result = self.evaluate_on_test_partition(model_to_test_with,eval_dataset=dataset)
             else:
                 if "test" in description:
                     eval_result = self.evaluate_on_test_partition(model_to_test_with,test_dataset=dataset)
@@ -1133,8 +1133,8 @@ class StudentTeacherTrainer:
         for dataset in datasetss:
             eval_result = None
             if "dev" in description:
-                eval_result, plain_text, gold_labels, predictions = self.evaluate(model_to_test_with,
-                                                                                  eval_dataset=dataset)
+                eval_result, plain_text, gold_labels, predictions = self.evaluate_on_test_partition(model_to_test_with,
+                                                                                                    test_dataset=dataset)
             else:
                 if "test" in description:
                     eval_result, plain_text, gold_labels, predictions = self.evaluate_on_test_partition(

@@ -307,8 +307,8 @@ def main():
 
         return compute_metrics_fn
 
-    dev_compute_metrics = build_compute_metrics_fn("feverindomain")
-    test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
+    dev_compute_metrics = build_compute_metrics_fn(data_args.task_name)
+    test_compute_metrics = build_compute_metrics_fn(data_args.task_name)
     if training_args.do_train_1student_1teacher:
         trainer = StudentTeacherTrainer(
             tokenizer_delex,
