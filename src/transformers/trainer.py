@@ -1061,10 +1061,6 @@ class StudentTeacherTrainer:
 
 
 
-            # self._intermediate_eval(datasets=self.eval_dataset,
-            #                                 epoch=epoch, output_eval_file=output_eval_file_path,
-            #                                 description="dev_partition",model_to_test_with=trained_model)
-
 
 
             dev_partition_evaluation_result, plain_text, gold_labels, predictions = self._intermediate_eval_from_multiple_teachers_branch(
@@ -1169,58 +1165,7 @@ class StudentTeacherTrainer:
                     writer.write(
                         "%d\t%s\t%s\t%s\t%s\n" % (index, gold_string, str(pred_sf.tolist()), pred_string, plain))
 
-    # def log(self, logs: Dict[str, float], iterator: Optional[tqdm] = None) -> None:
-    #     """
-    #     Log :obj:`logs` on the various objects watching training.
-    #     Subclass and override this method to inject custom behavior.
-    #     Args:
-    #         logs (:obj:`Dict[str, float]`):
-    #             The values to log.
-    #         iterator (:obj:`tqdm`, `optional`):
-    #             A potential tqdm progress bar to write the logs on.
-    #     """
-    #     # if hasattr(self, "_log"):
-    #     #     warnings.warn(
-    #     #         "The `_log` method is deprecated and won't be called in a future version, define `log` in your subclass.",
-    #     #         FutureWarning,
-    #     #     )
-    #     #     return self._log(logs, iterator=iterator)
-    #
-    #     if self.epoch is not None:
-    #         logs["epoch"] = self.epoch
-    #     if self.global_step is None:
-    #         # when logging evaluation metrics without training
-    #         self.global_step = 0
-    #     log_for_wandb = {}
-    #     if self.tb_writer:
-    #         for k, v in logs.items():
-    #             if isinstance(v, (int, float)):
-    #                 self.tb_writer.add_scalar(k, v, self.global_step)
-    #                 log_for_wandb[k] = v
-    #             else:
-    #                 if isinstance(v, (dict)):
-    #                     for k2, v2 in v.items():
-    #                         if isinstance(v2, (int, float)):
-    #                             self.tb_writer.add_scalar(k2, v2, self.global_step)
-    #                             log_for_wandb[k2] = v2
-    #                         else:
-    #                             logger.warning(
-    #                                 f"Trainer is attempting to log a valuefor key {k2}as a scalar."
-    #                                 f"This invocation of Tensorboard's writer.add_scalar()"
-    #                                 f" is incorrect so we dropped this attribute.",
-    #                             )
-    #                             logger.debug(v2)
-    #         self.tb_writer.flush()
-    #     if is_wandb_available():
-    #         if self.is_world_master():
-    #             if len(log_for_wandb.items()) > 0:
-    #                 wandb.log(log_for_wandb, step=int(self.epoch))
-    #     output = {**logs, **{"step": self.global_step}}
-    #     if iterator is not None:
-    #         iterator.write(output)
-    #     else:
-    #         logger.debug(output)
-    #
+
     def _training_step(
         self, model: nn.Module, inputs: Dict[str, torch.Tensor], optimizer: torch.optim.Optimizer
     ) -> float:
