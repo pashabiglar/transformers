@@ -215,7 +215,9 @@ class TrainingArguments:
         },
     )
     no_cuda: bool = field(default=False, metadata={"help": "Do not use CUDA even when it is available"})
+
     seed: int = field(default=3082, metadata={"help": "random seed for initialization"})
+
 
     fp16: bool = field(
         default=False,

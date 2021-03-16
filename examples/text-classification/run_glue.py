@@ -16,7 +16,7 @@
 """ Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
 from transformers.modeling_student_teacher import OneTeacherOneStudent
 
-import dataclasses
+import torch
 import logging
 import os
 import sys
@@ -108,7 +108,9 @@ def run_training(model_args, data_args, training_args):
     # Setup logging
     git_details=get_git_info()
 
+
     log_file_name=git_details['repo_short_sha']+"_"+(training_args.task_type)+"_"+(training_args.subtask_type1)+"_"+(training_args.subtask_type2)+"_"+str(model_args.model_name_or_path).replace("-","_")+"_"+data_args.task_name+".log"
+
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
@@ -126,8 +128,6 @@ def run_training(model_args, data_args, training_args):
         training_args.fp16,
     )
     logger.info("Training/evaluation parameters %s", training_args)
-
-
 
 
     # Set seed
@@ -160,6 +160,7 @@ def run_training(model_args, data_args, training_args):
     )
 
     #when in student-teacher mode, you need two tokenizers, one for lexicalized data, and one for the delexicalized data
+
     # the regular tokenizer_lex will be used for lexicalized data and special one for delexicalized
     #delex tokenizer reads from specialized handcrafted vocabulary which understands symbols like personC1..rather symbols like C1,C2 etc
     #update@jan2021: when using multiple delexicalized dataset, we will use same delex vocabulary for all different types of delexicalization.
@@ -182,6 +183,7 @@ def run_training(model_args, data_args, training_args):
             cache_dir=model_args.cache_dir,
             )
             list_all_models.append(model_stu_teacher)
+
     else:
         model = AutoModelForSequenceClassification.from_pretrained(
             model_args.model_name_or_path,
@@ -206,6 +208,9 @@ def run_training(model_args, data_args, training_args):
             Read3DatasetsParallely(training_args,args=data_args, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex, data_type_1="lex", data_type_2="delex",
                                 cache_dir=model_args.cache_dir) if training_args.do_train else None
         )
+
+
+
     else:
         if(training_args.task_type=="lex"):
             train_dataset = (
@@ -299,8 +304,9 @@ def run_training(model_args, data_args, training_args):
 
         return compute_metrics_fn
 
-    dev_compute_metrics = build_compute_metrics_fn("feverindomain")
-    test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
+
+    dev_compute_metrics = build_compute_metrics_fn(data_args.task_name)
+    test_compute_metrics = build_compute_metrics_fn(data_args.task_name)
 
 
     if training_args.do_train_student_teacher:
@@ -335,11 +341,13 @@ def run_training(model_args, data_args, training_args):
             )
 
 
+
         if trainer.is_world_master():
             tokenizer_lex.save_pretrained(training_args.output_dir)
         assert dev_partition_evaluation_result is not None
         assert test_partition_evaluation_result is not None
         return dev_partition_evaluation_result,test_partition_evaluation_result
+
 
 
 def _mp_fn(index):

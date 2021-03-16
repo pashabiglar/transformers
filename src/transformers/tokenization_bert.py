@@ -34,9 +34,11 @@ VOCAB_FILES_NAMES = {"vocab_file": "vocab.txt"}
 
 PRETRAINED_VOCAB_FILES_MAP = {
     "vocab_file": {
-        #for uofa's student teacher model we use a vocab file built on top of bert-base-uncased-vocab.txt, but has mappings for mod2 tokens like PERSON-C1
+        #for uofa's student teacher model we use a vocab file built on top of bert-base-uncased-vocab.txt, but has mappings for delex tokens like PERSON-C1
         "bert-base-uncased-delex": "https://osf.io/zjrdv/download",
         "bert-base-cased-delex": "https://osf.io/3ubnh/download",
+        "google/bert_uncased_L-12_H-128_A-2":"https://osf.io/r3sd5/download",
+        "google/bert_uncased_L-12_H-128_A-2-delex":"https://osf.io/am492/download",
         "bert-base-uncased": "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-vocab.txt",
         "bert-base-cased": "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-cased-vocab.txt",
 
@@ -84,6 +86,7 @@ PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
 }
 
 PRETRAINED_INIT_CONFIGURATION = {
+    "google/bert_uncased_L-12_H-128_A-2": {"do_lower_case": True},
     "bert-base-uncased": {"do_lower_case": True},
     "bert-large-uncased": {"do_lower_case": True},
     "bert-base-cased": {"do_lower_case": False},
