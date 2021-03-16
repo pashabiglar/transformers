@@ -66,6 +66,7 @@ from .modeling_bert import (
     BertForPreTraining,
     BertForQuestionAnswering,
     BertForSequenceClassification,
+    BertForFactVerficiationStudentTeacher,
     BertForTokenClassification,
     BertLMHeadModel,
     BertModel,

@@ -1,3 +1,4 @@
+wget
 tensorboard
 scikit-learn
 seqeval
@@ -14,4 +15,15 @@ elasticsearch
 pandas
 nlp
 tensorflow
-
+pytest
+gitpython
+requests
+filelock
+tqdm
+tokenizers
+wandb
+#conda install pytorch torchvision torchaudio -c pytorch
+ipython
+wget
+nltk
+stop-words

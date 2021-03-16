@@ -144,7 +144,7 @@ class TrainingArguments:
     )
 
     do_train: bool = field(default=False, metadata={"help": "Whether to run training."})
-    do_train_1student_1teacher: bool = field(default=False, metadata={"help": "Whether to run training the "
+    do_train_student_teacher: bool = field(default=False, metadata={"help": "Whether to run training the "
                                                                               "teacher student model as opposed to one model alone."})
 
     do_eval: bool = field(default=False, metadata={"help": "Whether to run eval on the dev set."})
@@ -180,13 +180,13 @@ class TrainingArguments:
         metadata={"help": "Number of updates steps to accumulate before performing a backward/update pass."},
     )
 
-    learning_rate: float = field(default=5e-5, metadata={"help": "The initial learning rate for Adam."})
+    learning_rate: float = field(default=1e-5, metadata={"help": "The initial learning rate for Adam."})
     weight_decay: float = field(default=0.0, metadata={"help": "Weight decay if we apply some."})
     adam_epsilon: float = field(default=1e-8, metadata={"help": "Epsilon for Adam optimizer."})
     max_grad_norm: float = field(default=1.0, metadata={"help": "Max gradient norm."})
 
 
-
+ 
 
     lr_max_value: int = field(default=200000.0, metadata={"help": "This is a value used in the function "
                                                                     "get_linear_schedule_with_warmup inside optimization"
@@ -215,7 +215,9 @@ class TrainingArguments:
         },
     )
     no_cuda: bool = field(default=False, metadata={"help": "Do not use CUDA even when it is available"})
-    seed: int = field(default=2343, metadata={"help": "random seed for initialization"})
+
+    seed: int = field(default=3082, metadata={"help": "random seed for initialization"})
+
 
     fp16: bool = field(
         default=False,
@@ -240,6 +242,9 @@ class TrainingArguments:
         metadata={"help": "Deprecated, the use of `--debug` is preferred. TPU: Whether to print debug metrics"},
     )
     debug: bool = field(default=False, metadata={"help": "Whether to print debug metrics on TPU"})
+    remove_stop_words: bool = field(default=False, metadata={"help": "While loading a trained model and predicting/trying to find"
+                                                                     "attention weights of bert system, remove stop words"})
+    use_trained_model: bool = field(default=False, metadata={"help": "Whether to print debug metrics on TPU"})
 
     dataloader_drop_last: bool = field(
         default=False, metadata={"help": "Drop the last incomplete batch if it is not divisible by the batch size."}
@@ -252,10 +257,34 @@ class TrainingArguments:
 
 
     task_type: Optional[str] = field(default="lex", metadata={"help": "Types of task for fact verification. Options include lex, delex etc."})
-    subtask_type: Optional[str] = field(default="figerspecific", metadata={
+    
+    #multiple subtasktypes when we use multipel teachers 
+    subtask_type1: Optional[str] = field(default="figerspecific", metadata={
+        "help": "Types of subtasks used in the delexicalization of data. Options include figerspecific,figerabstract, oaneretc."})
+    subtask_type2: Optional[str] = field(default="oa", metadata={
         "help": "Types of subtasks used in the delexicalization of data. Options include figerspecific,figerabstract, oaneretc."})
 
+    machine_to_run_on: Optional[str] = field(default="hpc", metadata={
+        "help": "machines to test on options include [hpc,clara, laptop]."})
 
+    toy_data_dir_path: Optional[str] = field(default="hpc", metadata={
+        "help": "this is the folder where a smaller version of the data is kept. this data is used for testing purposes."})
+    use_toy_data: bool = field(default=False, metadata={"help": "Run on a small part of the entire data. usually used for testing purposes"})
+    fever_in_domain_accuracy_on_toy_data_17_datapoints: float = field(default=1.0, metadata={"help": "For testing. accuracy when the code was run earlier on a toy data of size 17 data points"})
+    fever_cross_domain_accuracy_on_toy_data_17_datapoints: float = field(default=1.0, metadata={
+        "help": "For testing. accuracy when the code was run earlier on a toy data of size 17 data points"})
+    fever_cross_domain_fncscore_on_toy_data_17_datapoints: float = field(default=1.0, metadata={
+        "help": "For testing. accuracy when the code was run earlier on a toy data of size 17 data points"})
+
+
+    total_no_of_models_including_student_and_its_teachers: int = field(
+        default=4, metadata={"help": "in a student teacher model how many teachers will the student be learning from"}
+    )
+
+    hidden_dropout_prob: float = field(default=0.1, metadata={
+        "help": "dropout for ffnn layers of bert. . refer src/transformers/configuration_bert.py"})
+    attention_dropout: float = field(default=0.5, metadata={
+        "help": "you can use this to change the dropout probability of attention layers in bert. refer src/transformers/configuration_bert.py"})
 
     def __iter__(self):
         ''' Returns the Iterator object '''

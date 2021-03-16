@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """ Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
-
+from transformers.modeling_student_teacher import OneTeacherOneStudent
 
 import torch
 import logging
@@ -38,7 +38,7 @@ from transformers import (
     set_seed,
 )
 import math
-from transformers.data.datasets import ParallelDataDataset
+from transformers.data.datasets import ParallelDataDataset,Read3DatasetsParallely
 
 
 def get_git_info():
@@ -102,10 +102,15 @@ def main():
             f"Output directory ({training_args.output_dir}) already exists and is not empty. Use --overwrite_output_dir to overcome."
         )
 
+    run_training(model_args, data_args, training_args)
+
+def run_training(model_args, data_args, training_args):
     # Setup logging
     git_details=get_git_info()
 
-    log_file_name=git_details['repo_short_sha']+"_"+(training_args.task_type)+"_"+(training_args.subtask_type)+"_"+data_args.task_name+".log"
+
+    log_file_name=git_details['repo_short_sha']+"_"+(training_args.task_type)+"_"+(training_args.subtask_type1)+"_"+(training_args.subtask_type2)+"_"+str(model_args.model_name_or_path).replace("-","_")+"_"+data_args.task_name+".log"
+
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
@@ -136,11 +141,7 @@ def main():
     except KeyError:
         raise ValueError("Task not found: %s" % (data_args.task_name))
 
-    # Load pretrained model_teacher and tokenizer
-    #
-    # Distributed training:
-    # The .from_pretrained methods guarantee that only one local process can concurrently
-    # download model_teacher & vocab.
+
   
     config = AutoConfig.from_pretrained(
         model_args.config_name if model_args.config_name else model_args.model_name_or_path,
@@ -148,45 +149,40 @@ def main():
         finetuning_task=data_args.task_name,
         cache_dir=model_args.cache_dir,
     )
+    #manually overriding the default dropout of 0.1- just for tuning purposes
+    config.hidden_dropout_prob=training_args.hidden_dropout_prob
+    config.attention_dropout = training_args.attention_dropout
 
-
-    tokenizer = AutoTokenizer.from_pretrained(
+    tokenizer_lex = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
         force_download=True,
-        tokenizer_type=training_args.task_type
     )
 
     #when in student-teacher mode, you need two tokenizers, one for lexicalized data, and one for the delexicalized data
-    # the regular tokenizer will be used for lexicalized data and special one for delexicalized
-    if (training_args.do_train_1student_1teacher == True):
-        tokenizer_delex = AutoTokenizer.from_pretrained(
-            model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
+
+    # the regular tokenizer_lex will be used for lexicalized data and special one for delexicalized
+    #delex tokenizer reads from specialized handcrafted vocabulary which understands symbols like personC1..rather symbols like C1,C2 etc
+    #update@jan2021: when using multiple delexicalized dataset, we will use same delex vocabulary for all different types of delexicalization.
+    #  this is because even though there are different tokens (like personC1 for oaner and actorc1 for figerspecific) ultimately we want it to be split into
+    # person and c1- which any delex vocab will do
+    tokenizer_delex = AutoTokenizer.from_pretrained(
+        model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
+        cache_dir=model_args.cache_dir,
+        force_download=True,
+        tokenizer_type="delex"
+    )
+
+    if (training_args.do_train_student_teacher == True):
+        list_all_models = []
+        for x in range(training_args.total_no_of_models_including_student_and_its_teachers):
+            model_stu_teacher = AutoModelForSequenceClassification.from_pretrained(
+            model_args.model_name_or_path,
+            from_tf=bool(".ckpt" in model_args.model_name_or_path),
+            config=config,
             cache_dir=model_args.cache_dir,
-            force_download=True,
-            tokenizer_type="delex"
-        )
-
-    if (training_args.do_train_1student_1teacher == True):
-        model_teacher = AutoModelForSequenceClassification.from_pretrained(
-        model_args.model_name_or_path,
-        from_tf=bool(".ckpt" in model_args.model_name_or_path),
-        config=config,
-        cache_dir=model_args.cache_dir,
-        )
-
-
-        model_student = AutoModelForSequenceClassification.from_pretrained(
-        model_args.model_name_or_path,
-        from_tf=bool(".ckpt" in model_args.model_name_or_path),
-        config=config,
-        cache_dir=model_args.cache_dir,
-        )
-
-        if torch.cuda.is_available():
-            model_student=model_student.cuda()
-            model_teacher= model_teacher.cuda()
-
+            )
+            list_all_models.append(model_stu_teacher)
 
     else:
         model = AutoModelForSequenceClassification.from_pretrained(
@@ -196,18 +192,20 @@ def main():
             cache_dir=model_args.cache_dir,
         )
 
+
     # Get datasets
 
     # ParallelDataDataset is to be used in a student teacher model/architecture.
     # In this model teacher sees the lex data and student sees the delexicalized version of the same data
     # The one to one mapping is taken care of inside the ParallelDataDataset
-    if (training_args.do_train_1student_1teacher == True):
+    if (training_args.do_train_student_teacher == True):
         # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
-        assert training_args.task_type == "combined"
-        assert tokenizer is not None
+        assert (training_args.task_type == "combined" or training_args.task_type=="2t1s")
+        assert tokenizer_lex is not None
         assert tokenizer_delex is not None
+
         train_dataset = (
-            ParallelDataDataset(args=data_args, tokenizer_lex=tokenizer, tokenizer_delex=tokenizer_delex, data_type_1="lex", data_type_2="delex",
+            Read3DatasetsParallely(training_args,args=data_args, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex, data_type_1="lex", data_type_2="delex",
                                 cache_dir=model_args.cache_dir) if training_args.do_train else None
         )
 
@@ -216,7 +214,7 @@ def main():
     else:
         if(training_args.task_type=="lex"):
             train_dataset = (
-            GlueDataset(args=data_args, tokenizer=tokenizer, task_type="lex", mode="train",
+            GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="train",
                         cache_dir=model_args.cache_dir)
             if training_args.do_train
             else None
@@ -224,7 +222,7 @@ def main():
         else:
             if (training_args.task_type == "delex"):
                 train_dataset = (
-                    GlueDataset(args=data_args, tokenizer=tokenizer, task_type="delex", mode="train",
+                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="train",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_train
                     else None
@@ -232,18 +230,19 @@ def main():
 
 
 
-    #save only at the end of each epoch
-    #training_args.save_steps = math.floor((len(train_dataset) / training_args.per_device_train_batch_size) * training_args.num_train_epochs)
+
 
     # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
-    # combined model_teacher performs in a delexicalized dataset. This will serve as a verification point
+
+    # combined model_stu_teacher performs in a delexicalized dataset. This will serve as a verification point
+
     #to confirm the accuracy (we got 92.91% for fever delx in domain) if something goes wrong in the prediction phase below
 
 
-    if (training_args.do_train_1student_1teacher == True):
+    if (training_args.do_train_student_teacher == True):
         # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
         eval_dataset = (
-            GlueDataset(args=data_args, tokenizer=tokenizer, task_type="delex", mode="dev",
+            GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
                         cache_dir=model_args.cache_dir)
             if training_args.do_eval
             else None
@@ -251,7 +250,7 @@ def main():
     else:
         if (training_args.task_type == "lex"):
             eval_dataset = (
-                GlueDataset(args=data_args, tokenizer=tokenizer, task_type="lex", mode="dev",
+                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="dev",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_eval
                 else None
@@ -259,7 +258,7 @@ def main():
         else:
             if (training_args.task_type == "delex"):
                 eval_dataset = (
-                    GlueDataset(args=data_args, tokenizer=tokenizer, task_type="delex", mode="dev",
+                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_eval
                     else None
@@ -268,21 +267,19 @@ def main():
 
 
 
-
-
-    if (training_args.do_train_1student_1teacher == True):
+    if (training_args.do_train_student_teacher == True):
         # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
         # in the student teacher mode the evaluation always happens in the delex cross domain dev data. here we are loading it as the test partition so that we can keep track of
         # progress across epochs
         test_dataset = (
-            GlueDataset(data_args, tokenizer=tokenizer, task_type="delex", mode="test", cache_dir=model_args.cache_dir)
+            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test", cache_dir=model_args.cache_dir)
             if training_args.do_predict
             else None
         )
     else:
         if (training_args.task_type == "lex"):
             test_dataset = (
-                GlueDataset(data_args, tokenizer=tokenizer, task_type="lex", mode="test",
+                GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="lex", mode="test",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_predict
                 else None
@@ -291,7 +288,7 @@ def main():
         else:
             if (training_args.task_type == "delex"):
                 test_dataset = (
-                    GlueDataset(data_args, tokenizer=tokenizer, task_type="delex", mode="test",
+                    GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_predict
                     else None
@@ -307,41 +304,50 @@ def main():
 
         return compute_metrics_fn
 
+
     dev_compute_metrics = build_compute_metrics_fn(data_args.task_name)
     test_compute_metrics = build_compute_metrics_fn(data_args.task_name)
-    if training_args.do_train_1student_1teacher:
+
+
+    if training_args.do_train_student_teacher:
+        assert len(list_all_models)>1
         trainer = StudentTeacherTrainer(
             tokenizer_delex,
-            tokenizer,
-            models={"teacher": model_teacher, "student": model_student},
+            tokenizer_lex,
+            models=list_all_models,
             args=training_args,
             train_datasets={"combined": train_dataset},
-            test_dataset=test_dataset,
-            eval_dataset=eval_dataset,
-            eval_compute_metrics=dev_compute_metrics,
-            test_compute_metrics=test_compute_metrics
-        )
-    else:
-        trainer = Trainer(
-            model=model,
-            args=training_args,
-            train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             test_dataset=test_dataset,
-            eval_compute_metrics=dev_compute_metrics,
-            test_compute_metrics=test_compute_metrics
+            test_compute_metrics=test_compute_metrics,
+            eval_compute_metrics=dev_compute_metrics
+
         )
+
 
 
     if training_args.do_train:
-        if (training_args.do_train_1student_1teacher == True):
-            trainer.train_1teacher_1student(
+        dev_partition_evaluation_result=None
+        test_partition_evaluation_result=None
+
+        if (training_args.do_train_student_teacher == True):
+            dev_partition_evaluation_result,test_partition_evaluation_result=trainer.train_multiple_teachers_1student(
+
                 model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
             )
         else:
-            trainer.train(
+            dev_partition_evaluation_result,test_partition_evaluation_result=trainer.train(
                 model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
             )
+
+
+
+        if trainer.is_world_master():
+            tokenizer_lex.save_pretrained(training_args.output_dir)
+        assert dev_partition_evaluation_result is not None
+        assert test_partition_evaluation_result is not None
+        return dev_partition_evaluation_result,test_partition_evaluation_result
+
 
 
 def _mp_fn(index):

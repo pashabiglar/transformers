@@ -18,8 +18,7 @@ from torch.utils.data.dataset import Dataset
 from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data.sampler import RandomSampler, Sampler, SequentialSampler
 from tqdm.auto import tqdm, trange
-
-from .data.data_collator import DataCollator, default_data_collator, collate_batch_parallel_datasets
+from .data.data_collator import DataCollator, default_data_collator, collate_batch_parallel_datasets,collate_batch_for_3_datasets,collate_batch_for_4_datasets
 from .file_utils import is_apex_available, is_torch_tpu_available
 from .modeling_utils import PreTrainedModel
 from .optimization import AdamW, get_linear_schedule_with_warmup
@@ -33,7 +32,7 @@ from .trainer_utils import (
 )
 from .training_args import TrainingArguments
 
-
+import git
 if is_apex_available():
     from apex import amp
 
@@ -135,15 +134,41 @@ def get_tpu_sampler(dataset: Dataset):
 class StudentTeacherTrainer:
     """
     Trainer is a simple but feature-complete training and eval loop for PyTorch,
-    optimized for Transformers.
+
+    optimized for 🤗 Transformers.
+
+    Args:
+        model (:class:`~transformers.PreTrainedModel`):
+            The model to train, evaluate or use for predictions.
+        args (:class:`~transformers.TrainingArguments`):
+            The arguments to tweak training.
+        data_collator (:obj:`DataCollator`, `optional`, defaults to :func:`~transformers.default_data_collator`):
+            The function to use to from a batch from a list of elements of :obj:`train_dataset` or
+            :obj:`dev_dataset`.
+        train_dataset (:obj:`torch.utils.data.dataset.Dataset`, `optional`):
+            The dataset to use for training.
+        eval_dataset (:obj:`torch.utils.data.dataset.Dataset`, `optional`):
+            The dataset to use for evaluation.
+        compute_metrics (:obj:`Callable[[EvalPrediction], Dict]`, `optional`):
+            The function that will be used to compute metrics at evaluation. Must take a
+            :class:`~transformers.EvalPrediction` and return a dictionary string to metric values.
+        prediction_loss_only (:obj:`bool`, `optional`, defaults to `False`):
+            When performing evaluation and predictions, only returns the loss.
+        tb_writer (:obj:`SummaryWriter`, `optional`):
+            Object to write to TensorBoard.
+        optimizers (:obj:`Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR`, `optional`):
+            A tuple containing the optimizer and the scheduler to use. Will default to an instance of
+            :class:`~transformers.AdamW` on your model and a scheduler given by
+            :func:`~transformers.get_linear_schedule_with_warmup` controlled by :obj:`args`.
+
     """
 
     models: {}
     args: TrainingArguments
     data_collator: DataCollator
-    train_datasest:{}
+    train_dataset: Optional[Dataset]
     eval_dataset: Optional[Dataset]
-    test_dataset = Optional[Dataset]
+    test_dataset =Optional[Dataset]
     test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     eval_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
@@ -157,7 +182,9 @@ class StudentTeacherTrainer:
         self,
         tokenizer_delex,
         tokenizer_lex,
-        models: {},
+
+        models: [],
+
         args: TrainingArguments,
         train_datasets: {},
         eval_dataset: Optional[Dataset] = None,
@@ -170,28 +197,36 @@ class StudentTeacherTrainer:
         tb_writer: Optional["SummaryWriter"] = None,
         optimizers: Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR] = (None,None)
     ):
+
         """
-        Trainer is a simple but feature-complete training and eval loop for PyTorch,
+        Trainer is a simple but feature-complete traininfg and eval loop for PyTorch,
         optimized for Transformers.
         Args:
             prediction_loss_only:
                 (Optional) in evaluation and prediction, only return the loss
         """
-        self.lex_teacher_model = models.get("teacher").to(args.device)
-        self.delex_student_model = models.get("student").to(args.device)
+        self.list_all_models=[]
+        for each_model in models:
+            self.list_all_models.append(each_model.to(args.device))
+        assert len(self.list_all_models)>0
         self.eval_dataset = eval_dataset
         self.lex_tokenizer = tokenizer_lex
         self.delex_tokenizer = tokenizer_delex
+
         ###for fnc score evaluation
         self.test_dataset = test_dataset
         self.test_compute_metrics = test_compute_metrics
         self.eval_compute_metrics = eval_compute_metrics
         self.compute_metrics = None
-        #even though we train two models using student teacher architecture we weill only use the student model to do evaluation on fnc-dev delex dataset
-        #self.model=self.delex_student_model
+
+        #even though we train using multiple models, finally there is only one THE model which is trained.- usually the one called as student model.
+        # We are assigning it here to self.model. Rather, this will be the model which will finally be used to test on dev and test sets
+        # Note: even though it is initiated as null for now, but after training is over, this will get assigned the trained model.
+        self.model=None
+
         self.args = args
         self.default_data_collator = default_data_collator
-        self.data_collator = collate_batch_parallel_datasets
+        self.data_collator = collate_batch_for_4_datasets
         self.train_dataset_combined = train_datasets.get("combined")
         self.eval_dataset = eval_dataset
         self.compute_metrics = None
@@ -220,6 +255,34 @@ class StudentTeacherTrainer:
             # Set an xla_device flag on the model's config.
             # We'll find a more elegant and not need to do this in the future.
             self.model.config.xla_device = True
+
+        if not callable(self.data_collator) and callable(getattr(self.data_collator, "collate_batch", None)):
+            self.data_collator = self.data_collator.collate_batch
+            warnings.warn(
+                (
+                    "The `data_collator` should now be a simple callable (function, class with `__call__`), classes "
+                    + "with a `collate_batch` are deprecated and won't be supported in a future version."
+                ),
+                FutureWarning,
+            )
+
+    def write_predictions_to_disk(self, plain_text, gold_labels, predictions_logits, file_to_write_predictions, test_dataset):
+        predictions_argmaxes = np.argmax(predictions_logits, axis=1)
+        sf=torch.nn.Softmax(dim=1)
+        predictions_softmax=sf(torch.FloatTensor(predictions_logits))
+        if self.is_world_master():
+            with open(file_to_write_predictions, "w") as writer:
+                logger.info(f"***** (Going to write Test results to disk at {file_to_write_predictions} *****")
+                writer.write("index\t gold\tprediction_logits\t prediction_label\tplain_text\n")
+                for index,(gold, pred_sf, pred_argmax, plain) in enumerate(zip(gold_labels, predictions_softmax,predictions_argmaxes, plain_text)):
+                    gold_string = test_dataset.get_labels()[gold]
+                    pred_string = test_dataset.get_labels()[pred_argmax]
+                    writer.write("%d\t%s\t%s\t%s\t%s\n" % (index, gold_string, str(pred_sf.tolist()),pred_string,plain))
+
+
+    def predict_given_trained_model(self, model, test_dataset):
+        predictions_argmaxes = self.predict(test_dataset,model).predictions_argmaxes
+
 
     def predict(self, test_dataset: Dataset,model_to_test_with) -> PredictionOutput:
         """
@@ -261,15 +324,23 @@ class StudentTeacherTrainer:
         """
         eval_dataloader = self.get_eval_dataloader(eval_dataset)
 
-        output = self.prediction_loop(eval_dataloader,model_to_test_with, description="Evaluation")
+        output,plain_text = self.prediction_loop(eval_dataloader,model_to_test_with, description="Evaluation")
+        gold_labels = output.label_ids
+        predictions = output.predictions
 
         self.log(output[0].metrics)
 
+        self.log(output.metrics)
         if self.args.tpu_metrics_debug or self.args.debug:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
             xm.master_print(met.metrics_report())
 
+
         return output[0].metrics
+
+        #return output.metrics, plain_text, gold_labels, predictions
+
+
 
     def _prepare_inputs(
         self, inputs: Dict[str, torch.Tensor], model: nn.Module
@@ -308,7 +379,7 @@ class StudentTeacherTrainer:
         )
         return data_loader
 
-    def get_train_dataloader_two_parallel_datasets(self) -> DataLoader:
+    def get_train_dataloader_for_parallel_datasets(self) -> DataLoader:
         if self.train_dataset_combined is None:
             raise ValueError("Trainer: training requires a train_dataset.")
         if is_torch_tpu_available():
@@ -350,6 +421,7 @@ class StudentTeacherTrainer:
         )
 
         return data_loader
+
 
     def get_test_dataloader(self, test_dataset: Dataset) -> DataLoader:
         # We use the same batch_size as for eval.
@@ -403,7 +475,51 @@ class StudentTeacherTrainer:
                 "params": [p for n, p in self.delex_student_model.named_parameters() if any(nd in n for nd in no_decay)],
                 "weight_decay": 0.0,
             },
+
         ]
+        optimizer = AdamW(optimizer_grouped_parameters, lr=self.args.learning_rate, eps=self.args.adam_epsilon)
+        scheduler = get_linear_schedule_with_warmup(
+            optimizer, num_warmup_steps=self.args.warmup_steps, num_training_steps=num_training_steps
+        )
+        return optimizer, scheduler
+
+    def get_optimizers_for_multiple_models(
+        self, num_training_steps: int) -> Tuple[torch.optim.Optimizer, torch.optim.lr_scheduler.LambdaLR]:
+        """
+        Setup the optimizer and the learning rate scheduler.
+        We provide a reasonable default that works well.
+        If you want to use something else, you can pass a tuple in the Trainer's init,
+        or override this method in a subclass.
+        update: will combine parameters
+        """
+        if self.optimizer is not None:
+            return self.optimizers
+        # Prepare optimizer and schedule (linear warmup and decay)
+        no_decay = ["bias", "LayerNorm.weight"]
+        optimizer_grouped_parameters = []
+
+        #Weight decay ensures that the parameters don't explore/remain in a certain reasonable range. it is usually addeed to the loss function
+        # so that it can also be minimized with loss function.
+        # apply 0 weight decay (i.e dont decay if the parameter is bias or layer normalization term, for everything else do apply
+        #the specified weight decay.
+        #  )
+        for each_model in self.list_all_models:
+            per_model_parameters=[]
+            parameters_that_use_weight_decay={
+                "params": [p for n, p in each_model.named_parameters() if not any(nd in n for nd in no_decay)],
+                "weight_decay": self.args.weight_decay,
+            }
+            parameters_that_wont_use_weight_decay={
+                "params": [p for n, p in each_model.named_parameters() if any(nd in n for nd in no_decay)],
+                "weight_decay": 0.0,
+            }
+            per_model_parameters.append(parameters_that_use_weight_decay)
+            per_model_parameters.append(parameters_that_wont_use_weight_decay)
+
+            #sum up all the parameters. This is needed since in student teacher model, we are sharing the loss/weights across all architectures
+            optimizer_grouped_parameters += per_model_parameters
+
+        assert len(optimizer_grouped_parameters) > 0
         optimizer = AdamW(optimizer_grouped_parameters, lr=self.args.learning_rate, eps=self.args.adam_epsilon)
         scheduler = get_linear_schedule_with_warmup(
             optimizer, num_warmup_steps=self.args.warmup_steps, num_training_steps=num_training_steps
@@ -458,12 +574,12 @@ class StudentTeacherTrainer:
         wandb.init(project=os.getenv("WANDB_PROJECT", "huggingface"), config=vars(self.args))
         # keep track of model topology and gradients
         if os.getenv("WANDB_WATCH") != "false":
-            wandb.watch(
-                self.lex_teacher_model, log=os.getenv("WANDB_WATCH", "gradients"), log_freq=max(100, self.args.logging_steps)
-            )
-            wandb.watch(
-                self.delex_student_model, log=os.getenv("WANDB_WATCH", "gradients"), log_freq=max(100, self.args.logging_steps)
-            )
+            for each_model in self.list_all_models:
+                wandb.watch(
+                    each_model, log=os.getenv("WANDB_WATCH", "gradients"), log_freq=max(100, self.args.logging_steps)
+                )
+
+
 
     def num_examples(self, dataloader: DataLoader) -> int:
         """
@@ -472,6 +588,7 @@ class StudentTeacherTrainer:
         return len(dataloader.dataset)
 
     def evaluate_on_test_partition(self, model_to_test_with,test_dataset: Optional[Dataset] = None,model_index_number=0) -> Dict[str, float]:
+
         """
         Run evaluation and returns metrics.
         The calling script will be responsible for providing a method to compute metrics, as they are
@@ -484,6 +601,12 @@ class StudentTeacherTrainer:
             A dictionary containing the evaluation loss and the potential metrics computed from the predictions.
         """
         eval_dataloader = self.get_test_dataloader(test_dataset)
+
+
+
+        output,plain_text = self.prediction_loop(eval_dataloader,model_to_test_with ,description="Evaluation")
+        gold_labels = output.label_ids
+        predictions = output.predictions
 
 
 
@@ -588,10 +711,12 @@ class StudentTeacherTrainer:
         for dataset in datasetss:
             eval_result = None
             if "dev" in description:
-                eval_result = self.evaluate_on_test_partition(model_to_test_with,eval_dataset=dataset)
+
+                eval_result, plain_text, gold_labels, predictions = self.evaluate(model_to_test_with,eval_dataset=dataset)
+
             else:
                 if "test" in description:
-                    eval_result = self.evaluate_on_test_partition(model_to_test_with,test_dataset=dataset)
+                    eval_result, plain_text,gold_labels,predictions = self.evaluate_on_test_partition(model_to_test_with,test_dataset=dataset)
             assert eval_result is not None
 
             if self.is_world_master():
@@ -600,23 +725,24 @@ class StudentTeacherTrainer:
                         logger.info("  %s = %s", key, value)
                         writer.write("%s = %s\n" % (key, value))
             eval_results.update(eval_result)
-        return eval_result
+        return eval_result,plain_text,gold_labels,predictions
 
 
-    def _save(self, model_to_save,output_dir: Optional[str] = None):
+    def _save(self,output_dir: Optional[str] = None):
         output_dir = output_dir if output_dir is not None else self.args.output_dir
         os.makedirs(output_dir, exist_ok=True)
         logger.info("Saving model checkpoint to %s", output_dir)
         # Save a trained model and configuration using `save_pretrained()`.
         # They can then be reloaded using `from_pretrained()`
-        if not isinstance(model_to_save, PreTrainedModel):
+        assert self.model is not None
+        if not isinstance(self.model, PreTrainedModel):
             raise ValueError("Trainer.model appears to not be a PreTrainedModel")
-        model_to_save.save_pretrained(output_dir)
+        self.model.save_pretrained(output_dir)
 
         # Good practice: save your training arguments together with the trained model
         torch.save(self.args, os.path.join(output_dir, "training_args.bin"))
 
-    def save_model(self,model_to_save, output_dir: Optional[str] = None):
+    def save_model(self, output_dir: Optional[str] = None):
         """
         Will save the model, so you can reload it using :obj:`from_pretrained()`.
 
@@ -626,7 +752,7 @@ class StudentTeacherTrainer:
         if is_torch_tpu_available():
             self._save_tpu(output_dir)
         elif self.is_world_master():
-            self._save(model_to_save,output_dir)
+            self._save(output_dir)
 
     def prediction_step(
         self, model: nn.Module, inputs: Dict[str, torch.Tensor, ], prediction_loss_only: bool
@@ -677,6 +803,7 @@ class StudentTeacherTrainer:
 
     def get_git_info(self):
         import git
+
         repo = git.Repo(search_parent_directories=True)
 
         repo_sha=str(repo.head.object.hexsha),
@@ -698,7 +825,7 @@ class StudentTeacherTrainer:
                 (Optional) Local path to model if model to train has been instantiated from a local path
                 If present, we will try reloading the optimizer/scheduler states from there.
         """
-        train_dataloader = self.get_train_dataloader_two_parallel_datasets()
+        train_dataloader = self.get_train_dataloader_for_parallel_datasets()
         if self.args.max_steps > 0:
             t_total = self.args.max_steps
             num_train_epochs = (
@@ -710,27 +837,41 @@ class StudentTeacherTrainer:
 
         model_teacher = self.lex_teacher_model
         model_student = self.delex_student_model
-        flag_run_teacher_alone = True
-        flag_run_student_alone = False
-        flag_run_both = False
+
+        weight_consistency_loss = 1
+        weight_classification_loss = 0.0875
 
         optimizer = None
         scheduler = None
 
+        #these flags are used for testing purposes. IDeally when running in student teacher mode this should be
+        # flag_run_both=True. Other two flags are to test by loading each of these models independently from within
+        #the same trainer class
+        flag_run_teacher_alone = False
+        flag_run_student_alone = False
+        flag_run_both = True
+
+
 
         if (flag_run_both):
             optimizer, scheduler = self.get_optimizers_for_student_teacher(num_training_steps=self.args.lr_max_value)
+            assert optimizer is not None
+            assert scheduler is not None
         else:
             if (flag_run_teacher_alone):
                 optimizer, scheduler = self.get_optimizer(model_teacher,num_training_steps=self.args.lr_max_value)
+                assert optimizer is not None
+                assert scheduler is not None
             else:
                 if (flag_run_student_alone):
                     optimizer, scheduler = self.get_optimizer(model_student,num_training_steps=self.args.lr_max_value)
+                    assert optimizer is not None
+                    assert scheduler is not None
 
 
 
-        assert optimizer is not None
-        assert scheduler is not None
+
+
 
         # Check if saved optimizer or scheduler states exist
         if (
@@ -752,6 +893,7 @@ class StudentTeacherTrainer:
             model_teacher, optimizer = amp.initialize(model_teacher, optimizer, opt_level=self.args.fp16_opt_level)
             model_student, optimizer = amp.initialize(model_student, optimizer, opt_level=self.args.fp16_opt_level)
 
+
         # multi-gpu training (should be after apex fp16 initialization)
         if self.args.n_gpu > 1:
             logger.info(
@@ -761,6 +903,7 @@ class StudentTeacherTrainer:
 
             model_teacher = torch.nn.DataParallel(model_teacher)
             model_student = torch.nn.DataParallel(model_student)
+
 
         # Distributed training (should be after apex fp16 initialization)
         if self.args.local_rank != -1:
@@ -777,6 +920,7 @@ class StudentTeacherTrainer:
             output_device=self.args.local_rank,
             find_unused_parameters=True,
             )
+
 
         if self.tb_writer is not None:
             self.tb_writer.add_text("args", self.args.to_json_string())
@@ -826,14 +970,24 @@ class StudentTeacherTrainer:
         logging_loss = 0.0
         model_teacher.zero_grad()
         model_student.zero_grad()
+
         train_iterator = trange(
             epochs_trained, int(num_train_epochs), desc="Epoch", disable=not self.is_local_master()
         )
 
+
+        git_details = self.get_git_info()
+
         #empty out the file which stores intermediate evaluations
-        output_eval_file_path = self.args.output_dir + "intermediate_eval_results.txt"
+        output_dir_absolute_path=os.path.join(os.getcwd(),self.args.output_dir)
+        dev_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_dev_partition_results_"+git_details['repo_short_sha']+".txt"
         # empty out the
-        with open(output_eval_file_path, "w") as writer:
+        with open(dev_partition_evaluation_output_file_path, "w") as writer:
+            writer.write("")
+
+        test_partition_evaluation_output_file_path =  output_dir_absolute_path+ "intermediate_evaluation_on_test_partition_results_"+git_details['repo_short_sha']+".txt"
+        # empty out the
+        with open(test_partition_evaluation_output_file_path, "w") as writer:
             writer.write("")
 
         output_dir_absolute_path = os.path.join(os.getcwd(), self.args.output_dir)
@@ -845,6 +999,7 @@ class StudentTeacherTrainer:
             writer.write("")
         best_acc=0
         #for each epoch
+
         for epoch in train_iterator:
             logger.debug("just got inside for epoch in train_iterator")
 
@@ -867,7 +1022,6 @@ class StudentTeacherTrainer:
                 logger.debug("just got inside for step in enumerate epoch_iterator. i.e for each batch")
 
 
-
                 # Skip past any already trained steps if resuming training
                 if steps_trained_in_current_epoch > 0:
                     steps_trained_in_current_epoch -= 1
@@ -888,8 +1042,10 @@ class StudentTeacherTrainer:
                 tr_loss_lex,outputs_lex = self.get_classification_loss(model_teacher, input_lex, optimizer)
                 tr_loss_delex,outputs_delex = self.get_classification_loss(model_student, input_delex, optimizer)
 
+
                 if(flag_run_both):
                     combined_classification_loss=tr_loss_lex+tr_loss_delex
+
                 else:
                     if(flag_run_teacher_alone):
                         combined_classification_loss = tr_loss_lex
@@ -907,7 +1063,7 @@ class StudentTeacherTrainer:
                 consistency_loss = self.get_consistency_loss(logits_lex,logits_delex,"mse")
 
                 if (flag_run_both):
-                    combined_loss = combined_classification_loss + consistency_loss
+                    combined_loss = (weight_classification_loss*combined_classification_loss) + (weight_consistency_loss*consistency_loss)
                 else:
                     combined_loss = combined_classification_loss
 
@@ -916,9 +1072,12 @@ class StudentTeacherTrainer:
                     logger.info("self.args.fp16 is true")
                     with amp.scale_loss(combined_loss, optimizer) as scaled_loss:
                         scaled_loss.backward()
+                    with amp.scale_loss(combined_loss, optimizer) as scaled_loss:
+                        scaled_loss.backward()
                 else:
                     logger.debug("self.args.fp16 is false")
                     combined_loss.backward()
+
                     logger.debug("just got done with combined_loss.backward()")
 
                 tr_loss_lex_float+=tr_loss_lex.item()
@@ -937,6 +1096,7 @@ class StudentTeacherTrainer:
                         if (flag_run_both):
                             torch.nn.utils.clip_grad_norm_(model_student.parameters(), self.args.max_grad_norm)
                             torch.nn.utils.clip_grad_norm_(model_teacher.parameters(), self.args.max_grad_norm)
+
                         else:
                             if (flag_run_teacher_alone):
                                 torch.nn.utils.clip_grad_norm_(model_teacher.parameters(), self.args.max_grad_norm)
@@ -955,6 +1115,7 @@ class StudentTeacherTrainer:
                     if (flag_run_both):
                         model_teacher.zero_grad()
                         model_student.zero_grad()
+
                     else:
                         if (flag_run_teacher_alone):
                             model_teacher.zero_grad()
@@ -995,33 +1156,45 @@ class StudentTeacherTrainer:
                             if hasattr(model_teacher, "module"):
                                 assert model_teacher.module is self.lex_teacher_model.module
                                 assert model_student.module is self.delex_student_model.module
+
                             else:
                                 assert model_teacher is self.lex_teacher_model
                                 assert model_student is self.delex_student_model
+
+
+                            self.model=model_teacher
                             output_dir = os.path.join(self.args.output_dir,
                                                       f"model_teacher_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-                            self.save_model(model_teacher, output_dir)
+                            assert self.model is not None
+                            self.save_model(output_dir)
+
+                            self.model = model_student
                             output_dir = os.path.join(self.args.output_dir,
                                                       f"model_student_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-                            self.save_model(model_student, output_dir)
+                            assert self.model is not None
+                            self.save_model( output_dir)
+
+
                         else:
                             if (flag_run_teacher_alone):
                                 if hasattr(model_teacher, "module"):
                                     assert model_teacher.module is self.lex_teacher_model.module
                                 else:
                                     assert model_teacher is self.lex_teacher_model
+                                self.model = model_teacher
                                 output_dir = os.path.join(self.args.output_dir,
                                                           f"model_teacher_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-                                self.save_model(model_teacher, output_dir)
+                                self.save_model( output_dir)
                             else:
                                 if (flag_run_student_alone):
                                     if hasattr(model_teacher, "module"):
                                         assert model_student.module is self.delex_student_model.module
                                     else:
                                         assert model_student is self.delex_student_model
+                                self.model = model_student
                                 output_dir = os.path.join(self.args.output_dir,
                                                           f"model_student_{PREFIX_CHECKPOINT_DIR}-{self.global_step}")
-                                self.save_model(model_student, output_dir)
+                                self.save_model( output_dir)
 
                         # Save model checkpoint
 
@@ -1058,10 +1231,6 @@ class StudentTeacherTrainer:
                         trained_model = model_student
 
             assert trained_model is not None
-
-
-
-
 
             dev_partition_evaluation_result, plain_text, gold_labels, predictions = self._intermediate_eval_from_multiple_teachers_branch(
                 datasets=self.eval_dataset,
@@ -1108,7 +1277,9 @@ class StudentTeacherTrainer:
             self.tb_writer.close()
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
-        return TrainOutput(self.global_step, tr_loss_lex_float / self.global_step)
+         # Note: returning for testing purposes only. All performance evaluation measures by now are written to disk.
+        # Note that the assumption here is that the test will be run for 1 epoch only. ELse have to return the best dev and test partition scores
+        return dev_partition_evaluation_result,test_partition_evaluation_result
 
     def _intermediate_eval_from_multiple_teachers_branch(self, datasets, epoch, output_eval_file, description, model_to_test_with, model_number_in=0):
 
@@ -1166,6 +1337,338 @@ class StudentTeacherTrainer:
                         "%d\t%s\t%s\t%s\t%s\n" % (index, gold_string, str(pred_sf.tolist()), pred_string, plain))
 
 
+       
+
+    def train_multiple_teachers_1student(self, model_path: Optional[str] = None):
+        """
+        Main training entry point.
+        Args:
+            model_path:
+                (Optional) Local path to model if model to train has been instantiated from a local path
+                If present, we will try reloading the optimizer/scheduler states from there.
+        """
+
+        train_dataloader = self.get_train_dataloader_for_parallel_datasets()
+        if self.args.max_steps > 0:
+            t_total = self.args.max_steps
+            num_train_epochs = (
+                    self.args.max_steps // (len(train_dataloader) // self.args.gradient_accumulation_steps) + 1
+            )
+        else:
+            t_total = int(len(train_dataloader) // self.args.gradient_accumulation_steps * self.args.num_train_epochs)
+            num_train_epochs = self.args.num_train_epochs
+
+        weight_consistency_loss = 1
+        weight_classification_loss = 0.0875
+
+        optimizer = None
+        scheduler = None
+        optimizer, scheduler = self.get_optimizers_for_multiple_models(num_training_steps=self.args.lr_max_value)
+        assert optimizer is not None
+        assert scheduler is not None
+
+
+        # multi-gpu training (should be after apex fp16 initialization)
+        if self.args.n_gpu > 1:
+            logger.info(
+                f"found that self.args.Nn_gpu >1. going to exit.")
+            import sys
+            sys.exit()
+
+
+        if self.tb_writer is not None:
+            self.tb_writer.add_text("args", self.args.to_json_string())
+            self.tb_writer.add_hparams(self.args.to_sanitized_dict(), metric_dict={})
+
+        # Train!
+        if is_torch_tpu_available():
+            total_train_batch_size = self.args.train_batch_size * xm.xrt_world_size()
+        else:
+            total_train_batch_size = (
+                    self.args.train_batch_size
+                    * self.args.gradient_accumulation_steps
+                    * (torch.distributed.get_world_size() if self.args.local_rank != -1 else 1)
+            )
+        logger.info("***** Running training *****")
+        logger.info("  Num examples = %d", self.num_examples(train_dataloader))
+        logger.info("  Num Epochs = %d", num_train_epochs)
+        logger.info("  Instantaneous batch size per device = %d", self.args.per_device_train_batch_size)
+        logger.info("  Total train batch size (w. parallel, distributed & accumulation) = %d", total_train_batch_size)
+        logger.info("  Gradient Accumulation steps = %d", self.args.gradient_accumulation_steps)
+        logger.info("  Total optimization steps = %d", t_total)
+
+        self.global_step = 0
+        self.epoch = 0
+        epochs_trained = 0
+        steps_trained_in_current_epoch = 0
+        # Check if continuing training from a checkpoint
+        if model_path is not None:
+            # set global_step to global_step of last saved checkpoint from model path
+            try:
+                self.global_step = int(model_path.split("-")[-1].split("/")[0])
+                epochs_trained = self.global_step // (len(train_dataloader) // self.args.gradient_accumulation_steps)
+                steps_trained_in_current_epoch = self.global_step % (
+                        len(train_dataloader) // self.args.gradient_accumulation_steps
+                )
+
+                logger.info("  Continuing training from checkpoint, will skip to saved global_step")
+                logger.info("  Continuing training from epoch %d", epochs_trained)
+                logger.info("  Continuing training from global step %d", self.global_step)
+                logger.info("  Will skip the first %d steps in the first epoch", steps_trained_in_current_epoch)
+            except ValueError:
+                self.global_step = 0
+                logger.info("  Starting fine-tuning.")
+
+        for each_model in self.list_all_models:
+            each_model.zero_grad()
+
+        epoch_iterator = trange(
+            epochs_trained, int(num_train_epochs), desc="Epoch", disable=not self.is_local_master()
+        )
+
+        git_details = self.get_git_info()
+
+        # empty out the file which stores intermediate evaluations on dev
+        output_dir_absolute_path = os.path.join(os.getcwd(), self.args.output_dir)
+        dev_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_dev_partition_results_" + \
+                                                    git_details['repo_short_sha'] + ".txt"
+        # empty out the
+        with open(dev_partition_evaluation_output_file_path, "w") as writer:
+            writer.write("")
+
+        test_partition_evaluation_output_file_path = output_dir_absolute_path + "intermediate_evaluation_on_test_partition_results_" + \
+                                                     git_details['repo_short_sha'] + ".txt"
+        # empty out the
+        with open(test_partition_evaluation_output_file_path, "w") as writer:
+            writer.write("")
+
+        # empty out the file which stores intermediate evaluations on test partition (which is not really test partition, but the dev of cross-domain dataset)
+        predictions_on_test_file_path = output_dir_absolute_path + "predictions_on_test_partition_" + git_details[
+            'repo_short_sha'] + ".txt"
+        with open(predictions_on_test_file_path, "w") as writer:
+            writer.write("")
+
+        best_fnc_score = 0
+        best_acc = 0
+
+        # for each epoch
+        for epoch in epoch_iterator:
+            logger.debug("just got inside for epoch in epoch_iterator")
+
+            if isinstance(train_dataloader, DataLoader) and isinstance(train_dataloader.sampler, DistributedSampler):
+                train_dataloader.sampler.set_epoch(epoch)
+
+            if is_torch_tpu_available():
+                logger.debug("found that is_torch_tpu_available is true")
+
+                parallel_loader = pl.ParallelLoader(train_dataloader, [self.args.device]).per_device_loader(
+                    self.args.device
+                )
+                batch_iterator = tqdm(parallel_loader, desc="batches", disable=not self.is_local_master())
+            else:
+                logger.debug("found that is_torch_tpu_available is false")
+                batch_iterator = tqdm(train_dataloader, desc="batches", disable=not self.is_local_master())
+
+
+
+            # for each batch
+            #todo: dont hardcode the number 3. this should work for n models
+
+            all_inputs=[]
+            for x in range(self.args.total_no_of_models_including_student_and_its_teachers):
+                input_name="input_model"+str(x)
+                all_inputs.append(input_name)
+            tuple_all_inputs=tuple(all_inputs)
+
+            for step,(tuple_all_inputs)  in enumerate(batch_iterator):
+                logger.debug("just got inside for step in enumerate batch_iterator. i.e for each batch")
+
+                # Skip past any already trained steps if resuming training
+                if steps_trained_in_current_epoch > 0:
+                    steps_trained_in_current_epoch -= 1
+                    continue
+
+                #compare all labels of all inputs are same. gold labels shouldnt change across datasets
+                labels=tuple_all_inputs[0]['labels'].tolist()
+                for each_input in tuple_all_inputs:
+                    assert each_input['labels'].tolist() == labels
+
+                # todo : check the input tokens differ atleast by one token across all datasets. this is a sanity check to ensure that we are not duplicating datasets.
+
+
+                assert len(all_inputs) == len(self.list_all_models)
+
+
+
+                combined_classification_loss = torch.zeros(1).to(device=self.args.device)
+                all_models_outputs=[]
+                for index,each_model in enumerate(self.list_all_models):
+                    # model returns # (loss), logits, (hidden_states), (attentions)
+                    tr_classification_loss, outputs_model = self.get_classification_loss(each_model, tuple_all_inputs[index], optimizer)
+                    combined_classification_loss += tr_classification_loss
+                    all_models_outputs.append(outputs_model)
+                assert index == (len(self.list_all_models)-1)
+
+
+
+
+
+
+                all_logits=[]
+                assert len(all_models_outputs) > 0
+                for each_model_output in (all_models_outputs):
+                        # outputs contains in that order # (loss), logits, (hidden_states), (attentions)-src/transformers/modeling_bert.py
+                        #so logits will be output[1]
+                        this_model_logit=each_model_output[1]
+                        all_logits.append(this_model_logit)
+
+                # calculate sum of all consistency losses:consistency loss is the loss between logits of all models (non repeating ..i.e AB=BA)
+                # so if there are 4 models,A,B,C,D`, the total combinations will be AB, AC, AD, BC, BD, CD
+                combined_consistency_loss = torch.zeros(1).to(device=self.args.device)
+                for index1,(x) in enumerate(all_logits):
+                    for y in range(index1 + 1, len(all_logits)):
+                            consistency_loss = self.get_consistency_loss(x, all_logits[y], "mse")
+                            combined_consistency_loss += consistency_loss
+
+                assert combined_classification_loss.item() > 0
+                assert combined_consistency_loss.item() > 0
+                #overall loss is a weighteed sum of classification and consistency losses
+                combined_loss = (weight_classification_loss * combined_classification_loss) + (
+                                weight_consistency_loss * combined_consistency_loss)
+                combined_loss.backward()
+                optimizer.step()
+                scheduler.step()
+
+                for each_model in self.list_all_models:
+                    torch.nn.utils.clip_grad_norm_(each_model.parameters(), self.args.max_grad_norm)
+
+                for each_model in self.list_all_models:
+                        each_model.zero_grad()
+
+                self.global_step += 1
+                self.epoch = epoch + (step + 1) / len(batch_iterator)
+
+            trained_model = self.list_all_models[1]
+            self.model = self.list_all_models[1]
+
+            assert trained_model is not None
+            assert self.model is not None
+
+            dev_partition_evaluation_result, plain_text, gold_labels, predictions = self._intermediate_eval(
+                datasets=self.eval_dataset,
+                epoch=epoch,
+                output_eval_file=dev_partition_evaluation_output_file_path,
+                description="dev_partition", model_to_test_with=trained_model)
+
+            test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = self._intermediate_eval(
+                datasets=self.test_dataset,
+                epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",
+                model_to_test_with=trained_model)
+
+            fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
+            accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
+
+            if fnc_score_test_partition > best_fnc_score:
+                best_fnc_score = fnc_score_test_partition
+
+                logger.info(f"found that the current fncscore:{fnc_score_test_partition} in epoch "
+                            f"{epoch} beats the bestfncscore so far i.e ={best_fnc_score}. going to prediction"
+                            f"on test partition and save that and model to disk")
+                # if the accuracy or fnc_score_test_partition beats the highest so far, write predictions to disk
+
+                self.write_predictions_to_disk(plain_text, gold_labels, predictions_logits,
+                                               predictions_on_test_file_path,
+                                               self.test_dataset)
+
+                # Save model checkpoint
+                self.model = trained_model
+                output_dir = os.path.join(self.args.output_dir)
+                self.save_model(output_dir)
+
+                # if self.is_world_master():
+                #     self._rotate_checkpoints()
+
+                if is_torch_tpu_available():
+                    xm.rendezvous("saving_optimizer_states")
+                    xm.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
+                    xm.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
+                elif self.is_world_master():
+                    torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
+                    torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
+
+            if accuracy_test_partition > best_acc:
+                best_acc = accuracy_test_partition
+
+            logger.info(
+                f"********************************end of epoch {epoch+1}************************************************************************")
+            if self.args.max_steps > 0 and self.global_step > self.args.max_steps:
+                epoch_iterator.close()
+                break
+            if self.args.tpu_metrics_debug:
+                # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
+                xm.master_print(met.metrics_report())
+
+        if self.tb_writer:
+            self.tb_writer.close()
+
+        logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
+
+        # Note: returning for testing purposes only. All performance evaluation measures by now are written to disk.
+        # Note that the assumption here is that the test will be run for 1 epoch only. ELse have to return the best dev and test partition scores
+        return dev_partition_evaluation_result, test_partition_evaluation_result
+
+    def log(self, logs: Dict[str, float], iterator: Optional[tqdm] = None) -> None:
+        """
+        Log :obj:`logs` on the various objects watching training.
+        Subclass and override this method to inject custom behavior.
+        Args:
+            logs (:obj:`Dict[str, float]`):
+                The values to log.
+            iterator (:obj:`tqdm`, `optional`):
+                A potential tqdm progress bar to write the logs on.
+        """
+        # if hasattr(self, "_log"):
+        #     warnings.warn(
+        #         "The `_log` method is deprecated and won't be called in a future version, define `log` in your subclass.",
+        #         FutureWarning,
+        #     )
+        #     return self._log(logs, iterator=iterator)
+
+        if self.epoch is not None:
+            logs["epoch"] = self.epoch
+        if self.global_step is None:
+            # when logging evaluation metrics without training
+            self.global_step = 0
+        log_for_wandb = {}
+        if self.tb_writer:
+            for k, v in logs.items():
+                if isinstance(v, (int, float)):
+                    self.tb_writer.add_scalar(k, v, self.global_step)
+                    log_for_wandb[k] = v
+                else:
+                    if isinstance(v, (dict)):
+                        for k2, v2 in v.items():
+                            if isinstance(v2, (int, float)):
+                                self.tb_writer.add_scalar(k2, v2, self.global_step)
+                                log_for_wandb[k2] = v2
+                            else:
+                                logger.warning(
+                                    f"Trainer is attempting to log a valuefor key {k2}as a scalar."
+                                    f"This invocation of Tensorboard's writer.add_scalar()"
+                                    f" is incorrect so we dropped this attribute.",
+                                )
+                                logger.debug(v2)
+            self.tb_writer.flush()
+        if is_wandb_available():
+            if self.is_world_master():
+                if len(log_for_wandb.items()) > 0:
+                    wandb.log(log_for_wandb, step=int(self.epoch))
+        output = {**logs, **{"step": self.global_step}}
+        if iterator is not None:
+            iterator.write(output)
+        else:
+            logger.debug(output)
+
     def _training_step(
         self, model: nn.Module, inputs: Dict[str, torch.Tensor], optimizer: torch.optim.Optimizer
     ) -> float:
@@ -1192,6 +1695,96 @@ class StudentTeacherTrainer:
             loss.backward()
 
         return loss.item()
+
+
+    def is_local_master(self) -> bool:
+        if is_torch_tpu_available():
+            return xm.is_master_ordinal(local=True)
+        else:
+            return self.args.local_rank in [-1, 0]
+
+    def is_world_master(self) -> bool:
+        """
+        This will be True only in one process, even in distributed mode,
+        even when training on multiple machines.
+        """
+        if is_torch_tpu_available():
+            return xm.is_master_ordinal(local=False)
+        else:
+            return self.args.local_rank == -1 or torch.distributed.get_rank() == 0
+
+    def save_model(self, output_dir: Optional[str] = None):
+        """
+        Will save the model, so you can reload it using :obj:`from_pretrained()`.
+
+        Will only save from the world_master process (unless in TPUs).
+        """
+
+        if is_torch_tpu_available():
+            self._save_tpu(output_dir)
+        elif self.is_world_master():
+            self._save(output_dir)
+
+    def _save_tpu(self, output_dir: Optional[str] = None):
+        output_dir = output_dir if output_dir is not None else self.args.output_dir
+        logger.info("Saving model checkpoint to %s", output_dir)
+
+        if xm.is_master_ordinal():
+            os.makedirs(output_dir, exist_ok=True)
+            torch.save(self.args, os.path.join(output_dir, "training_args.bin"))
+
+        # Save a trained model and configuration using `save_pretrained()`.
+        # They can then be reloaded using `from_pretrained()`
+        if not isinstance(self.model, PreTrainedModel):
+            raise ValueError("Trainer.model appears to not be a PreTrainedModel")
+
+        xm.rendezvous("saving_checkpoint")
+        self.model.save_pretrained(output_dir)
+
+    def _save(self, output_dir: Optional[str] = None):
+        output_dir = output_dir if output_dir is not None else self.args.output_dir
+        os.makedirs(output_dir, exist_ok=True)
+        logger.info("Saving model checkpoint to %s", output_dir)
+        # Save a trained model and configuration using `save_pretrained()`.
+        # They can then be reloaded using `from_pretrained()`
+        if not isinstance(self.model, PreTrainedModel):
+            raise ValueError("Trainer.model appears to not be a PreTrainedModel")
+        self.model.save_pretrained(output_dir)
+
+        # Good practice: save your training arguments together with the trained model
+        torch.save(self.args, os.path.join(output_dir, "training_args.bin"))
+
+    def _sorted_checkpoints(self, checkpoint_prefix=PREFIX_CHECKPOINT_DIR, use_mtime=False) -> List[str]:
+        ordering_and_checkpoint_path = []
+
+        glob_checkpoints = [str(x) for x in Path(self.args.output_dir).glob(f"{checkpoint_prefix}-*")]
+
+        for path in glob_checkpoints:
+            if use_mtime:
+                ordering_and_checkpoint_path.append((os.path.getmtime(path), path))
+            else:
+                regex_match = re.match(f".*{checkpoint_prefix}-([0-9]+)", path)
+                if regex_match and regex_match.groups():
+                    ordering_and_checkpoint_path.append((int(regex_match.groups()[0]), path))
+
+        checkpoints_sorted = sorted(ordering_and_checkpoint_path)
+        checkpoints_sorted = [checkpoint[1] for checkpoint in checkpoints_sorted]
+        return checkpoints_sorted
+
+    def _rotate_checkpoints(self, use_mtime=False) -> None:
+        if self.args.save_total_limit is None or self.args.save_total_limit <= 0:
+            return
+
+        # Check if we should delete older checkpoint(s)
+        checkpoints_sorted = self._sorted_checkpoints(use_mtime=use_mtime)
+        if len(checkpoints_sorted) <= self.args.save_total_limit:
+            return
+
+        number_of_checkpoints_to_delete = max(0, len(checkpoints_sorted) - self.args.save_total_limit)
+        checkpoints_to_be_deleted = checkpoints_sorted[:number_of_checkpoints_to_delete]
+        for checkpoint in checkpoints_to_be_deleted:
+            logger.info("Deleting older checkpoint [{}] due to args.save_total_limit".format(checkpoint))
+            shutil.rmtree(checkpoint)
 
     def get_classification_loss(
             self, model: nn.Module, inputs: Dict[str, torch.Tensor], optimizer: torch.optim.Optimizer
@@ -1245,11 +1838,13 @@ class StudentTeacherTrainer:
         '''
         similar to _training_step however returns loss instead of doing .backward
         Args:
+
             model:
             inputs:
             optimizer:
         Returns:loss
         '''\
+
 
         if(loss_function=="mse"):
             loss_fct = MSELoss()
@@ -1289,6 +1884,7 @@ class StudentTeacherTrainer:
     ) -> PredictionOutput:
         """
         Prediction/evaluation loop, shared by :obj:`Trainer.evaluate()` and :obj:`Trainer.predict()`.
+
         Works both with or without labels.
         """
         if hasattr(self, "_prediction_loop"):
@@ -1326,9 +1922,9 @@ class StudentTeacherTrainer:
 
         if self.args.past_index >= 0:
             self._past = None
-        plain_text_full = []
+        plain_text_full=[]
         for inputs in tqdm(dataloader, desc=description):
-            plain_text_batch = self.lex_tokenizer.batch_decode(inputs['input_ids'])
+            plain_text_batch = self.delex_tokenizer.batch_decode(inputs['input_ids'])
             plain_text_full.extend(plain_text_batch)
             loss, logits, labels = self.prediction_step(model, inputs, prediction_loss_only)
             if loss is not None:
@@ -1384,6 +1980,10 @@ class StudentTeacherTrainer:
             if not key.startswith("eval_"):
                 metrics[f"eval_{key}"] = metrics.pop(key)
         assert plain_text_full is not None
-        assert len(plain_text_full) == len(dataloader.dataset.features)
+        assert len(plain_text_full)== len(dataloader.dataset.features)
 
-        return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics), plain_text_full
+        return PredictionOutput(predictions=preds, label_ids=label_ids, metrics=metrics),plain_text_full
+
+
+
+

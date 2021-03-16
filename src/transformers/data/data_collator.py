@@ -3,7 +3,6 @@ from typing import Any, Callable, Dict, List, NewType, Tuple
 
 import torch
 from torch.nn.utils.rnn import pad_sequence
-
 from ..tokenization_utils import PreTrainedTokenizer
 
 
@@ -70,7 +69,7 @@ def collate_batch_parallel_datasets(features: List[InputDataClass]) -> Dict[str,
         # So we will look at the first element as a proxy for what attributes exist
         # on the whole batch.
 
-        #for reading lex and delex versions as a single tuple
+        #for reading mod1 and mod2 versions as a single tuple
         first = features[0][0]
         #first = features[0]
 
@@ -80,7 +79,7 @@ def collate_batch_parallel_datasets(features: List[InputDataClass]) -> Dict[str,
         if hasattr(first, "label") and first.label is not None:
             if type(first.label) is int:
                 #labels = torch.tensor([f.label for f in features], dtype=torch.long)
-                #for reading lex and delex versions as a single tuple
+                #for reading mod1 and mod2 versions as a single tuple
                 labels_lex=[]
                 labels_delex=[]
                 for f in features:
@@ -130,6 +129,166 @@ def collate_batch_parallel_datasets(features: List[InputDataClass]) -> Dict[str,
 
 
         return (batch_lex,batch_delex)
+
+
+def collate_batch_for_3_datasets(features: List[InputDataClass]) -> Dict[str, torch.Tensor]:
+    # In this method we'll make the assumption that all `features` in the batch
+    # have the same attributes.
+    # So we will look at the first element as a proxy for what attributes exist
+    # on the whole batch.
+
+    # for reading mod1 and mod2 versions as a single tuple
+    first = features[0][0]
+    # first = features[0]
+
+    # Special handling for labels.
+    # Ensure that tensor is created with the correct type
+    # (it should be automatically the case, but let's make sure of it.)
+    if hasattr(first, "label") and first.label is not None:
+        if type(first.label) is int:
+            # labels = torch.tensor([f.label for f in features], dtype=torch.long)
+            # for reading mod1 and mod2 versions as a single tuple
+            labels_teacher1 = []
+            labels_student = []
+            labels_teacher2 = []
+            for f in features:
+                assert f[0].label==f[1].label
+                assert f[2].label == f[1].label
+                labels_teacher1.append(f[0].label)
+                labels_student.append(f[1].label)
+                labels_teacher2.append(f[2].label)
+
+            assert labels_teacher1 == labels_student
+            labels_lex_tf = torch.tensor(labels_teacher1, dtype=torch.long)
+            labels_delex_tf = torch.tensor(labels_student, dtype=torch.long)
+
+            labels = labels_lex_tf
+
+        else:
+            # labels = torch.tensor([f.label for f in features], dtype=torch.float)
+            labels_teacher1 = []
+            labels_student = []
+            for f in features:
+                labels_teacher1.append(f[0].label)
+                labels_student.append(f[1].label)
+
+            assert labels_teacher1 == labels_student
+            labels_lex_tf = torch.tensor(labels_teacher1, dtype=torch.float)
+            labels_delex_tf = torch.tensor(labels_student, dtype=torch.float)
+            labels = labels_lex_tf
+        batch_teacher1 = {"labels": labels}
+        batch_student = {"labels": labels}
+        batch_teacher2 = {"labels": labels}
+
+    elif hasattr(first, "label_ids") and first.label_ids is not None:
+        if type(first.label_ids[0]) is int:
+            labels = torch.tensor([f.label_ids for f in features], dtype=torch.long)
+        else:
+            labels = torch.tensor([f.label_ids for f in features], dtype=torch.float)
+        batch = {"labels": labels}
+    else:
+        batch = {}
+
+    # Handling of all other possible attributes.
+    # Again, we will use the first element to figure out which key/values are not None for this model.
+    for k, v in vars(first).items():
+        if k not in ("label", "label_ids") and v is not None and not isinstance(v, str):
+            k_list_teacher1 = []
+            k_list_student = []
+            k_list_teacher2 = []
+            for tuple_feature in features:
+                k_list_teacher1.append(getattr(tuple_feature[0], k))
+                k_list_student.append(getattr(tuple_feature[1], k))
+                k_list_teacher2.append(getattr(tuple_feature[2], k))
+            batch_teacher1[k] = torch.tensor(k_list_teacher1, dtype=torch.long)
+            batch_student[k] = torch.tensor(k_list_student, dtype=torch.long)
+            batch_teacher2[k] = torch.tensor(k_list_teacher2, dtype=torch.long)
+
+    return (batch_teacher1, batch_student, batch_teacher2)
+
+
+
+#todo: make this for n datasets, and pass n from trainer.py
+def collate_batch_for_4_datasets(features: List[InputDataClass]) -> Dict[str, torch.Tensor]:
+    # In this method we'll make the assumption that all `features` in the batch
+    # have the same attributes.
+    # So we will look at the first element as a proxy for what attributes exist
+    # on the whole batch.
+
+    # for reading mod1 and mod2 versions as a single tuple
+    first = features[0][0]
+    # first = features[0]
+
+    # Special handling for labels.
+    # Ensure that tensor is created with the correct type
+    # (it should be automatically the case, but let's make sure of it.)
+    if hasattr(first, "label") and first.label is not None:
+        if type(first.label) is int:
+            # labels = torch.tensor([f.label for f in features], dtype=torch.long)
+            # for reading mod1 and mod2 versions as a single tuple
+            labels_teacher1 = []
+            labels_student = []
+            labels_teacher2 = []
+            for f in features:
+                assert f[0].label==f[1].label
+                assert f[2].label == f[1].label
+                labels_teacher1.append(f[0].label)
+                labels_student.append(f[1].label)
+                labels_teacher2.append(f[2].label)
+
+            assert labels_teacher1 == labels_student
+            labels_lex_tf = torch.tensor(labels_teacher1, dtype=torch.long)
+            labels_delex_tf = torch.tensor(labels_student, dtype=torch.long)
+
+            labels = labels_lex_tf
+
+        else:
+            # labels = torch.tensor([f.label for f in features], dtype=torch.float)
+            labels_teacher1 = []
+            labels_student = []
+            for f in features:
+                labels_teacher1.append(f[0].label)
+                labels_student.append(f[1].label)
+
+            assert labels_teacher1 == labels_student
+            labels_lex_tf = torch.tensor(labels_teacher1, dtype=torch.float)
+            labels_delex_tf = torch.tensor(labels_student, dtype=torch.float)
+            labels = labels_lex_tf
+        batch_teacher1 = {"labels": labels}
+        batch_student = {"labels": labels}
+        batch_teacher2 = {"labels": labels}
+        batch_teacher3 = {"labels": labels}
+
+    elif hasattr(first, "label_ids") and first.label_ids is not None:
+        if type(first.label_ids[0]) is int:
+            labels = torch.tensor([f.label_ids for f in features], dtype=torch.long)
+        else:
+            labels = torch.tensor([f.label_ids for f in features], dtype=torch.float)
+        batch = {"labels": labels}
+    else:
+        batch = {}
+
+    # Handling of all other possible attributes.
+    # Again, we will use the first element to figure out which key/values are not None for this model.
+    for k, v in vars(first).items():
+        if k not in ("label", "label_ids") and v is not None and not isinstance(v, str):
+            k_list_teacher1 = []
+            k_list_student = []
+            k_list_teacher2 = []
+            k_list_teacher3 = []
+            for tuple_feature in features:
+                k_list_teacher1.append(getattr(tuple_feature[0], k))
+                k_list_student.append(getattr(tuple_feature[1], k))
+                k_list_teacher2.append(getattr(tuple_feature[2], k))
+                k_list_teacher3.append(getattr(tuple_feature[3], k))
+            batch_teacher1[k] = torch.tensor(k_list_teacher1, dtype=torch.long)
+            batch_student[k] = torch.tensor(k_list_student, dtype=torch.long)
+            batch_teacher2[k] = torch.tensor(k_list_teacher2, dtype=torch.long)
+            batch_teacher3[k] = torch.tensor(k_list_teacher3, dtype=torch.long)
+
+    return (batch_teacher1, batch_student, batch_teacher2,batch_teacher3)
+
+
 
 @dataclass
 class DataCollatorForLanguageModeling:

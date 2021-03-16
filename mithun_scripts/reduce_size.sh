@@ -8,15 +8,16 @@ then
          export toy_data_path="$2"
     fi
 else
-  echo "inside reduce size. number of args is not greater than 1"
+  echo "inside reduce_size,sh. number of args is not greater than 1. going to exit"
   echo $#
-
+  exit
 fi
 echo "value of toy_data_path is $toy_data_path"
 
 #create a data directory where the reduced size toy data will be kept. Initially full data is downloaded here , then later when reduce_size.sh is called, the data is reduced
 mkdir -p $toy_data_path
 
+echo "value of toy_data_path is $toy_data_path"
 
 
 for complete_path in $(find $DATA_DIR -name '*.tsv');
@@ -36,9 +37,6 @@ else
     mv temp $toy_data_full_path
     echo "found that MACHINE_TO_RUN_ON is hpc . reduced size toy data created at to $toy_data_full_path"
 fi
-
-
-
 done
 echo "value of toy_data_path is $toy_data_path"
 

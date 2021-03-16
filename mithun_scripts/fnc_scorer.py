@@ -7,6 +7,8 @@ LABELS = ['disagree', 'agree', 'discuss', 'unrelated']
 LABELS_RELATED = ['unrelated','related']
 RELATED = LABELS[0:3]
 
+
+
 def score_submission(gold_labels, test_labels):
     score = 0.0
     cm = [[0, 0, 0, 0],
@@ -14,7 +16,10 @@ def score_submission(gold_labels, test_labels):
           [0, 0, 0, 0],
           [0, 0, 0, 0]]
 
+    gold_label_spread = {}
+
     for i, (g, t) in enumerate(zip(gold_labels, test_labels)):
+        gold_label_spread[g]= gold_label_spread.get(g, 0) + 1
         g_stance, t_stance = g, t
         if g_stance == t_stance:
             score += 0.25
@@ -25,7 +30,12 @@ def score_submission(gold_labels, test_labels):
 
         cm[LABELS.index(g_stance)][LABELS.index(t_stance)] += 1
 
-    return score, cm
+    return score, cm, gold_label_spread
+
+def convert_labels_from_string_to_index(label_list):
+
+    return [LABELS.index(label) for label in label_list]
+
 
 
 def print_confusion_matrix(cm):
@@ -46,17 +56,23 @@ def print_confusion_matrix(cm):
         lines.append("-"*line_len)
     print('\n'.join(lines))
 
+def simple_accuracy(preds, gold):
+    total_right=0
+    for p,g in zip(preds,gold):
+        if(p == g):
+            total_right+=1
+    return (total_right*100)/len(preds)
 
 def report_score(actual,predicted):
-    score,cm = score_submission(actual,predicted)
-    best_score, _ = score_submission(actual,actual)
-
+    score,cm,gold_label_spread  = score_submission(actual,predicted)
+    best_score, _,gold_label_spread = score_submission(actual,actual)
+    print_gold_label_distribution(gold_label_spread)
     print_confusion_matrix(cm)
     print("Score: " +str(score) + " out of " + str(best_score) + "\t("+str(score*100/best_score) + "%)")
     return score*100/best_score
 
 #read tsv predictions from sandeeps tensorflow code
-test_prediction_logits=pd.read_csv("output/fever/fevercrossdomain/lex/figerspecific/bert-base-cased/128/3/predictions_labels_on_test_partition_fevercrossdomain.txt",sep="\t",header=None)
+test_prediction_logits=pd.read_csv("predictions/predictions_on_test_partition_aed5a7.txt",sep="\t",header=None)
 test_gold=pd.read_csv("predictions/fnc_dev_gold.tsv",sep="\t",header=None)
 
 
@@ -73,23 +89,20 @@ for (pred,actual_row) in zip(test_prediction_logits.values,test_gold.values):
     if(index==1):
         continue
     #label_index=(np.argmax((pred).tolist()))
-    label_string=pred[1]
+    label_string=pred[3]
     pred_labels.append(label_string)
     gold_labels.append(actual_row[1])
 
-#assuming there is no corresponding prediction for 1st gold value/datapoint
-# for index,predictions_row in enumerate(test_prediction_logits.values):
-#     if index<25411:seed
-#         label_index=(np.argmax(predictions_row.tolist()))
-#         label_string=LABELS[label_index]
-#         pred_labels.append(label_string)
-#
-#         gold_label=(test_gold.values[index+1][1])
-#         gold_labels.append(gold_label)
-#     else:
-#         break
+
+def print_gold_label_distribution(gold_label_spread):
+    for x in gold_label_spread.items():
+        print(x)
 
 print(len(pred_labels))
 
 assert len(pred_labels)==len(gold_labels)
 report_score(gold_labels,pred_labels)
+pred_labels_int=convert_labels_from_string_to_index(pred_labels)
+gold_labels_int=convert_labels_from_string_to_index(gold_labels)
+accuracy=simple_accuracy(pred_labels_int,gold_labels_int)
+print(f"accuracy={accuracy}")
