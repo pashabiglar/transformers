@@ -71,7 +71,7 @@ class GlueDataset(Dataset):
         tokenizer: PreTrainedTokenizer,
         limit_length: Optional[int] = None,
         task_type: Optional[str] = None,
-        index_in: Optional[int] = None,
+        index_in: Optional[int] = 0,
         mode: Union[str, Split] = Split.train,
         cache_dir: Optional[str] = None,
             remove_stop_words_in=False
@@ -397,6 +397,7 @@ class ParallelDataDataset(Dataset):
                     max_length=args.max_seq_length,
                     label_list=label_list,
                     output_mode=self.output_mode,
+                    task=args.task_name
                 )
                 start = time.time()
                 torch.save(self.features, cached_features_file)
