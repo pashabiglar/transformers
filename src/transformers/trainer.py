@@ -208,7 +208,7 @@ class StudentTeacherTrainer:
             self.list_all_models.append(each_model.to(args.device))
         assert len(self.list_all_models)>0
         self.eval_dataset = eval_dataset
-        self.lex_tokenizer=tokenizer_lex
+        self.lex_tokenizer = tokenizer_lex
         self.delex_tokenizer = tokenizer_delex
 
         ###evaluate each model in the corresponding dataset
@@ -330,13 +330,18 @@ class StudentTeacherTrainer:
         gold_labels = output.label_ids
         predictions = output.predictions
 
+        self.log(output[0].metrics)
 
         self.log(output.metrics)
         if self.args.tpu_metrics_debug or self.args.debug:
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
             xm.master_print(met.metrics_report())
 
-        return output.metrics, plain_text, gold_labels, predictions
+
+        return output[0].metrics
+
+        #return output.metrics, plain_text, gold_labels, predictions
+
 
 
     def _prepare_inputs(
@@ -584,7 +589,6 @@ class StudentTeacherTrainer:
         """
         return len(dataloader.dataset)
 
-
     def get_plaintext_given_dataloader(self):
         pass
         #return eval_dataloader.dataset.features
@@ -608,7 +612,6 @@ class StudentTeacherTrainer:
         output,plain_text = self.prediction_loop(eval_dataloader,model_to_test_with ,description="Evaluation")
         gold_labels = output.label_ids
         predictions = output.predictions
-
         self.log(logs=output.metrics,model_number=model_index_number)
 
         if self.args.tpu_metrics_debug or self.args.debug:
@@ -631,7 +634,7 @@ class StudentTeacherTrainer:
             logger.info("Deleting older checkpoint [{}] due to args.save_total_limit".format(checkpoint))
             shutil.rmtree(checkpoint)
 
-    def log(self, logs: Dict[str, float], iterator: Optional[tqdm] = None) -> None:
+    def log(self, logs: Dict[str, float], iterator: Optional[tqdm] = None, model_number=0) -> None:
         """
         Log :obj:`logs` on the various objects watching training.
         Subclass and override this method to inject custom behavior.
@@ -653,24 +656,31 @@ class StudentTeacherTrainer:
         if self.global_step is None:
             # when logging evaluation metrics without training
             self.global_step = 0
+        log_for_wandb = {}
         if self.tb_writer:
             for k, v in logs.items():
                 if isinstance(v, (int, float)):
                     self.tb_writer.add_scalar(k, v, self.global_step)
+                    log_for_wandb[k] = v
                 else:
-                    logger.warning(
-                        "Trainer is attempting to log a value of "
-                        '"%s" of type %s for key "%s" as a scalar. '
-                        "This invocation of Tensorboard's writer.add_scalar() "
-                        "is incorrect so we dropped this attribute.",
-                        v,
-                        type(v),
-                        k,
-                    )
+                    if isinstance(v, (dict)):
+                        for k2, v2 in v.items():
+                            if isinstance(v2, (int, float)):
+                                self.tb_writer.add_scalar(k2, v2, self.global_step)
+                                k2_model_no = k2 + "_model" + str(model_number)
+                                log_for_wandb[k2_model_no] = v2
+                            else:
+                                logger.warning(
+                                    f"Trainer is attempting to log a valuefor key {k2}as a scalar."
+                                    f"This invocation of Tensorboard's writer.add_scalar()"
+                                    f" is incorrect so we dropped this attribute.",
+                                )
+                                logger.debug(v2)
             self.tb_writer.flush()
         if is_wandb_available():
             if self.is_world_master():
-                wandb.log(logs, step=self.global_step)
+                if len(log_for_wandb.items()) > 0:
+                    wandb.log(log_for_wandb, step=int(self.epoch))
         output = {**logs, **{"step": self.global_step}}
         if iterator is not None:
             iterator.write(output)
@@ -700,7 +710,9 @@ class StudentTeacherTrainer:
         for dataset in datasetss:
             eval_result = None
             if "dev" in description:
+
                 eval_result, plain_text, gold_labels, predictions = self.evaluate(model_to_test_with,eval_dataset=dataset)
+
             else:
                 if "test" in description:
                     eval_result, plain_text,gold_labels,predictions = self.evaluate_on_test_partition(model_to_test_with,test_dataset=dataset,model_index_number=model_number_in)
@@ -787,7 +799,10 @@ class StudentTeacherTrainer:
             labels = labels.detach()
         return (loss, logits.detach(), labels)
 
+
     def get_git_info(self):
+        import git
+
         repo = git.Repo(search_parent_directories=True)
 
         repo_sha=str(repo.head.object.hexsha),
@@ -974,16 +989,14 @@ class StudentTeacherTrainer:
         with open(test_partition_evaluation_output_file_path, "w") as writer:
             writer.write("")
 
-
+        output_dir_absolute_path = os.path.join(os.getcwd(), self.args.output_dir)
+        git_details = self.get_git_info()
         # empty out the file which stores intermediate evaluations
-        predictions_on_test_file_path = output_dir_absolute_path + "predictions_on_test_partition_"+git_details['repo_short_sha']+".txt"
+        predictions_on_test_file_path = output_dir_absolute_path + "predictions_on_test_partition_" + git_details[
+            'repo_short_sha'] + ".txt"
         with open(predictions_on_test_file_path, "w") as writer:
             writer.write("")
-
-        best_fnc_score=0
         best_acc=0
-
-
         #for each epoch
 
         for epoch in train_iterator:
@@ -1014,6 +1027,14 @@ class StudentTeacherTrainer:
                     continue
                 assert input_lex['labels'].tolist()==input_delex['labels'].tolist()
 
+                if torch.cuda.is_available():
+                    for k,v in input_lex.items():
+                        v=v.cuda()
+                        input_lex[k]=v
+
+                    for k, v in input_delex.items():
+                        v = v.cuda()
+                        input_delex[k] = v
 
 
                 #model returns # (loss), logits, (hidden_states), (attentions)
@@ -1210,51 +1231,37 @@ class StudentTeacherTrainer:
 
             assert trained_model is not None
 
+            dev_partition_evaluation_result, plain_text, gold_labels, predictions = self._intermediate_eval_from_multiple_teachers_branch(
+                datasets=self.eval_dataset,
+                epoch=epoch,
+                output_eval_file=output_eval_file_path,
+                description="dev_partition", model_to_test_with=trained_model)
 
-            dev_partition_evaluation_result,plain_text,gold_labels,predictions = self._intermediate_eval(datasets=self.eval_dataset,
-                                                                      epoch=epoch,
-                                                                      output_eval_file=dev_partition_evaluation_output_file_path,
-                                                                      description="dev_partition",model_to_test_with=trained_model)
+            test_partition_evaluation_result, plain_text, gold_labels, predictions = self._intermediate_eval_from_multiple_teachers_branch(
+                datasets=self.test_dataset,
+                epoch=epoch,
+                output_eval_file=output_eval_file_path,
+                description="test_partition", model_to_test_with=trained_model)
 
-            test_partition_evaluation_result,plain_text,gold_labels,predictions_logits=self._intermediate_eval(datasets=self.test_dataset,
-                                    epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",model_to_test_with=trained_model)
 
-            fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
+
             accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
 
-
-
-            if fnc_score_test_partition>best_fnc_score:
-                best_fnc_score=fnc_score_test_partition
-
-                logger.info(f"found that the current fncscore:{fnc_score_test_partition} in epoch "
-                            f"{epoch} beats the bestfncscore so far i.e ={best_fnc_score}. going to prediction"
-                            f"on test partition and save that and model to disk")
-                #if the accuracy or fnc_score_test_partition beats the highest so far, write predictions to disk
-
-                self.write_predictions_to_disk(plain_text, gold_labels, predictions_logits, predictions_on_test_file_path,
-                                               self.test_dataset)
-
-                # Save model checkpoint
-                self.model=trained_model
-                output_dir = os.path.join(self.args.output_dir)
-                self.save_model(output_dir)
-
-                # if self.is_world_master():
-                #     self._rotate_checkpoints()
-
-                if is_torch_tpu_available():
-                    xm.rendezvous("saving_optimizer_states")
-                    xm.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
-                    xm.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
-                elif self.is_world_master():
-                    torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
-                    torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
-
             if accuracy_test_partition > best_acc:
+
+                logger.info(f"found that the current accuracy:{accuracy_test_partition} in epoch "
+                            f"{epoch+1} beats the bestfncscore so far i.e ={best_acc}. going to prediction"
+                            f"on test partition and save that and model to disk")
+
+                self.write_predictions_to_disk(plain_text, gold_labels,
+                                           predictions,
+                                           predictions_on_test_file_path,
+                                           self.test_dataset)
+
                 best_acc = accuracy_test_partition
 
-
+                # save model if and when accuracy increases
+                self.save_model(trained_model, self.args.output_dir)
 
             logger.info(
                 f"********************************end of epoch {epoch+1}************************************************************************")
@@ -1269,11 +1276,67 @@ class StudentTeacherTrainer:
             self.tb_writer.close()
 
         logger.info("\n\nTraining completed. Do not forget to share your model on huggingface.co/models =)\n\n")
-
-
-        # Note: returning for testing purposes only. All performance evaluation measures by now are written to disk.
+         # Note: returning for testing purposes only. All performance evaluation measures by now are written to disk.
         # Note that the assumption here is that the test will be run for 1 epoch only. ELse have to return the best dev and test partition scores
         return dev_partition_evaluation_result,test_partition_evaluation_result
+
+    def _intermediate_eval_from_multiple_teachers_branch(self, datasets, epoch, output_eval_file, description, model_to_test_with, model_number_in=0):
+
+        """
+        Helper function to call eval() method if and when you want to evaluate after say each epoch,
+        instead having to wait till the end of all epochs
+        Returns:
+        """
+
+        logger.info(f"*******End of training.Going to run evaluation on {description} ")
+
+        if "dev" in description:
+            self.compute_metrics = self.eval_compute_metrics
+        else:
+            if "test" in description:
+                self.compute_metrics = self.test_compute_metrics
+
+        assert self.compute_metrics is not None
+        # Evaluation
+        eval_results = {}
+        datasetss = [datasets]
+        for dataset in datasetss:
+            eval_result = None
+            if "dev" in description:
+                eval_result, plain_text, gold_labels, predictions = self.evaluate_on_test_partition(model_to_test_with,
+                                                                                                    test_dataset=dataset)
+            else:
+                if "test" in description:
+                    eval_result, plain_text, gold_labels, predictions = self.evaluate_on_test_partition(
+                        model_to_test_with, test_dataset=dataset)
+            assert eval_result is not None
+
+            if self.is_world_master():
+                with open(output_eval_file, "a") as writer:
+                    for key, value in eval_result.items():
+                        logger.info("  %s = %s", key, value)
+                        writer.write("%s = %s\n" % (key, value))
+            eval_results.update(eval_result)
+        return eval_result, plain_text, gold_labels, predictions
+
+    def write_predictions_to_disk(self, plain_text, gold_labels, predictions_logits, file_to_write_predictions,
+                                  test_dataset):
+        predictions_argmaxes = np.argmax(predictions_logits, axis=1)
+        sf = torch.nn.Softmax(dim=1)
+        predictions_softmax = sf(torch.FloatTensor(predictions_logits))
+        if self.is_world_master():
+            with open(file_to_write_predictions, "w") as writer:
+                logger.info(f"***** (Going to write Test results to disk at {file_to_write_predictions} *****")
+                writer.write("index\t gold\tprediction_logits\t prediction_label\tplain_text\n")
+                for index, (gold, pred_sf, pred_argmax, plain) in enumerate(
+                        zip(gold_labels, predictions_softmax, predictions_argmaxes, plain_text)):
+                    gold_string = test_dataset.get_labels()[gold]
+                    pred_string = test_dataset.get_labels()[pred_argmax]
+                    writer.write(
+                        "%d\t%s\t%s\t%s\t%s\n" % (index, gold_string, str(pred_sf.tolist()), pred_string, plain))
+
+
+       
 
     def train_multiple_teachers_1student(self, model_path: Optional[str] = None):
         """
@@ -1831,7 +1894,8 @@ class StudentTeacherTrainer:
             return self.args.local_rank == -1 or torch.distributed.get_rank() == 0
 
     def prediction_loop(
-        self, dataloader: DataLoader, model_to_test_with,description: str, prediction_loss_only: Optional[bool] = None
+            self, dataloader: DataLoader, model_to_test_with, description: str,
+            prediction_loss_only: Optional[bool] = None
     ) -> PredictionOutput:
         """
         Prediction/evaluation loop, shared by :obj:`Trainer.evaluate()` and :obj:`Trainer.predict()`.
@@ -1860,7 +1924,7 @@ class StudentTeacherTrainer:
         # inside a DistributedDataParallel as we'll be under `no_grad` anyways.
 
         batch_size = dataloader.batch_size
-        logger.debug("***** Running %s at epoch number:%s *****", description,self.epoch)
+        logger.debug("***** Running %s at epoch number:%s *****", description, self.epoch)
         logger.debug("  Num examples = %d", self.num_examples(dataloader))
         logger.debug("  Batch size = %d", batch_size)
         eval_losses: List[float] = []
