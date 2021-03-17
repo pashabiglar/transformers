@@ -1567,6 +1567,8 @@ class StudentTeacherTrainer:
                         f" {index_accuracy_test_partition_between_all_models+1} and that value is {best_accuracy_test_partition_amongst_all_models} ")
 
             logger.info(f"accuracies of all 4 models are {all_accuracies_on_test_partition_by_all_models}")
+            trained_model = self.list_all_models[index_accuracy_test_partition_between_all_models]
+            self.model = self.list_all_models[index_accuracy_test_partition_between_all_models]
 
             best_trained_model = self.list_all_models[index_accuracy_test_partition_between_all_models]
             self.model = self.list_all_models[index_accuracy_test_partition_between_all_models]
@@ -1578,6 +1580,7 @@ class StudentTeacherTrainer:
                 datasets=self.eval_dataset,
                 epoch=epoch,
                 output_eval_file=dev_partition_evaluation_output_file_path,
+
                 description="dev_partition", model_to_test_with=best_trained_model)
 
 

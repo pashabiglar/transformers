@@ -469,7 +469,9 @@ if test -f "$FILE";then
     echo "$FILE exists"
 else
 
-    wget https://osf.io/msxfg/download -O $FILE
+    #wget https://osf.io/msxfg/download -O $FILE
+        #loading fever-dev-oaner as dev dataset . for acl final paper.
+    wget https://osf.io/5qupx/download -O $FILE
 fi
 
 
@@ -497,7 +499,9 @@ FILE="$DATA_DIR/test3.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
-      wget https://osf.io/5qupx/download -O $FILE
+      #wget https://osf.io/5qupx/download -O $FILE
+      #loading fever-testoaner-3labels as test3 for acl paper
+      wget https://osf.io/u2kw8/download -O $FILE
 fi
 
 #fever dev delexicalized with figer abstract
