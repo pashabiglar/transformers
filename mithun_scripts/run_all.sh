@@ -41,7 +41,6 @@ fi
 fi
 
 
-
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training_4models_classweight0.1/output"
         export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training_4models_classweight0.1/data"
@@ -57,7 +56,6 @@ fi
 if [ $MACHINE_TO_RUN_ON == "clara" ]; then
         wandb online
         export OUTPUT_DIR_BASE="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v3/output"
-        export DATA_DIR_BASE="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v3/data"
 fi
 
 
@@ -68,35 +66,28 @@ echo "EPOCHS=$EPOCHS"
 
 
 
-export DATASET="fever"
+export DATASET="fnc"
 export basedir="$DATA_DIR_BASE/$DATASET"
 export TASK_TYPE="3t1s" #options for task type include lex,delex,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both mod1 and mod2 folders
 export SUB_TASK_TYPE1="figerspecific" #options for TASK_SUB_TYPE (usually used only for TASK_TYPEs :[mod2,combined])  include [oa, figerspecific, figerabstract, oass, simplener]
 export SUB_TASK_TYPE2="oa" #options for TASK_SUB_TYPE (usually used only for TASK_TYPEs :[mod2,combined])  include [oa, figerspecific, figerabstract, oass, simplener]
 export TASK_NAME="fnccrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
 export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE1"
-
 export TOY_DATA_DIR="toydata"
-export TOY_DATA_DIR_PATH="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE1/$TOY_DATA_DIR/"
-
-
-
+export TOY_DATA_DIR_PATH="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE/$TOY_DATA_DIR/"
+export PYTHONPATH="../src"
 export BERT_MODEL_NAME="google/bert_uncased_L-12_H-128_A-2" #options include things like [bert-base-uncased,bert-base-cased] etc. refer src/transformers/tokenization_bert.py for more.
 export MAX_SEQ_LENGTH="128"
 export OUTPUT_DIR="$OUTPUT_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$SUB_TASK_TYPE1/$BERT_MODEL_NAME/$MAX_SEQ_LENGTH/"
 echo $OUTPUT_DIR
 
+wandb on
+wandb online
+
+
 echo "OUTPUT_DIR=$OUTPUT_DIR"
 
 echo "value of epochs is $EPOCHS"
-echo "value of DATA_DIR is $DATA_DIR"
-
-
-
-#get data fresh before every run
-echo ". going to download data"
-
-
 
 
 echo "$DOWNLOAD_FRESH_DATA"
@@ -106,19 +97,31 @@ if [ $DOWNLOAD_FRESH_DATA == "true" ]; then
     ./get_fever_fnc_data.sh
     ./convert_to_mnli_format.sh
 fi
+echo "value of toy_data_path is $TOY_DATA_DIR_PATH"
+
 
 #create a small part of data as toy data. this will be used to run regresssion tests before the actual run starts
 ./reduce_size.sh  --data_path $TOY_DATA_DIR_PATH
+
+
+
+echo "value of DATA_DIR is $DATA_DIR"
+
 
 echo "done with data download  TOY_DATA_DIR_PATH now is $TOY_DATA_DIR_PATH"
 
 
 #use a smaller toy data to test
 
+
 if  [ "$USE_TOY_DATA" = true ]; then
         DATA_DIR=$TOY_DATA_DIR_PATH
         echo "found USE_TOY_DATA is true"
 fi
+
+echo "done with data download part . datapath now is $DATA_DIR"
+
+
 
 
 

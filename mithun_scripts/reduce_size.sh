@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-if [ $# -gt 1 ]
+
+if [ $# -gt 0 ]
 then
    echo "inside reduce sixe. number of args is greater than 1"
    if [ $1 == "--data_path" ]; then
@@ -11,9 +12,11 @@ else
   echo $#
   exit
 fi
+echo "value of toy_data_path is $toy_data_path"
 
 #create a data directory where the reduced size toy data will be kept. Initially full data is downloaded here , then later when reduce_size.sh is called, the data is reduced
 mkdir -p $toy_data_path
+
 echo "value of toy_data_path is $toy_data_path"
 
 
@@ -34,10 +37,7 @@ else
     mv temp $toy_data_full_path
     echo "found that MACHINE_TO_RUN_ON is hpc . reduced size toy data created at to $toy_data_full_path"
 fi
-
-
-
-
-
 done
+echo "value of toy_data_path is $toy_data_path"
 
+echo "value of DATA_DIR ins reduce_size is $DATA_DIR"

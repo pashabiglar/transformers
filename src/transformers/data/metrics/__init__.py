@@ -39,6 +39,11 @@ if _has_sklearn:
             "in_domain_acc": acc
         }
 
+    def acc_with_explicit_return_name(preds, labels):
+        acc = simple_accuracy(preds, labels)
+        return {
+            "cross_domain_acc": acc,
+        }
     def acc_and_fnc_score(preds, labels):
         acc = simple_accuracy(preds, labels)
         cm, f1 = calculate_fnc_score(labels, preds)
@@ -94,6 +99,8 @@ if _has_sklearn:
             return {"acc": acc_renamed(preds, labels)}
         elif task_name == "fevercrossdomain":
             return {"acc": acc_and_fnc_score(preds, labels)}
+        elif task_name == "fnccrossdomain":
+            return {"acc": acc_with_explicit_return_name(preds, labels)}
         else:
             raise KeyError(task_name)
 
