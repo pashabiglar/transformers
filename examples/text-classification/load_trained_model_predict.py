@@ -30,7 +30,6 @@ from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTok
 from transformers import GlueDataTrainingArguments as DataTrainingArguments
 from transformers import (
     HfArgumentParser,
-    Trainer,
     TrainingArguments,
     StudentTeacherTrainer,
     glue_compute_metrics,
@@ -110,7 +109,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     # Setup logging
     git_details=get_git_info()
 
-    log_file_name=git_details['repo_short_sha']+"_"+(training_args.task_type)+"_"+(training_args.subtask_type)+"_"+str(model_args.model_name_or_path).replace("-","_")+"_"+data_args.task_name+".log"
+    log_file_name=git_details['repo_short_sha']+"_"+(training_args.task_type)+"_"+(training_args.subtask_type1)+"_"+data_args.task_name+".log"
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
@@ -173,7 +172,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     # Get datasets
 
-    if (training_args.do_train_1student_1teacher == True):
+    if (training_args.do_train_student_teacher == True):
         model_teacher = AutoModelForSequenceClassification.from_pretrained(
             model_args.model_name_or_path,
             from_tf=bool(".ckpt" in model_args.model_name_or_path),
@@ -194,10 +193,10 @@ def run_loading_and_testing(model_args, data_args, training_args):
             cache_dir=model_args.cache_dir,
         )
 
-    if (training_args.do_train_1student_1teacher == True):
-        # the task type must be delex, . also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
+    if (training_args.do_train_student_teacher == True):
+        # if you are testing using a model that will be trained on a delex train partition, the task type and tokenizer heremust be delex, else pass both as lex
         eval_dataset = (
-            GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
+            GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="fnccrossdomain", mode="dev",
                         cache_dir=model_args.cache_dir)
             if training_args.do_eval
             else None
@@ -219,9 +218,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
                     else None
                 )
 
-    if (training_args.do_train_1student_1teacher == True):
+    if (training_args.do_train_student_teacher == True):
         test_dataset = (
-            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
+            GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="lex", mode="test",
                         cache_dir=model_args.cache_dir)
             if training_args.do_predict
             else None
@@ -259,14 +258,14 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
 
 
-    if training_args.do_train_1student_1teacher:
+    if training_args.do_train_student_teacher:
         trainer = StudentTeacherTrainer(
             tokenizer_delex,
             tokenizer_lex,
             models={"teacher": model_teacher, "student": model_student},
             args=training_args,
             train_datasets={"combined": None},
-            test_dataset=test_dataset,
+            test_datasets=test_dataset,
             eval_dataset=eval_dataset,
             eval_compute_metrics=dev_compute_metrics,
             test_compute_metrics=test_compute_metrics
@@ -293,21 +292,60 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #best  models when trained on fever lexicalized data
     #url = 'https://osf.io/q6apm/download'  # link to one of the best lex trained model- trained_model_lex_wandbGraphNameQuietHaze806_accuracy67point5_fncscore64point5_atepoch2.bin...this gave 64.58in cross domain fnc score and 67.5 for cross domain accuracy
     # url = 'https://osf.io/fus25/download' #trained_model_lex_sweet_water_1001_trained_model_afterepoch1_accuracy6907_fncscore6254.bin
-    url = 'https://osf.io/fp89k/download' #trained_model_lex_helpful_vortex_1002_trained_model_afterepoch1_accuracy70point21percent..bin
 
 
 
-    #url = 'https://osf.io/uspm4/download'  # link to best delex trained model-this gave 55.69 in cross domain fnc score and 54.04 for cross domain accuracy
+    #url = 'https://osf.io/fp89k/download' #trained_model_lex_helpful_vortex_1002_trained_model_afterepoch1_accuracy70point21percent..bin
+    # url = 'https://osf.io/uspm4/download'  # link to best delex trained model-this gave 55.69 in cross domain fnc score and 54.04 for cross domain accuracy
     # refer:https://tinyurl.com/y5dyshnh for further details regarding accuracies
 
 
-    #model_path = wget.download(url)
+    # update @jan30th2021: multiple models learning together
+    # after training with multilple models this is the best model in lex that gave 6762 accuracy on fnc dev lex
+    #url = 'https://osf.io/vx2cp/download'
+
+
+    # after training with multilple models this is the best model out of the 4 models combinedly trained. note that this was also a lex model but now enhanced by other models
+    #url = 'https://osf.io/gzk3t/download'
+    # after training with lex model alone (in the multiple model context, this is the modeel from wandb graph revived shape which produced 67.62 on fnc-dev.)
+    #url='https://osf.io/vx2cp/download'
+    # after training with multilple models this is the best model out of the 4 models combinedly trained.l from wandb graph lilac-rain at epoch2 which produced 70.41 on fnc-dev-plaintext and 72.6 on fnc-test-plain-text.)
+
+    #lex fnc2fever hearty thunder
+   # url="https://osf.io/n3js4/download"
+
+    # lex fnc2fever hearty thundev2
+    #url = 'https://osf.io/gm8dr/download'
+
+    # charmed glitter..fnc2fever gave 78.42 on fever test.
+    #url='https://osf.io/5zxv7/download'
+
+    #brisk fire
+    #url='https://osf.io/nv3ar/download'
+
+    #rosy lion
+    #url = 'https://osf.io/ja9b6/download'
+
+    url = 'https://osf.io/uxv9n/download'
+    #""
+
+    model_path = wget.download(url)
 
     #uncomment and use this if you want to load the model from local disk.
-    model_path="/home/u11/mithunpaul/xdisk/huggingface_bert_fnc_to_fever_combined_attndropout0pt5classLossWeight0pt0875/output/fever/fnccrossdomain/lex/figerspecific/bert-base-cased/128/pytorch_model_b29119.bin"
-    device = torch.device('cpu')
+    #model:with corresponding graph on wandb named:dulcet-thunder-1674
+    #model_path = "/work/mithunpaul/huggingface_bertmini_multiple_teachers_v1/output/fever/fevercrossdomain/3t1s/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/pytorch_model_e0c7ad.bin"
+    # model:with corresponding graph on wandb named:lilac-rain-1683
+    #model_path="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v5/output/fever/fevercrossdomain/3t1s/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/pytorch_model_a21010.bin"
+    # model:with corresponding graph on wandb named:playful-pond-1680
+    #model_path = "/work/mithunpaul/huggingface_bertmini_multiple_teachers_v2/output/fever/fevercrossdomain/3t1s/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/pytorch_model_423597.bin"
 
-    if training_args.do_train_1student_1teacher:
+    # model:with corresponding graph on wandb named:olive-dawn-1721. this is a rerun of playful pond. we were saving wrong model till now.
+    #model_path="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v1/output/fever/fevercrossdomain/3t1s/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/pytorch_model_55a068.bin"
+
+
+    device = torch.device(training_args.device)
+
+    if training_args.do_train_student_teacher:
         model=model_student
 
     assert model is not None

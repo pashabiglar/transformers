@@ -16,7 +16,7 @@ from ...tokenization_xlm_roberta import XLMRobertaTokenizer
 from ..processors.glue import glue_convert_examples_to_features, glue_output_modes, glue_processors,glue_convert_pair_examples_to_features,glue_convert_examples_from_list_of_datasets_to_features
 from ..processors.utils import InputFeatures
 
-
+from random import randrange
 logger = logging.getLogger(__name__)
 
 @dataclass
@@ -67,11 +67,11 @@ class GlueDataset(Dataset):
 
     def __init__(
         self,
-
         args: GlueDataTrainingArguments,
         tokenizer: PreTrainedTokenizer,
-        task_type: Optional[str] = None,
         limit_length: Optional[int] = None,
+        task_type: Optional[str] = None,
+        index_in: Optional[int] = 0,
         mode: Union[str, Split] = Split.train,
         cache_dir: Optional[str] = None,
             remove_stop_words_in=False
@@ -126,13 +126,13 @@ class GlueDataset(Dataset):
 
             else:
                 logger.info(f"found that no cache file exists. Creating features from dataset file at {args.data_dir}. value of mode is {mode}")
-
+                examples=None
 
                 if mode == Split.dev:
                     examples = self.processor.get_dev_examples(args.data_dir)
                     logger.info(f"Done readign dev data")
                 elif mode == Split.test:
-                    examples = self.processor.get_test_examples(args.data_dir)
+                    examples = self.processor.get_test_examples_given_dataset_index(args.data_dir, index=index_in)
                     logger.info(f"Done readign test data")
                 else:
                     examples = self.processor.get_train_examples(args.data_dir)
@@ -143,6 +143,7 @@ class GlueDataset(Dataset):
                 logger.info(f"going to get into function glue_convert_examples_to_features")
 
                 #finding all NER entities. this is needed in attention calculations for bert
+                # this was used in finding attention weights allocated by bert across all layres and heads
                 #spacy causing issues in hpc. commenting out temporarily on jan 2021 since i am doing only training now and dont need this
 
                 # if(task_type == "lex"):
@@ -154,7 +155,7 @@ class GlueDataset(Dataset):
                 #         for ent in doc.ents:
                 #             all_ner[ent.text]=1
                 #     self.ner_tags=all_ner
-
+                assert examples is not None
                 self.features = glue_convert_examples_to_features(
                     examples,
                     tokenizer,
@@ -200,7 +201,7 @@ class Read3DatasetsParallely(Dataset):
 
     def __init__(
         self,
-
+        training_args,
         args: GlueDataTrainingArguments,
         tokenizer_lex: PreTrainedTokenizer,
         tokenizer_delex: PreTrainedTokenizer,
@@ -260,21 +261,26 @@ class Read3DatasetsParallely(Dataset):
                     #when using parallel datasets get two features of examples and pass it to glue_convert_pair_examples_to_features
                     #which in turn creates features and combines them both
                     #update: will use 3 teachers each having a different
-                    dataset1 = self.processor.get_train_examples_set1(args.data_dir)
-                    dataset2 = self.processor.get_train_examples_set2(args.data_dir)
-                    dataset3 = self.processor.get_train_examples_set3(args.data_dir)
+                    list_all_datasets=[]
+                    for index in range(training_args.total_no_of_models_including_student_and_its_teachers):
+                        list_all_datasets.append(self.processor.get_train_examples_given_dataset_index(args.data_dir,index))
 
                     # assert both datasets are congruent
-                    for index,(x, y) in enumerate(zip(dataset1, dataset2)):
-                        assert x.label == y.label
-                        assert x.guid == y.guid
+                    len_datasets=len(list_all_datasets[0])
+                    # pick a random value and assert they match in label and guid with that of the first dataset
+                    rand_index = randrange(0, len_datasets)
+                    rand_label = list_all_datasets[0][rand_index].label
+                    rand_guid = list_all_datasets[0][rand_index].guid
 
-                if limit_length is not None:
-                    dataset1 = dataset1[:limit_length]
-                    dataset2 = dataset2[:limit_length]
-                    dataset3 = dataset3[:limit_length]
+                    for each_dataset in list_all_datasets:
+                        assert len(each_dataset) == len_datasets
+                        assert each_dataset[rand_index].label==rand_label
+                        assert each_dataset[rand_index].guid == rand_guid
 
-                list_all_datasets=[dataset1,dataset2,dataset3]
+                        if limit_length is not None:
+                            each_dataset = each_dataset[:limit_length]
+
+
                 self.features = glue_convert_examples_from_list_of_datasets_to_features(
                     list_all_datasets,
                     tokenizer_lex,
@@ -391,6 +397,7 @@ class ParallelDataDataset(Dataset):
                     max_length=args.max_seq_length,
                     label_list=label_list,
                     output_mode=self.output_mode,
+                    task=args.task_name
                 )
                 start = time.time()
                 torch.save(self.features, cached_features_file)
