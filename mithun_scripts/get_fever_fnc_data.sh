@@ -676,6 +676,7 @@ else
 fi
 
 
+
 FILE="$DATA_DIR/train2.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
@@ -735,6 +736,7 @@ if test -f "$FILE";then
 echo "$FILE exists"
 else
      wget https://osf.io/4n7b6/download -O $FILE
+
 fi
 
 

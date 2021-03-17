@@ -54,9 +54,11 @@ if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
 fi
 
 if [ $MACHINE_TO_RUN_ON == "clara" ]; then
+
         wandb off
         export OUTPUT_DIR_BASE="/work/mithunpaul/huggingface_bertmini_load_model_predict/output"
         export DATA_DIR_BASE="/work/mithunpaul/huggingface_bertmini_load_model_predict/data"
+
 fi
 
 
