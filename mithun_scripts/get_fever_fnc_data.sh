@@ -273,15 +273,19 @@ FILE="$DATA_DIR/dev.tsv"
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    wget https://osf.io/d9wnf/download  -O $FILE
+    #wget https://osf.io/d9wnf/download  -O $FILE
+
+    #will load fever-dev as dev for acl paper purposes
+    wget https://osf.io/xdbh6/download -O $FILE
 fi
 
-#this is fever-dev plain text but with 3 labels. its called fever-in-domain since fever originally had only 3 labels, agree, disagree, nei
+
 FILE="$DATA_DIR/test.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
-     wget https://osf.io/xdbh6/download -O $FILE
+#will load fever-test plainteext for acl paper purposes
+wget https://osf.io/q38pn/download -O $FILE
 fi
 
 fi
