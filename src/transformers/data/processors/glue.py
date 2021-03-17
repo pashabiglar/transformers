@@ -451,14 +451,14 @@ def _glue_convert_list_of_example_pairs_to_features(
     for i in range(total_no_of_datapoints):
             inputs1 = {k: all_encoded_datasets[0][k][i] for k in all_encoded_datasets[0]}
             inputs2 = {k: all_encoded_datasets[1][k][i] for k in all_encoded_datasets[1]}
-            #inputs3 = {k: all_encoded_datasets[2][k][i] for k in all_encoded_datasets[2]}
-            #inputs4 = {k: all_encoded_datasets[3][k][i] for k in all_encoded_datasets[3]}
+            inputs3 = {k: all_encoded_datasets[2][k][i] for k in all_encoded_datasets[2]}
+            inputs4 = {k: all_encoded_datasets[3][k][i] for k in all_encoded_datasets[3]}
 
             feature1 = InputFeatures(**inputs1, label=list_of_lists_of_labels[0][i])
             feature2 = InputFeatures(**inputs2, label=list_of_lists_of_labels[0][i])
-            #feature3 = InputFeatures(**inputs3, label=list_of_lists_of_labels[0][i])
-            #feature4 = InputFeatures(**inputs4, label=list_of_lists_of_labels[0][i])
-            feature=(feature1,feature2)
+            feature3 = InputFeatures(**inputs3, label=list_of_lists_of_labels[0][i])
+            feature4 = InputFeatures(**inputs4, label=list_of_lists_of_labels[0][i])
+            feature=(feature1,feature2,feature3,feature4)
             features.append(feature)
 
 
@@ -627,7 +627,125 @@ class FeverInDomainProcessor(DataProcessor):
             examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
 
+class FncCrossDomainProcessor(DataProcessor):
+    """Processor for the uofa expt fnc cross domain(train on fnc and test on fever) data set (GLUE version)."""
+
+    def get_example_from_tensor_dict(self, tensor_dict):
+        """See base class."""
+        return InputExample(
+            tensor_dict["idx"].numpy(),
+            tensor_dict["premise"].numpy().decode("utf-8"),
+            tensor_dict["hypothesis"].numpy().decode("utf-8"),
+            str(tensor_dict["label"].numpy()),
+        )
+
+
+
+    def get_train_examples_set1(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train1.tsv")), "train")
+
+    def get_train_examples_set2(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train2.tsv")), "train")
+    def get_dev_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
+
+
+
+    def get_test_examples(self, data_dir):
+        """See base class."""
+        #passing dev instead of test to make it read labels also.
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "test.tsv")), "dev")
+
+    def get_labels(self):
+        """See base class."""
+        return ["disagree", "agree", "nei"]
+
+    def _create_examples(self, lines, set_type):
+        """Creates examples for the training, dev and test sets."""
+        examples = []
+        for (i, line) in tqdm(enumerate(lines),desc="creating examples",total=len(lines)):
+            if i == 0:
+                continue
+            guid = "%s-%s" % (set_type, line[0])
+            text_a = line[8]
+            text_b = line[9]
+            label = None if set_type.startswith("test") else line[-1]
+            examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        return examples
+
+
 class FeverCrossDomainProcessor(DataProcessor):
+    """Processor for the MultiNLI data set (GLUE version)."""
+
+    def get_example_from_tensor_dict(self, tensor_dict):
+        """See base class."""
+        return InputExample(
+            tensor_dict["idx"].numpy(),
+            tensor_dict["premise"].numpy().decode("utf-8"),
+            tensor_dict["hypothesis"].numpy().decode("utf-8"),
+            str(tensor_dict["label"].numpy()),
+        )
+
+    def get_train_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
+    def get_train_examples_set1(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train1.tsv")), "train")
+
+    def get_train_examples_set2(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train2.tsv")), "train")
+
+    def get_train_examples_set3(self, data_dir):
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train3.tsv")), "train")
+
+    def get_train_examples_given_dataset_index(self, data_dir,index):
+        train_file_name="train"+str(index+1)+".tsv"
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, train_file_name)), "train")
+
+    def get_dev_examples(self, data_dir):
+        """See base class."""
+        """See base class."""
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
+
+    #in multiple teacher land, we will be using each trained model to test on corresponding dataset. So now
+    # get data from the corresponding test dataset
+    def get_test_examples_given_dataset_index(self, data_dir, index=0):
+        """See base class."""
+        test_file_name="test"+str(index+1)+".tsv"
+        #passing dev instead of test to make it read labels also.
+        # this is needed because we are using test partition to load cross domain dev dataset
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, test_file_name)), "dev")
+
+
+    def get_test_examples(self, data_dir):
+        """See base class."""
+        #passing dev instead of test to make it read labels also.
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, "test.tsv")), "dev")
+
+    def get_labels(self):
+        """See base class."""
+        return ["disagree", "agree", "discuss","unrelated"]
+
+    def _create_examples(self, lines, set_type):
+        """Creates examples for the training, dev and test sets."""
+        examples = []
+        for (i, line) in tqdm(enumerate(lines),desc="creating examples",total=len(lines)):
+            if i == 0:
+                continue
+            guid = "%s-%s" % (set_type, line[0])
+            text_a = line[8]
+            text_b = line[9]
+            label = None if set_type.startswith("test") else line[-1]
+            examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+        return examples
+
+class FncCrossDomainProcessor(DataProcessor):
     """Processor for the MultiNLI data set (GLUE version)."""
 
     def get_example_from_tensor_dict(self, tensor_dict):
@@ -662,6 +780,14 @@ class FeverCrossDomainProcessor(DataProcessor):
         """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
 
+    #in multiple teacher land, we will be using each trained model to test on corresponding dataset. So now
+    # get data from the corresponding test dataset
+    def get_test_examples_given_dataset_index(self, data_dir, index=0):
+        """See base class."""
+        test_file_name="test"+str(index+1)+".tsv"
+        #passing dev instead of test to make it read labels also.
+        # this is needed because we are using test partition to load cross domain dev dataset
+        return self._create_examples(self._read_tsv(os.path.join(data_dir, test_file_name)), "dev")
 
 
     def get_test_examples(self, data_dir):
@@ -671,7 +797,7 @@ class FeverCrossDomainProcessor(DataProcessor):
 
     def get_labels(self):
         """See base class."""
-        return ["disagree", "agree", "discuss","unrelated"]
+        return ["disagree", "agree", "nei"]
 
     def _create_examples(self, lines, set_type):
         """Creates examples for the training, dev and test sets."""
@@ -1010,7 +1136,8 @@ glue_tasks_num_labels = {
     "rte": 2,
     "wnli": 2,
     "feverindomain": 3 ,
-    "fevercrossdomain": 4
+    "fevercrossdomain": 4,
+"fnccrossdomain": 3
 }
 
 glue_processors = {
@@ -1025,8 +1152,8 @@ glue_processors = {
     "rte": RteProcessor,
     "wnli": WnliProcessor,
     "feverindomain": FeverInDomainProcessor,
-    "fevercrossdomain": FeverCrossDomainProcessor
-
+    "fevercrossdomain": FeverCrossDomainProcessor,
+"fnccrossdomain": FncCrossDomainProcessor
 }
 
 glue_output_modes = {
@@ -1042,4 +1169,5 @@ glue_output_modes = {
     "wnli": "classification",
     "feverindomain": "classification",
     "fevercrossdomain": "classification",
+    "fnccrossdomain": "classification"
 }
