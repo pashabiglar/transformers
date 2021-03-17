@@ -83,6 +83,8 @@ PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
     "TurkuNLP/bert-base-finnish-cased-v1": 512,
     "TurkuNLP/bert-base-finnish-uncased-v1": 512,
     "wietsedv/bert-base-dutch-cased": 512,
+    #adding this on jan 2021 since we found that there is a light weight bert available. this one has 12 layers and 128 emb size
+    "google/bert_uncased_L-12_H-128_A-2":128
 }
 
 PRETRAINED_INIT_CONFIGURATION = {

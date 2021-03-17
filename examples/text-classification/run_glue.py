@@ -83,6 +83,7 @@ def main():
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
 
+
     parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
 
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
@@ -109,7 +110,9 @@ def run_training(model_args, data_args, training_args):
     git_details=get_git_info()
 
 
+
     log_file_name=git_details['repo_short_sha']+"_"+(training_args.task_type)+"_"+(training_args.subtask_type1)+"_"+(training_args.subtask_type2)+"_"+str(model_args.model_name_or_path).replace("-","_")+"_"+data_args.task_name+".log"
+
 
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
@@ -149,7 +152,7 @@ def run_training(model_args, data_args, training_args):
         finetuning_task=data_args.task_name,
         cache_dir=model_args.cache_dir,
     )
-    #manually overriding the default dropout of 0.1- just for tuning purposes
+    #you can override herethe default dropout of 0.1-  for tuning purposes if you choose to
     config.hidden_dropout_prob=training_args.hidden_dropout_prob
     config.attention_dropout = training_args.attention_dropout
 
@@ -159,6 +162,8 @@ def run_training(model_args, data_args, training_args):
         force_download=True,
     )
 
+
+
     #when in student-teacher mode, you need two tokenizers, one for lexicalized data, and one for the delexicalized data
 
     # the regular tokenizer_lex will be used for lexicalized data and special one for delexicalized
@@ -166,6 +171,7 @@ def run_training(model_args, data_args, training_args):
     #update@jan2021: when using multiple delexicalized dataset, we will use same delex vocabulary for all different types of delexicalization.
     #  this is because even though there are different tokens (like personC1 for oaner and actorc1 for figerspecific) ultimately we want it to be split into
     # person and c1- which any delex vocab will do
+
     tokenizer_delex = AutoTokenizer.from_pretrained(
         model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
         cache_dir=model_args.cache_dir,
@@ -200,7 +206,7 @@ def run_training(model_args, data_args, training_args):
     # The one to one mapping is taken care of inside the ParallelDataDataset
     if (training_args.do_train_student_teacher == True):
         # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
-        assert (training_args.task_type == "combined" or training_args.task_type=="2t1s")
+        assert (training_args.task_type == "combined" or training_args.task_type=="3t1s")
         assert tokenizer_lex is not None
         assert tokenizer_delex is not None
 
@@ -271,28 +277,20 @@ def run_training(model_args, data_args, training_args):
         # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
         # in the student teacher mode the evaluation always happens in the delex cross domain dev data. here we are loading it as the test partition so that we can keep track of
         # progress across epochs
-        test_dataset = (
-            GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test", cache_dir=model_args.cache_dir)
-            if training_args.do_predict
-            else None
-        )
-    else:
-        if (training_args.task_type == "lex"):
+        #update: when using multiple teachers, we are going to have an array of test datasets
+
+        list_test_datasets=[]
+        for n in range(training_args.total_no_of_test_datasets):
             test_dataset = (
-                GlueDataset(data_args, tokenizer=tokenizer_lex, task_type="lex", mode="test",
-                            cache_dir=model_args.cache_dir)
-                if training_args.do_predict
-                else None
+                GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test", cache_dir=model_args.cache_dir,index_in=n)
             )
 
-        else:
-            if (training_args.task_type == "delex"):
-                test_dataset = (
-                    GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
-                                cache_dir=model_args.cache_dir)
-                    if training_args.do_predict
-                    else None
-                )
+            list_test_datasets.append(test_dataset)
+        assert len(list_test_datasets) > 0
+        assert len(list_test_datasets) == training_args.total_no_of_test_datasets
+    else:
+        print("training_args.do_train_student_teacher is false. going to exit")
+        sys.exit()
 
     def build_compute_metrics_fn(task_name: str) -> Callable[[EvalPrediction], Dict]:
         def compute_metrics_fn(p: EvalPrediction):
@@ -318,7 +316,7 @@ def run_training(model_args, data_args, training_args):
             args=training_args,
             train_datasets={"combined": train_dataset},
             eval_dataset=eval_dataset,
-            test_dataset=test_dataset,
+            test_datasets=list_test_datasets,
             test_compute_metrics=test_compute_metrics,
             eval_compute_metrics=dev_compute_metrics
 

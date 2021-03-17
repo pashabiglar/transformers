@@ -215,7 +215,6 @@ class TrainingArguments:
         },
     )
     no_cuda: bool = field(default=False, metadata={"help": "Do not use CUDA even when it is available"})
-
     seed: int = field(default=3082, metadata={"help": "random seed for initialization"})
 
 
@@ -279,6 +278,12 @@ class TrainingArguments:
 
     total_no_of_models_including_student_and_its_teachers: int = field(
         default=4, metadata={"help": "in a student teacher model how many teachers will the student be learning from"}
+    )
+
+    total_no_of_test_datasets: int = field(
+        default=4, metadata={"help": "are you using one model to test on one dataset, or n models to test on n datasets, each correspondingly delexicalized. "
+                                     "This number must be less than or equal to total_no_of_models_including_student_and_its_teachers  "
+                                     "note that even though this iss called test partition, it is really the dev partition of the cross domain dataset"}
     )
 
     hidden_dropout_prob: float = field(default=0.1, metadata={

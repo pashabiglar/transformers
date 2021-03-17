@@ -22,23 +22,17 @@ if [ "$TASK_TYPE" = "lex" ] ; then
 fi
 
 
-if [ "$TASK_TYPE" = "2t1s" ] ; then
+if [ "$TASK_TYPE" = "3t1s" ] ; then
  echo $DATA_DIR
  echo "task type is combined"
  args="$args --do_train_student_teacher"
 fi
 
-
 echo "TASK_TYPE is $TASK_TYPE"
-
-
 echo $args
-
-
 mkdir -p OUTPUT_DIR
+export CUDA_VISIBLE_DEVICES=2
 
-
-export CUDA_VISIBLE_DEVICES=1
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
        python3.6 ../examples/text-classification/run_glue.py $args
 else

@@ -168,7 +168,7 @@ class StudentTeacherTrainer:
     data_collator: DataCollator
     train_dataset: Optional[Dataset]
     eval_dataset: Optional[Dataset]
-    test_dataset =Optional[Dataset]
+    test_dataset =[]
     test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     eval_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
     compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None
@@ -182,13 +182,11 @@ class StudentTeacherTrainer:
         self,
         tokenizer_delex,
         tokenizer_lex,
-
         models: [],
-
+        test_datasets: [],
         args: TrainingArguments,
         train_datasets: {},
         eval_dataset: Optional[Dataset] = None,
-        test_dataset: Optional[Dataset] = None,
         test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
         eval_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
         compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
@@ -213,8 +211,12 @@ class StudentTeacherTrainer:
         self.lex_tokenizer = tokenizer_lex
         self.delex_tokenizer = tokenizer_delex
 
-        ###for fnc score evaluation
-        self.test_dataset = test_dataset
+        ###evaluate each model in the corresponding dataset
+        self.list_test_datasets=[]
+        for each_test_dataset in test_datasets:
+            self.list_test_datasets.append(each_test_dataset)
+
+
         self.test_compute_metrics = test_compute_metrics
         self.eval_compute_metrics = eval_compute_metrics
         self.compute_metrics = None
@@ -587,8 +589,11 @@ class StudentTeacherTrainer:
         """
         return len(dataloader.dataset)
 
-    def evaluate_on_test_partition(self, model_to_test_with,test_dataset: Optional[Dataset] = None,model_index_number=0) -> Dict[str, float]:
+    def get_plaintext_given_dataloader(self):
+        pass
+        #return eval_dataloader.dataset.features
 
+    def evaluate_on_test_partition(self, model_to_test_with,test_dataset: Optional[Dataset] = None,model_index_number=0) -> Dict[str, float]:
         """
         Run evaluation and returns metrics.
         The calling script will be responsible for providing a method to compute metrics, as they are
@@ -607,13 +612,6 @@ class StudentTeacherTrainer:
         output,plain_text = self.prediction_loop(eval_dataloader,model_to_test_with ,description="Evaluation")
         gold_labels = output.label_ids
         predictions = output.predictions
-
-
-
-        output,plain_text = self.prediction_loop(eval_dataloader,model_to_test_with ,description="Evaluation")
-        gold_labels = output.label_ids
-        predictions = output.predictions
-
         self.log(logs=output.metrics,model_number=model_index_number)
 
         if self.args.tpu_metrics_debug or self.args.debug:
@@ -687,8 +685,9 @@ class StudentTeacherTrainer:
         if iterator is not None:
             iterator.write(output)
         else:
-            logger.debug(output)
-    def _intermediate_eval(self, datasets, epoch, output_eval_file, description,model_to_test_with):
+            logger.info(output)
+
+    def _intermediate_eval(self, datasets, epoch, output_eval_file, description,model_to_test_with,model_number_in=0):
 
         """
         Helper function to call eval() method if and when you want to evaluate after say each epoch,
@@ -716,7 +715,7 @@ class StudentTeacherTrainer:
 
             else:
                 if "test" in description:
-                    eval_result, plain_text,gold_labels,predictions = self.evaluate_on_test_partition(model_to_test_with,test_dataset=dataset)
+                    eval_result, plain_text,gold_labels,predictions = self.evaluate_on_test_partition(model_to_test_with,test_dataset=dataset,model_index_number=model_number_in)
             assert eval_result is not None
 
             if self.is_world_master():
@@ -1359,7 +1358,7 @@ class StudentTeacherTrainer:
             num_train_epochs = self.args.num_train_epochs
 
         weight_consistency_loss = 1
-        weight_classification_loss = 0.0875
+        weight_classification_loss = 10
 
         optimizer = None
         scheduler = None
@@ -1448,7 +1447,7 @@ class StudentTeacherTrainer:
         with open(predictions_on_test_file_path, "w") as writer:
             writer.write("")
 
-        best_fnc_score = 0
+
         best_acc = 0
 
         # for each epoch
@@ -1472,8 +1471,6 @@ class StudentTeacherTrainer:
 
 
             # for each batch
-            #todo: dont hardcode the number 3. this should work for n models
-
             all_inputs=[]
             for x in range(self.args.total_no_of_models_including_student_and_its_teachers):
                 input_name="input_model"+str(x)
@@ -1494,8 +1491,6 @@ class StudentTeacherTrainer:
                     assert each_input['labels'].tolist() == labels
 
                 # todo : check the input tokens differ atleast by one token across all datasets. this is a sanity check to ensure that we are not duplicating datasets.
-
-
                 assert len(all_inputs) == len(self.list_all_models)
 
 
@@ -1548,40 +1543,61 @@ class StudentTeacherTrainer:
                 self.global_step += 1
                 self.epoch = epoch + (step + 1) / len(batch_iterator)
 
-            trained_model = self.list_all_models[1]
-            self.model = self.list_all_models[1]
 
-            assert trained_model is not None
+
+            #update @jan 28th 2021: now we are going to try predicting using each model on a correspondingly delexicalized dev partition of the cross domain dataset
+            assert len(self.list_test_datasets)== len(self.list_all_models)
+            all_accuracies_on_test_partition_by_all_models=[]
+            all_prediction_logits=[]
+            for index,(each_test_dataset,each_trained_model) in enumerate(zip(self.list_test_datasets,self.list_all_models)):
+                test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = self._intermediate_eval(
+                    datasets=each_test_dataset,
+                    epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",
+                    model_to_test_with=each_trained_model,model_number_in=(index+1))
+                fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
+                accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
+                all_accuracies_on_test_partition_by_all_models.append(accuracy_test_partition)
+                all_prediction_logits.append(predictions_logits)
+
+            best_accuracy_test_partition_amongst_all_models=max(all_accuracies_on_test_partition_by_all_models)
+            index_accuracy_test_partition_between_all_models=all_accuracies_on_test_partition_by_all_models.index(best_accuracy_test_partition_amongst_all_models)
+
+            logger.info(f"found that in epoch {epoch+1} out of all the {len(self.list_all_models)} models trained,"
+                        f"the model which gave highest accuracy was model number"
+                        f" {index_accuracy_test_partition_between_all_models+1} and that value is {best_accuracy_test_partition_amongst_all_models} ")
+
+            logger.info(f"accuracies of all 4 models are {all_accuracies_on_test_partition_by_all_models}")
+
+            best_trained_model = self.list_all_models[index_accuracy_test_partition_between_all_models]
+            self.model = self.list_all_models[index_accuracy_test_partition_between_all_models]
+
+            assert best_trained_model is not None
             assert self.model is not None
 
             dev_partition_evaluation_result, plain_text, gold_labels, predictions = self._intermediate_eval(
                 datasets=self.eval_dataset,
                 epoch=epoch,
                 output_eval_file=dev_partition_evaluation_output_file_path,
-                description="dev_partition", model_to_test_with=trained_model)
+                description="dev_partition", model_to_test_with=best_trained_model)
 
-            test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = self._intermediate_eval(
-                datasets=self.test_dataset,
-                epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",
-                model_to_test_with=trained_model)
 
-            fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
-            accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
+            if best_accuracy_test_partition_amongst_all_models > best_acc:
+                logger.info(
+                    f"found that the current accuracy:{best_accuracy_test_partition_amongst_all_models} in epoch "
+                    f"{epoch} beats the beest accuracy so far i.e ={best_acc}. going to prediction"
+                    f"on test partition and save that and model to disk")
 
-            if fnc_score_test_partition > best_fnc_score:
-                best_fnc_score = fnc_score_test_partition
+                best_acc=best_accuracy_test_partition_amongst_all_models
 
-                logger.info(f"found that the current fncscore:{fnc_score_test_partition} in epoch "
-                            f"{epoch} beats the bestfncscore so far i.e ={best_fnc_score}. going to prediction"
-                            f"on test partition and save that and model to disk")
+
                 # if the accuracy or fnc_score_test_partition beats the highest so far, write predictions to disk
 
-                self.write_predictions_to_disk(plain_text, gold_labels, predictions_logits,
+                self.write_predictions_to_disk(plain_text, gold_labels, all_prediction_logits[index_accuracy_test_partition_between_all_models],
                                                predictions_on_test_file_path,
-                                               self.test_dataset)
+                                               self.list_test_datasets[index_accuracy_test_partition_between_all_models])
 
                 # Save model checkpoint
-                self.model = trained_model
+                self.model = self.list_all_models[index_accuracy_test_partition_between_all_models]
                 output_dir = os.path.join(self.args.output_dir)
                 self.save_model(output_dir)
 
@@ -1596,8 +1612,6 @@ class StudentTeacherTrainer:
                     torch.save(optimizer.state_dict(), os.path.join(output_dir, "optimizer.pt"))
                     torch.save(scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
 
-            if accuracy_test_partition > best_acc:
-                best_acc = accuracy_test_partition
 
             logger.info(
                 f"********************************end of epoch {epoch+1}************************************************************************")
@@ -1617,7 +1631,7 @@ class StudentTeacherTrainer:
         # Note that the assumption here is that the test will be run for 1 epoch only. ELse have to return the best dev and test partition scores
         return dev_partition_evaluation_result, test_partition_evaluation_result
 
-    def log(self, logs: Dict[str, float], iterator: Optional[tqdm] = None) -> None:
+    def log(self, logs: Dict[str, float], iterator: Optional[tqdm] = None,model_number=0) -> None:
         """
         Log :obj:`logs` on the various objects watching training.
         Subclass and override this method to inject custom behavior.
@@ -1650,7 +1664,8 @@ class StudentTeacherTrainer:
                         for k2, v2 in v.items():
                             if isinstance(v2, (int, float)):
                                 self.tb_writer.add_scalar(k2, v2, self.global_step)
-                                log_for_wandb[k2] = v2
+                                k2_model_no=k2+"_model"+str(model_number)
+                                log_for_wandb[k2_model_no] = v2
                             else:
                                 logger.warning(
                                     f"Trainer is attempting to log a valuefor key {k2}as a scalar."
