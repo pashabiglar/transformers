@@ -1360,6 +1360,7 @@ class StudentTeacherTrainer:
         weight_consistency_loss = 1
         weight_classification_loss = 10
 
+
         optimizer = None
         scheduler = None
         optimizer, scheduler = self.get_optimizers_for_multiple_models(num_training_steps=self.args.lr_max_value)
@@ -1524,6 +1525,7 @@ class StudentTeacherTrainer:
                     for y in range(index1 + 1, len(all_logits)):
                             consistency_loss = self.get_consistency_loss(x, all_logits[y], "mse")
                             combined_consistency_loss += consistency_loss
+
 
                 assert combined_classification_loss.item() > 0
                 assert combined_consistency_loss.item() > 0
