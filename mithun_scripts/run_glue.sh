@@ -27,7 +27,6 @@ if [ "$TASK_TYPE" = "3t1s" ] ; then
  echo "task type is combined"
  args="$args --do_train_student_teacher"
 fi
-
 echo "TASK_TYPE is $TASK_TYPE"
 echo $args
 mkdir -p OUTPUT_DIR

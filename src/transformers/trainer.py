@@ -205,7 +205,7 @@ class StudentTeacherTrainer:
         """
         self.list_all_models=[]
         for each_model in models:
-            self.list_all_models.append(each_model.to(args.device))
+            self.list_all_models.append(each_model)
         assert len(self.list_all_models)>0
         self.eval_dataset = eval_dataset
         self.lex_tokenizer = tokenizer_lex
@@ -575,11 +575,11 @@ class StudentTeacherTrainer:
         logger.info('Automatic Weights & Biases logging enabled, to disable set os.environ["WANDB_DISABLED"] = "true"')
         wandb.init(project=os.getenv("WANDB_PROJECT", "huggingface"), config=vars(self.args))
         # keep track of model topology and gradients
-        if os.getenv("WANDB_WATCH") != "false":
-            for each_model in self.list_all_models:
-                wandb.watch(
-                    each_model, log=os.getenv("WANDB_WATCH", "gradients"), log_freq=max(100, self.args.logging_steps)
-                )
+        # if os.getenv("WANDB_WATCH") != "false":
+            # for each_model in self.list_all_models:
+            #     wandb.watch(
+            #         each_model, log=os.getenv("WANDB_WATCH", "gradients"), log_freq=max(100, self.args.logging_steps)
+            #     )
 
 
 
@@ -1941,7 +1941,12 @@ class StudentTeacherTrainer:
         if self.args.past_index >= 0:
             self._past = None
         plain_text_full=[]
+
+        device = "cuda:0"
+        model = model.to(device)
+
         for inputs in tqdm(dataloader, desc=description):
+            inputs = self._prepare_inputs(inputs, model)
             plain_text_batch = self.delex_tokenizer.batch_decode(inputs['input_ids'])
             plain_text_full.extend(plain_text_batch)
             loss, logits, labels = self.prediction_step(model, inputs, prediction_loss_only)

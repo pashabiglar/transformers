@@ -710,6 +710,7 @@ class FeverCrossDomainProcessor(DataProcessor):
 
     def get_dev_examples(self, data_dir):
         """See base class."""
+        """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
 
     #in multiple teacher land, we will be using each trained model to test on corresponding dataset. So now
@@ -744,7 +745,6 @@ class FeverCrossDomainProcessor(DataProcessor):
             examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
 
-
 class FncCrossDomainProcessor(DataProcessor):
     """Processor for the MultiNLI data set (GLUE version)."""
 
@@ -771,9 +771,6 @@ class FncCrossDomainProcessor(DataProcessor):
     def get_train_examples_set3(self, data_dir):
         """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "train3.tsv")), "train")
-    def get_train_examples_set3(self, data_dir):
-        """See base class."""
-        return self._create_examples(self._read_tsv(os.path.join(data_dir, "train4.tsv")), "train")
 
     def get_train_examples_given_dataset_index(self, data_dir,index):
         train_file_name="train"+str(index+1)+".tsv"
@@ -1140,8 +1137,8 @@ glue_tasks_num_labels = {
     "wnli": 2,
     "feverindomain": 3 ,
     "fevercrossdomain": 4,
-    "fnccrossdomain": 3,
-
+"fnccrossdomain": 3
+}
 
 glue_processors = {
     "cola": ColaProcessor,
@@ -1156,7 +1153,7 @@ glue_processors = {
     "wnli": WnliProcessor,
     "feverindomain": FeverInDomainProcessor,
     "fevercrossdomain": FeverCrossDomainProcessor,
-    "fnccrossdomain":FncCrossDomainProcessor
+"fnccrossdomain": FncCrossDomainProcessor
 }
 
 glue_output_modes = {

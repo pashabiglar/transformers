@@ -54,8 +54,9 @@ if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
 fi
 
 if [ $MACHINE_TO_RUN_ON == "clara" ]; then
-        wandb online
-        export OUTPUT_DIR_BASE="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v3/output"
+        wandb off
+        export OUTPUT_DIR_BASE="/work/mithunpaul/huggingface_bertmini_load_model_predict/output"
+        export DATA_DIR_BASE="/work/mithunpaul/huggingface_bertmini_load_model_predict/data"
 fi
 
 
@@ -130,7 +131,7 @@ export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME     
 --data_dir $DATA_DIR    --max_seq_length $MAX_SEQ_LENGTH      --per_device_eval_batch_size=16        --per_device_train_batch_size=16       \
 --learning_rate 1e-5      --num_train_epochs $EPOCHS     --output_dir $OUTPUT_DIR --overwrite_output_dir  \
 --weight_decay 0.01 --adam_epsilon 1e-6  --evaluate_during_training \
---task_type $TASK_TYPE --subtask_type1 $SUB_TASK_TYPE1 --subtask_type2 $SUB_TASK_TYPE2 --machine_to_run_on $MACHINE_TO_RUN_ON --toy_data_dir_path $TOY_DATA_DIR_PATH "
+--task_type $TASK_TYPE --subtask_type1 $SUB_TASK_TYPE1 --subtask_type2 $SUB_TASK_TYPE2 --machine_to_run_on $MACHINE_TO_RUN_ON --toy_data_dir_path $TOY_DATA_DIR_PATH --overwrite_cache "
 
 
 
@@ -141,8 +142,9 @@ export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME     
 
 
 #actual code runs
-./run_glue.sh
+#./run_glue.sh
 
-#./load_model_test.sh
+./load_model_test.sh
+
 
 
