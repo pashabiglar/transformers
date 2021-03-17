@@ -38,10 +38,20 @@ np.random.seed(34345)
 random.seed(334534)
 
 
-delex_predictions=pd.read_csv("for_bootstrap/fnc_dev/predictions_on_fnc_dev_by_delex_trained_model_acc55point3.txt", sep="\t")
-lex_predictions=pd.read_csv("for_bootstrap/fnc_dev/predictions_on_fnc_dev_by_lex_trained_model_acc70point21.txt", sep="\t")
-student_teacher_predictions=pd.read_csv("for_bootstrap/fnc_dev/predictions_on_fnc_dev_by_student_teacher_trained_model_acc74point74.txt", sep="\t")
-gold=pd.read_csv("for_bootstrap/fnc_dev/fnc_dev_gold.tsv", sep="\t")
+#note: the delex_predictions is veestigial. its not used. calculation for statistical signficance will bee only between lex_predictions and student_teacher_predictions
+delex_predictions=pd.read_csv("predictions/predictions_on_test_partition_e4780a_lex_stand_alone_jan30th2021_aclpaper_acc67pt62.txt", sep="\t")
+lex_predictions=pd.read_csv("predictions/predictions_on_test_partition_e4780a_lex_stand_alone_jan30th2021_aclpaper_acc67pt62.txt", sep="\t")
+
+#73.72
+#student_teacher_predictions=pd.read_csv("predictions/predictions_on_test_partition_e0c7ad.txt", sep="\t")
+
+#70.41
+#student_teacher_predictions=pd.read_csv("predictions/predictions_on_test_partition_a21010_multiple_teachers_bestacc_70pt41.txt", sep="\t")
+
+#69.86
+#student_teacher_predictions=pd.read_csv("predictions/predictions_on_test_partition_423597_multiplemodels_acc_69pt86.txt", sep="\t")
+
+gold=pd.read_csv("predictions/fnc_dev_gold.tsv", sep="\t")
 
 
 # are the lengths different?
