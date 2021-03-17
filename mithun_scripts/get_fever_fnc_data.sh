@@ -710,6 +710,9 @@ if test -f "$FILE";then
     echo "$FILE exists"
 else
 
+#note that we are loading the cross domain's dev partition as test partition here
+# note: we are loading the dev partition of fnc dataset here..(which will be found in my osf.io account folder: student_teacher_fact_verification/all_input_files/fnc/in_domain/figerspecifid/dev.tsv)
+
     #wget https://osf.io/msxfg/download -O $FILE
         #loading fever-dev-oaner as dev dataset . for acl final paper.
     wget https://osf.io/5qupx/download -O $FILE
