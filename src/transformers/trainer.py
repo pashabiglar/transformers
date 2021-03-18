@@ -1498,6 +1498,8 @@ class StudentTeacherTrainer:
 
                 combined_classification_loss = torch.zeros(1).to(device=self.args.device)
                 all_models_outputs=[]
+                # in the multiple teacher/group learning environment, there will be n models. Take each of these model
+                # and do a forward prop in their corresponding dataset.
                 for index,each_model in enumerate(self.list_all_models):
                     # model returns # (loss), logits, (hidden_states), (attentions)
                     tr_classification_loss, outputs_model = self.get_classification_loss(each_model, tuple_all_inputs[index], optimizer)

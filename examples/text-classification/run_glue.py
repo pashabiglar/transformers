@@ -111,7 +111,7 @@ def run_training(model_args, data_args, training_args):
 
 
 
-    log_file_name=git_details['repo_short_sha']+"_"+(training_args.task_type)+"_"+(training_args.subtask_type1)+"_"+(training_args.subtask_type2)+"_"+str(model_args.model_name_or_path).replace("-","_")+"_"+data_args.task_name+".log"
+    log_file_name=git_details['repo_short_sha']+"_"+(training_args.task_type)+"_"+str(model_args.model_name_or_path).replace("-","_").replace("/","_")+"_"+data_args.task_name+".log"
 
 
     logging.basicConfig(
@@ -274,10 +274,11 @@ def run_training(model_args, data_args, training_args):
 
 
     if (training_args.do_train_student_teacher == True):
-        # the task type must be combined, not lex or delex. also make sure the corresponding data has been downloaded in get_fever_fnc_data.sh
-        # in the student teacher mode the evaluation always happens in the delex cross domain dev data. here we are loading it as the test partition so that we can keep track of
+        # if you are running in student teacher mode the task type must be combined, not lex or delex.
+        # also make sure the corresponding data has been downloaded using ./get_fever_fnc_data.sh
+        #extra info: in the student teacher mode the evaluation always happens in the delex cross domain dev data. here we are loading it as the test partition so that we can keep track of
         # progress across epochs
-        #update: when using multiple teachers, we are going to have an array of test datasets
+        #update: when using multiple teachers, we are going to have an array of test datasets- each delexicalized in a different way.
 
         list_test_datasets=[]
         for n in range(training_args.total_no_of_test_datasets):
