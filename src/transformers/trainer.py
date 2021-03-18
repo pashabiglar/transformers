@@ -1819,8 +1819,15 @@ class StudentTeacherTrainer:
         Returns:loss
         '''
         model.train()
+
         for k, v in inputs.items():
             inputs[k] = v.to(self.args.device)
+
+        if torch.cuda.is_available():
+            for k, v in inputs.items():
+                v = v.cuda()
+                inputs[k] = v
+
 
         outputs = model(**inputs)
         loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
