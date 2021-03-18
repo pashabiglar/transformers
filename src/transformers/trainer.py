@@ -1824,6 +1824,7 @@ class StudentTeacherTrainer:
             inputs[k] = v.to(self.args.device)
 
         if torch.cuda.is_available():
+            logger.info("found that if torch.cuda.is_available() is true inside get_classification_loss. going to convert all input data into cuda")
             for k, v in inputs.items():
                 v = v.cuda()
                 inputs[k] = v
