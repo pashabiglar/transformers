@@ -330,7 +330,7 @@ class StudentTeacherTrainer:
         gold_labels = output.label_ids
         predictions = output.predictions
 
-        self.log(output[0].metrics)
+
 
         self.log(output.metrics)
         if self.args.tpu_metrics_debug or self.args.debug:
@@ -338,7 +338,7 @@ class StudentTeacherTrainer:
             xm.master_print(met.metrics_report())
 
 
-        return output[0].metrics
+        return output.metrics
 
         #return output.metrics, plain_text, gold_labels, predictions
 
@@ -703,6 +703,7 @@ class StudentTeacherTrainer:
             if "test" in description:
                 self.compute_metrics = self.test_compute_metrics
 
+        plain_text=gold_labels=predictions=None
         assert self.compute_metrics is not None
         # Evaluation
         eval_results = {}
@@ -710,9 +711,7 @@ class StudentTeacherTrainer:
         for dataset in datasetss:
             eval_result = None
             if "dev" in description:
-
-                eval_result, plain_text, gold_labels, predictions = self.evaluate(model_to_test_with,eval_dataset=dataset)
-
+                eval_result = self.evaluate(model_to_test_with,eval_dataset=dataset)
             else:
                 if "test" in description:
                     eval_result, plain_text,gold_labels,predictions = self.evaluate_on_test_partition(model_to_test_with,test_dataset=dataset,model_index_number=model_number_in)
@@ -1580,7 +1579,7 @@ class StudentTeacherTrainer:
             assert best_trained_model is not None
             assert self.model is not None
 
-            dev_partition_evaluation_result, plain_text, gold_labels, predictions = self._intermediate_eval(
+            dev_partition_evaluation_result, _,_,_ = self._intermediate_eval(
                 datasets=self.eval_dataset,
                 epoch=epoch,
                 output_eval_file=dev_partition_evaluation_output_file_path,
@@ -1946,8 +1945,9 @@ class StudentTeacherTrainer:
             self._past = None
         plain_text_full=[]
 
-        device = "cuda:0"
-        model = model.to(device)
+        if torch.cuda.is_available():
+            device = "cuda:0"
+            model = model.to(device)
 
         for inputs in tqdm(dataloader, desc=description):
             inputs = self._prepare_inputs(inputs, model)
