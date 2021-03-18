@@ -100,7 +100,7 @@ if _has_sklearn:
         elif task_name == "fevercrossdomain":
             return {"acc": acc_and_fnc_score(preds, labels)}
         elif task_name == "fnccrossdomain":
-            return {"acc": acc_with_explicit_return_name(preds, labels)}
+            return {"acc": acc_and_fnc_score(preds, labels)}
         else:
             raise KeyError(task_name)
 
