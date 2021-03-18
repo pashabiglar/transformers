@@ -124,7 +124,8 @@ echo "done with data download part . datapath now is $DATA_DIR"
 
 
 
-CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=0
+set CUDA_VISIBLE_DEVICES=0
 
 
 export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME      --do_train   --do_eval   --do_predict    \

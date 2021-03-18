@@ -1819,16 +1819,19 @@ class StudentTeacherTrainer:
             optimizer:
         Returns:loss
         '''
+        device = "cuda:0"
+        inputs=inputs.to(device)
+
         model.train()
 
-        for k, v in inputs.items():
-            inputs[k] = v.to(self.args.device)
-        device = "cuda:0"
-        if torch.cuda.is_available():
-            logger.info("found that if torch.cuda.is_available() is true inside get_classification_loss. going to convert all input data into cuda")
-            for k, v in inputs.items():
-                v = v.to(device)
-                inputs[k] = v
+        # for k, v in inputs.items():
+        #     inputs[k] = v.to(self.args.device)
+        #
+        # if torch.cuda.is_available():
+        #     logger.info("found that if torch.cuda.is_available() is true inside get_classification_loss. going to convert all input data into cuda")
+        #     for k, v in inputs.items():
+        #         v = v.to(device)
+        #         inputs[k] = v
 
 
         outputs = model(**inputs)
