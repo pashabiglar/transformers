@@ -1821,6 +1821,8 @@ class StudentTeacherTrainer:
         '''
         device = "cuda:0"
 
+        if torch.cuda.is_available():
+            model = model.to(device)
 
         model.train()
 
