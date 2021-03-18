@@ -1028,7 +1028,8 @@ class StudentTeacherTrainer:
 
                 if torch.cuda.is_available():
                     for k,v in input_lex.items():
-                        v=v.cuda()
+                        device = "cuda:0"
+                        v=  v.to(device)
                         input_lex[k]=v
 
                     for k, v in input_delex.items():
@@ -1822,16 +1823,19 @@ class StudentTeacherTrainer:
 
         for k, v in inputs.items():
             inputs[k] = v.to(self.args.device)
-
+        device = "cuda:0"
         if torch.cuda.is_available():
             logger.info("found that if torch.cuda.is_available() is true inside get_classification_loss. going to convert all input data into cuda")
             for k, v in inputs.items():
-                v = v.cuda()
+                v = v.to(device)
                 inputs[k] = v
 
 
         outputs = model(**inputs)
         loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
+
+        if torch.cuda.is_available():
+                loss = loss.to(device)
 
         if self.args.n_gpu > 1:
             loss = loss.mean()  # mean() to average on multi-gpu parallel training
