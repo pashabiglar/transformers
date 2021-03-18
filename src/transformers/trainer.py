@@ -1829,7 +1829,6 @@ class StudentTeacherTrainer:
 
 
         if torch.cuda.is_available():
-            logger.info(f"found that if torch.cuda.is_available() is true inside get_classification_loss. value of self.args.device) is {self.args.device}")
             for k, v in inputs.items():
                 v = v.to(device)
                 torch.cuda.set_device(device)
