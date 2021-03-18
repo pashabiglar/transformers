@@ -51,7 +51,7 @@ if _has_sklearn:
             "cross_domain_acc": acc,
             "cross_domain_fnc_score": f1,
             "confusion matrix": cm
-        }
+        } 
 
     def acc_and_f1(preds, labels):
         acc = simple_accuracy(preds, labels)
