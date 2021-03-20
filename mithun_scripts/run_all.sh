@@ -42,6 +42,8 @@ fi
 
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
+        wandb on
+        wandb online
         export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training_4models_classweight0.1/output"
         export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training_4models_classweight0.1/data"
 fi
@@ -55,8 +57,8 @@ if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
 fi
 
 if [ $MACHINE_TO_RUN_ON == "clara" ]; then
-
-        wandb off
+        wandb on
+        wandb online
         export OUTPUT_DIR_BASE="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v1/output"
         export DATA_DIR_BASE="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v1/data"
 
@@ -72,6 +74,7 @@ echo "EPOCHS=$EPOCHS"
 export DATASET="fnc"
 export basedir="$DATA_DIR_BASE/$DATASET"
 export TASK_TYPE="3t1s" #options for task type include lex,delex,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both mod1 and mod2 folders
+export SUBTASK_TYPE="few_shot"
 export TASK_NAME="fnccrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
 export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/"
 export TOY_DATA_DIR="toydata"
@@ -82,8 +85,7 @@ export MAX_SEQ_LENGTH="128"
 export OUTPUT_DIR="$OUTPUT_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$BERT_MODEL_NAME/$MAX_SEQ_LENGTH/"
 echo $OUTPUT_DIR
 
-wandb on
-wandb online
+
 
 
 echo "OUTPUT_DIR=$OUTPUT_DIR"
@@ -102,6 +104,7 @@ fi
 echo "value of toy_data_path is $TOY_DATA_DIR_PATH"
 #create a small part of data as toy data. this will be used to run regresssion tests before the actual run starts
 ./reduce_size.sh  --data_path $TOY_DATA_DIR_PATH
+
 
 
 

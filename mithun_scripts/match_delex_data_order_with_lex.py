@@ -1,10 +1,13 @@
-#this was because when sandeep did figer conversion he somehow messed up line numbers..rather at each line he stored the actual line number of the coreresponding data point in lex, as a value called index.
+#this was because when sandeep did figer conversion he somehow messed up line numbers..rather at each line he stored
+# the actual line number of the coreresponding data point in lex, as a value called index.
 '''
 This code is used to match the delex data with lex counter part in the combined/student teacher architecture.
 had to do this because th TSV files sandeep created for figer* didnt match with lex order.
-
+input=FILE_TO_CHANGE: give the input path to the wrongly encoded file
+output=
 '''
 
+FILE_TO_CHANGE="/Users/mordor/Downloads/cross_domain_train2.tsv"
 import pandas
 import csv
 from tqdm import tqdm
@@ -33,5 +36,5 @@ def write_csv(all_inputs_rearranged):
     csvfile.close()
     return
 
-all_inputs_rearranged=_create_examples(_read_tsv("/Users/mordor/Downloads/figer-abstract-selected/test.tsv"),"dev")
+all_inputs_rearranged=_create_examples(_read_tsv(FILE_TO_CHANGE),"dev")
 write_csv(all_inputs_rearranged)
