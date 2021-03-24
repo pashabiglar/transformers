@@ -662,94 +662,13 @@ fi
 #model 4 : test4.tsv fever-dev delexicalised using figerabstract
 
 
+#########
+#update: $SUB_TASK_TYPE means the type of delexicalization we will be using. however we are doing away with it, since
+# in multiple teachers there are so many delexicalizations and hence no point trying to segregate a control flow based on that
 
-if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fevercrossdomain" ] ; then
-    echo "found task type to be 3t1s, taskname to be fevercrossdomain and subtasktypes to be figerspecific and oa"
-echo $DATA_DIR
-mkdir -p $DATA_DIR
+#####
+#update: $SUB_TASK_TYPE few_shot means, the training will be done with indomain training data mized with 10% data from target domain
 
-FILE="$DATA_DIR/train1.tsv"
-if test -f "$FILE";then
-    echo "$FILE exists"
-else
-     wget https://osf.io/r6mdz/download -O $FILE
-fi
-
-
-
-FILE="$DATA_DIR/train2.tsv"
-if test -f "$FILE";then
-    echo "$FILE exists"
-else
-    wget https://osf.io/8shu4/download -O  $FILE
-fi
-
-# model 3: train3.tsv fnc-train delexicalized using oaner
-FILE="$DATA_DIR/train3.tsv"
-if test -f "$FILE";then
-    echo "$FILE exists"
-else
-
-   wget https://osf.io/uwcxs/download -O $FILE
-fi
-
-
-#model 4 : train4.tsv fnc-train delexicalised using figerabstract (aka fnc cross domain with 3 labels)
-FILE="$DATA_DIR/train4.tsv"
-if test -f "$FILE";then
-    echo "$FILE exists"
-else
-
-   wget https://osf.io/mauqv/download -O $FILE
-fi
-
-
-
-#dev is dev partition of in-domain dataset, fnc, delexicalized with figerspecific
-FILE="$DATA_DIR/dev.tsv"
-if test -f "$FILE";then
-    echo "$FILE exists"
-else
-    #loading fever-dev-figerspecific as dev dataset. note: ideally we must have four dev files also. but i am ignoring that since main goal is to test on cross domain, which we are doing in test partition
-    wget https://osf.io/r5pz3/download -O $FILE
-fi
-
-
-####test partitions aka cross domain dev partitions
-FILE="$DATA_DIR/test1.tsv"
-if test -f "$FILE";then
-echo "$FILE exists"
-else
-     wget https://osf.io/jfpbv/download -O $FILE
-fi
-
-
-FILE="$DATA_DIR/test2.tsv"
-if test -f "$FILE";then
-echo "$FILE exists"
-else
-     wget https://osf.io/jx32m/download -O $FILE
-
-fi
-
-
-FILE="$DATA_DIR/test3.tsv"
-if test -f "$FILE";then
-echo "$FILE exists"
-else
-      wget https://osf.io/b4qau/download -O $FILE
-fi
-
-FILE="$DATA_DIR/test4.tsv"
-if test -f "$FILE";then
-echo "$FILE exists"
-else
-      wget https://osf.io/m4dzs/download -O $FILE
-fi
-
-fi
-
-##############
 
 
 if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fnccrossdomain" ] && [ "$SUBTASK_TYPE" = "few_shot" ] ; then
@@ -870,6 +789,121 @@ fi
 
 
 
+if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUBTASK_TYPE" = "few_shot" ] ; then
+    echo "found task type to be 3t1s, taskname to be fevercrossdomain and subtask to be few shot"
+
+echo $DATA_DIR
+mkdir -p $DATA_DIR
+
+FILE="$DATA_DIR/train1.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+     wget https://osf.io/r6mdz/download -O $FILE
+
+    # here we download lex plain text version of fnc in domain with 4 labels and append it at the end of fever4 labels in domain training data
+    wget https://osf.io/a6tks/download -O cross_domain_train1.tsv
+    tail -2000 cross_domain_train1.tsv >> $FILE
+
+
+fi
+
+
+
+FILE="$DATA_DIR/train2.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://osf.io/8shu4/download -O  $FILE
+
+
+    # here we download delex figerspecific version of fnc in domain with 4 labels and append it at the end of fever4 labels in domain training data
+    wget https://osf.io/78vbs/download -O cross_domain_train2.tsv
+    tail -2000 cross_domain_train2.tsv >> $FILE
+
+
+fi
+
+# model 3: train3.tsv fnc-train delexicalized using oaner
+FILE="$DATA_DIR/train3.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+
+   wget https://osf.io/uwcxs/download -O $FILE
+
+    # here we download delex oaner version of fnc in domain with 4 labels and append it at the end of fever4 labels in domain training data
+    wget https://osf.io/djkg3/download -O cross_domain_train3.tsv
+    tail -2000 cross_domain_train3.tsv >> $FILE
+
+
+fi
+
+
+#model 4 : train4.tsv fnc-train delexicalised using figerabstract (aka fnc cross domain with 3 labels)
+FILE="$DATA_DIR/train4.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+
+   wget https://osf.io/mauqv/download -O $FILE
+    # here we download figerabstract delexicalised/version of fnc in domain with 4 labels and append it at the end of fever4 labels in domain training data
+    wget https://osf.io/2grqh/download -O cross_domain_train4.tsv
+    tail -2000 cross_domain_train4.tsv >> $FILE
+
+fi
+
+
+
+#dev is dev partition of in-domain dataset, fnc, delexicalized with figerspecific
+FILE="$DATA_DIR/dev.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    #loading fever-dev-figerspecific as dev dataset. note: ideally we must have four dev files also. but i am ignoring that since main goal is to test on cross domain, which we are doing in test partition
+    wget https://osf.io/r5pz3/download -O $FILE
+fi
+
+
+####test partitions aka cross domain dev partitions
+FILE="$DATA_DIR/test1.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+     wget https://osf.io/jfpbv/download -O $FILE
+fi
+
+
+FILE="$DATA_DIR/test2.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+     wget https://osf.io/jx32m/download -O $FILE
+
+fi
+
+
+FILE="$DATA_DIR/test3.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+      wget https://osf.io/b4qau/download -O $FILE
+fi
+
+FILE="$DATA_DIR/test4.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+      wget https://osf.io/m4dzs/download -O $FILE
+fi
+#fi of if corresponding to 3t1s check
+fi
+
+
+#############
+
+
+
 if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fnccrossdomain" ] ; then
     echo "found task type to be 3t1s, taskname to be fnccrossdomain and subtasktypes to be figerspecific and oa"
 echo $DATA_DIR
@@ -962,3 +996,95 @@ else
 fi
 #fi of if corresponding to 3t1s check
 fi
+
+
+##############
+
+
+if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fevercrossdomain" ] ; then
+    echo "found task type to be 3t1s, taskname to be fevercrossdomain and subtasktypes to be figerspecific and oa"
+echo $DATA_DIR
+mkdir -p $DATA_DIR
+
+FILE="$DATA_DIR/train1.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+     wget https://osf.io/r6mdz/download -O $FILE
+fi
+
+
+
+FILE="$DATA_DIR/train2.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://osf.io/8shu4/download -O  $FILE
+fi
+
+# model 3: train3.tsv fnc-train delexicalized using oaner
+FILE="$DATA_DIR/train3.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+
+   wget https://osf.io/uwcxs/download -O $FILE
+fi
+
+
+#model 4 : train4.tsv fnc-train delexicalised using figerabstract (aka fnc cross domain with 3 labels)
+FILE="$DATA_DIR/train4.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+
+   wget https://osf.io/mauqv/download -O $FILE
+fi
+
+
+
+#dev is dev partition of in-domain dataset, fnc, delexicalized with figerspecific
+FILE="$DATA_DIR/dev.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    #loading fever-dev-figerspecific as dev dataset. note: ideally we must have four dev files also. but i am ignoring that since main goal is to test on cross domain, which we are doing in test partition
+    wget https://osf.io/r5pz3/download -O $FILE
+fi
+
+
+####test partitions aka cross domain dev partitions
+FILE="$DATA_DIR/test1.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+     wget https://osf.io/jfpbv/download -O $FILE
+fi
+
+
+FILE="$DATA_DIR/test2.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+     wget https://osf.io/jx32m/download -O $FILE
+
+fi
+
+
+FILE="$DATA_DIR/test3.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+      wget https://osf.io/b4qau/download -O $FILE
+fi
+
+FILE="$DATA_DIR/test4.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+      wget https://osf.io/m4dzs/download -O $FILE
+fi
+
+fi
+
+##############

@@ -71,12 +71,12 @@ echo "DATA_DIR_BASE=$DATA_DIR_BASE"
 echo "EPOCHS=$EPOCHS"
 
 
-export DATASET="fnc"
+export DATASET="fever" #options include [fever, fnc]
 export basedir="$DATA_DIR_BASE/$DATASET"
 export TASK_TYPE="3t1s" #options for task type include lex,delex,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both mod1 and mod2 folders
 export SUBTASK_TYPE="few_shot"
-export TASK_NAME="fnccrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
-export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/"
+export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
+export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE"
 export TOY_DATA_DIR="toydata"
 export TOY_DATA_DIR_PATH="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$TOY_DATA_DIR/"
 export PYTHONPATH="../src"
@@ -101,6 +101,8 @@ if [ $DOWNLOAD_FRESH_DATA == "true" ]; then
     ./get_fever_fnc_data.sh
     ./convert_to_mnli_format.sh
 fi
+
+exit
 echo "value of toy_data_path is $TOY_DATA_DIR_PATH"
 #create a small part of data as toy data. this will be used to run regresssion tests before the actual run starts
 ./reduce_size.sh  --data_path $TOY_DATA_DIR_PATH
