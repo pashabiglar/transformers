@@ -44,8 +44,8 @@ fi
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         wandb on
         wandb online
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training_4models_classweight0.1/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training_4models_classweight0.1/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/factverification/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/factverification/data"
 fi
 
 
@@ -72,16 +72,17 @@ echo "EPOCHS=$EPOCHS"
 
 
 export DATASET="fever" #options include [fever, fnc]
-export basedir="$DATA_DIR_BASE/$DATASET"
 export TASK_TYPE="3t1s" #options for task type include lex,delex,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both mod1 and mod2 folders
 export SUBTASK_TYPE="few_shot"
 export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
+export BERT_MODEL_NAME="google/bert_uncased_L-12_H-128_A-2" #options include things like [bert-base-uncased,bert-base-cased] etc. refer src/transformers/tokenization_bert.py for more.
+export MAX_SEQ_LENGTH="128"
+
+export basedir="$DATA_DIR_BASE/$DATASET"
+export PYTHONPATH="../src"
 export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE"
 export TOY_DATA_DIR="toydata"
 export TOY_DATA_DIR_PATH="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$TOY_DATA_DIR/"
-export PYTHONPATH="../src"
-export BERT_MODEL_NAME="google/bert_uncased_L-12_H-128_A-2" #options include things like [bert-base-uncased,bert-base-cased] etc. refer src/transformers/tokenization_bert.py for more.
-export MAX_SEQ_LENGTH="128"
 export OUTPUT_DIR="$OUTPUT_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$BERT_MODEL_NAME/$MAX_SEQ_LENGTH/"
 echo $OUTPUT_DIR
 
