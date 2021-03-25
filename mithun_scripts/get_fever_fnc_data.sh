@@ -792,7 +792,7 @@ fi
 if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUBTASK_TYPE" = "few_shot" ] ; then
     echo "found task type to be 3t1s, taskname to be fevercrossdomain and subtask to be few shot"
 
-echo $DATA_DIR
+echo $DATA_DIR=
 mkdir -p $DATA_DIR
 
 FILE="$DATA_DIR/train1.tsv"
