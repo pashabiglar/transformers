@@ -13,7 +13,7 @@ from ...tokenization_bart import BartTokenizer, BartTokenizerFast
 from ...tokenization_roberta import RobertaTokenizer, RobertaTokenizerFast
 from ...tokenization_utils import PreTrainedTokenizer
 from ...tokenization_xlm_roberta import XLMRobertaTokenizer
-from ..processors.glue import glue_convert_examples_to_features, glue_output_modes, glue_processors,glue_convert_pair_examples_to_features,glue_convert_examples_from_list_of_datasets_to_features
+from ..processors.glue import glue_convert_examples_to_features, glue_output_modes, glue_processors,glue_convert_pair_examples_to_features,_glue_convert_examples_to_features,glue_convert_examples_from_list_of_datasets_to_features
 from ..processors.utils import InputFeatures
 
 from random import randrange
@@ -280,15 +280,27 @@ class Read3DatasetsParallely(Dataset):
                         if limit_length is not None:
                             each_dataset = each_dataset[:limit_length]
 
+                #treate separately when we have only one dataset. multiple datasets need more parallel processing
+                if(len(list_all_datasets))==1:
+                    self.features = _glue_convert_examples_to_features(
+                        list_all_datasets,
+                        tokenizer_lex,
+                        tokenizer_delex,
+                        max_length=args.max_seq_length,
+                        label_list=label_list,
+                        output_mode=self.output_mode,
+                    )
 
-                self.features = glue_convert_examples_from_list_of_datasets_to_features(
-                    list_all_datasets,
-                    tokenizer_lex,
-                    tokenizer_delex,
-                    max_length=args.max_seq_length,
-                    label_list=label_list,
-                    output_mode=self.output_mode,
-                )
+                else:
+
+                    self.features = glue_convert_examples_from_list_of_datasets_to_features(
+                        list_all_datasets,
+                        tokenizer_lex,
+                        tokenizer_delex,
+                        max_length=args.max_seq_length,
+                        label_list=label_list,
+                        output_mode=self.output_mode,
+                    )
                 start = time.time()
                 torch.save(self.features, cached_features_file)
                 # ^ This seems to take a lot of time so I want to investigate why and how we can improve.
