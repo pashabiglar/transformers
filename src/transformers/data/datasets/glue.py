@@ -281,17 +281,17 @@ class Read3DatasetsParallely(Dataset):
                             each_dataset = each_dataset[:limit_length]
 
                 #treate separately when we have only one dataset. multiple datasets need more parallel processing
-                if(len(list_all_datasets))==1:
-                    self.features = _glue_convert_examples_to_features(
-                        list_all_datasets,
-                        tokenizer_lex,
-                        tokenizer_delex,
-                        max_length=args.max_seq_length,
-                        label_list=label_list,
-                        output_mode=self.output_mode,
-                    )
-
-                else:
+                # if(len(list_all_datasets))==1:
+                #     self.features = _glue_convert_examples_to_features(
+                #         list_all_datasets,
+                #         tokenizer_lex,
+                #         tokenizer_delex,
+                #         max_length=args.max_seq_length,
+                #         label_list=label_list,
+                #         output_mode=self.output_mode,
+                #     )
+                #
+                # else:
 
                     self.features = glue_convert_examples_from_list_of_datasets_to_features(
                         list_all_datasets,

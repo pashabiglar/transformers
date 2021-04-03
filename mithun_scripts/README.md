@@ -47,6 +47,21 @@ then run the code using:
 
 note: change the $MACHINE_TO_RUN_ON to whatever you picked aboce
 
+## to run 1+ models
+pass command line args:
+total_no_of_models_including_student_and_its_teachers=1
+total_no_of_test_datasets=1
+
+
+to run 1teacher 1 student pass same as 2.
+
+Note, here is the mapping 
+1= just run lex alone
+2= lex as teacher, student will have data that is delexicalized with figerspecific
+3= 1t, 1student as before+ another student with delexicalized using oaner
+4= 4 models, with : lex, figerspecific, oaner, figerabstract
+
+
 #### for internal uofa reference
 
 scripts to run on each of the machines:
