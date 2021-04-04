@@ -450,7 +450,7 @@ def _glue_convert_list_of_example_pairs_to_features(
     #todo:replace this with a generic function which automatically finds the total number of
     # various types of datasets and creates feature per data point accordingly
     #update: i tried creating a general function based on total numver of datasets. every time fucks my brain up big time
-    #
+
     #
     # for i in range(total_no_of_datapoints):
     #         inputs1 = {k: all_encoded_datasets[0][k][i] for k in all_encoded_datasets[0]}
@@ -471,8 +471,8 @@ def _glue_convert_list_of_example_pairs_to_features(
             inputs = {k: each_dataset[k][i] for k in each_dataset}
             feature = InputFeatures(**inputs, label=list_of_lists_of_labels[0][i])
             list_features.append(feature)
-        tuple(list_features)
-        features.append(feature)
+        four_features=tuple(list_features)
+        features.append(four_features)
     return features
 
 
