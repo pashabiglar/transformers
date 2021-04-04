@@ -32,6 +32,7 @@ from transformers import (
     HfArgumentParser,
     TrainingArguments,
     StudentTeacherTrainer,
+    OneModelAloneTrainer,
     glue_compute_metrics,
     glue_output_modes,
     glue_tasks_num_labels,
@@ -309,6 +310,7 @@ def run_training(model_args, data_args, training_args):
 
 
     if training_args.do_train_student_teacher:
+        #student teacher architecture expects 2 or more models
         assert len(list_all_models)>1
         trainer = StudentTeacherTrainer(
             tokenizer_delex,
@@ -322,6 +324,21 @@ def run_training(model_args, data_args, training_args):
             eval_compute_metrics=dev_compute_metrics
 
         )
+    else:
+        #if we want to just train one model.
+        trainer = OneModelAloneTrainer(
+            tokenizer_delex,
+            tokenizer_lex,
+            models=list_all_models,
+            args=training_args,
+            train_datasets={"combined": train_dataset},
+            eval_dataset=eval_dataset,
+            test_datasets=list_test_datasets,
+            test_compute_metrics=test_compute_metrics,
+            eval_compute_metrics=dev_compute_metrics
+
+        )
+
 
 
 
