@@ -237,9 +237,7 @@ def run_training(model_args, data_args, training_args):
 
 
     # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
-
     # combined model_stu_teacher performs in a delexicalized dataset. This will serve as a verification point
-
     #to confirm the accuracy (we got 92.91% for fever delx in domain) if something goes wrong in the prediction phase below
 
 
@@ -339,9 +337,9 @@ def run_training(model_args, data_args, training_args):
             tokenizer_lex,
             models=model,
             args=training_args,
-            train_datasets=train_dataset,
+            train_dataset=train_dataset,
             eval_dataset=eval_dataset,
-            test_datasets=test_dataset,
+            test_dataset=test_dataset,
             test_compute_metrics=test_compute_metrics,
             eval_compute_metrics=dev_compute_metrics
         )

@@ -1616,9 +1616,9 @@ class OneModelAloneTrainer:
             tokenizer_delex,
             tokenizer_lex,
             models,
-            test_datasets: [],
+            test_dataset,
             args: TrainingArguments,
-            train_datasets: {},
+            train_dataset,
             eval_dataset: Optional[Dataset] = None,
             test_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
             eval_compute_metrics: Optional[Callable[[EvalPrediction], Dict]] = None,
@@ -1642,16 +1642,14 @@ class OneModelAloneTrainer:
         self.delex_tokenizer = tokenizer_delex
 
         ###evaluate each model in the corresponding dataset
-        self.list_test_datasets = []
-        for each_test_dataset in test_datasets:
-            self.list_test_datasets.append(each_test_dataset)
+        self.test_dataset=test_dataset
 
         self.test_compute_metrics = test_compute_metrics
         self.eval_compute_metrics = eval_compute_metrics
         self.compute_metrics = None
         self.args = args
         self.data_collator = default_data_collator
-        self.train_dataset = train_datasets
+        self.train_dataset = train_dataset
         self.eval_dataset = eval_dataset
         self.compute_metrics = None
         self.prediction_loss_only = prediction_loss_only
@@ -1837,7 +1835,7 @@ class OneModelAloneTrainer:
             eval_dataset,
             sampler=sampler,
             batch_size=self.args.eval_batch_size,
-            collate_fn=self.default_data_collator
+            collate_fn=self.data_collator
         )
 
         return data_loader
@@ -2342,80 +2340,40 @@ class OneModelAloneTrainer:
                 tr_classification_loss, outputs_model = self.get_classification_loss(self.model,
                                                                                          data,
                                                                                          optimizer)
-
-
-
                 tr_classification_loss.backward()
                 optimizer.step()
                 scheduler.step()
-
-
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.args.max_grad_norm)
-
-
                 self.model.zero_grad()
-
                 self.global_step += 1
                 self.epoch = epoch + (step + 1) / len(batch_iterator)
-
-                test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = self._intermediate_eval(
-                    datasets=self.test_dataset,
-                    epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path,
-                    description="test_partition",
-                    model_to_test_with=self.model, model_number_in=0)
-                fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
-                accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
-                all_accuracies_on_test_partition_by_all_models.append(accuracy_test_partition)
-                all_prediction_logits.append(predictions_logits)
-
-            best_accuracy_test_partition_amongst_all_models = max(all_accuracies_on_test_partition_by_all_models)
-            index_accuracy_test_partition_between_all_models = all_accuracies_on_test_partition_by_all_models.index(
-                best_accuracy_test_partition_amongst_all_models)
-
-            logger.info(f"found that in epoch {epoch+1} out of all the {len(self.list_all_models)} models trained,"
-                        f"the model which gave highest accuracy was model number"
-                        f" {index_accuracy_test_partition_between_all_models+1} and that value is {best_accuracy_test_partition_amongst_all_models} ")
-
-            logger.info(f"accuracies of all 4 models are {all_accuracies_on_test_partition_by_all_models}")
-            trained_model = self.list_all_models[index_accuracy_test_partition_between_all_models]
-            self.model = self.list_all_models[index_accuracy_test_partition_between_all_models]
-
-            best_trained_model = self.list_all_models[index_accuracy_test_partition_between_all_models]
-            self.model = self.list_all_models[index_accuracy_test_partition_between_all_models]
-
-            assert best_trained_model is not None
             assert self.model is not None
-
+            assert self.test_dataset is not None
+            test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = self._intermediate_eval(
+                datasets=self.test_dataset,
+                epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path,
+                description="test_partition",
+                model_to_test_with=self.model, model_number_in=0)
+            accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
+            logger.info(f"found that in epoch {epoch+1}  accuracy_test_partition : {accuracy_test_partition} ")
             dev_partition_evaluation_result, _, _, _ = self._intermediate_eval(
                 datasets=self.eval_dataset,
                 epoch=epoch,
                 output_eval_file=dev_partition_evaluation_output_file_path,
+                description="dev_partition", model_to_test_with=self.model)
 
-                description="dev_partition", model_to_test_with=best_trained_model)
-
-            if best_accuracy_test_partition_amongst_all_models > best_acc:
+            if  accuracy_test_partition> best_acc:
                 logger.info(
-                    f"found that the current accuracy:{best_accuracy_test_partition_amongst_all_models} in epoch "
-                    f"{epoch} beats the beest accuracy so far i.e ={best_acc}. going to prediction"
-                    f"on test partition and save that and model to disk")
-
-                best_acc = best_accuracy_test_partition_amongst_all_models
-
+                    f"found that the current accuracy:{accuracy_test_partition} in epoch {epoch} beats the best accuracy so far i.e ={best_acc}")
                 # if the accuracy or fnc_score_test_partition beats the highest so far, write predictions to disk
-
                 self.write_predictions_to_disk(plain_text, gold_labels,
-                                               all_prediction_logits[index_accuracy_test_partition_between_all_models],
+                                               predictions_logits,
                                                predictions_on_test_file_path,
-                                               self.list_test_datasets[
-                                                   index_accuracy_test_partition_between_all_models])
+                                               self.test_dataset)
 
                 # Save model checkpoint
-                self.model = self.list_all_models[index_accuracy_test_partition_between_all_models]
                 output_dir = os.path.join(self.args.output_dir)
                 self.save_model(output_dir)
-
-                # if self.is_world_master():
-                #     self._rotate_checkpoints()
 
                 if is_torch_tpu_available():
                     xm.rendezvous("saving_optimizer_states")

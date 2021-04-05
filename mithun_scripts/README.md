@@ -48,13 +48,12 @@ then run the code using:
 note: change the $MACHINE_TO_RUN_ON to whatever you picked above
 
 ### to run just 1 model
-remove command line argument `do_train_student_teacher`
-pass command line args:
 
-total_no_of_models_including_student_and_its_teachers=1
-
-total_no_of_test_datasets=1
-task_type=[lex or delex]
+command line args:
+- remove  `--do_train_student_teacher`
+- total_no_of_models_including_student_and_its_teachers=1
+- total_no_of_test_datasets=1
+- task_type=[lex or delex]
 
 e.g.,`--total_no_of_models_including_student_and_its_teachers 1 --total_no_of_test_datasets 1 --task_type lex`
 
