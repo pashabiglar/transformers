@@ -81,7 +81,7 @@ export TASK_TYPE="lex" #[lex, delex, combined, 3t1s]
 # also if you want to add fewshot learning to your models (irrespective of the number of models), use: few_shot
 #note: in case of having more than 2 models, (i.e group learning), this variable is not checked (i.e the order of delexicalizations are fixed)
 # unless you are using few_shot+3t1s
-export SUBTASK_TYPE="few_shot" #['few_shot',"oa","figer_specific", "figer_abstract"]
+export SUBTASK_TYPE="" #['few_shot',"oa","figer_specific", "figer_abstract"]
 
 export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
 export BERT_MODEL_NAME="google/bert_uncased_L-12_H-128_A-2" #options include things like [bert-base-uncased,bert-base-cased] etc. refer src/transformers/tokenization_bert.py for more.

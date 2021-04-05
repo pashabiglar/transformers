@@ -2370,7 +2370,7 @@ class OneModelAloneTrainer:
                                                predictions_logits,
                                                predictions_on_test_file_path,
                                                self.test_dataset)
-
+                best_acc=accuracy_test_partition
                 # Save model checkpoint
                 output_dir = os.path.join(self.args.output_dir)
                 self.save_model(output_dir)
