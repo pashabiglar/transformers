@@ -4,8 +4,57 @@
 
 
 
+#########################################################################################################################################################################################
+# fevercrossdomain with one model that uses lexicalized dataset (i.e training and dev will be in fever
+# (with 4 labels), and test on fnc-dev partition)
+# #+ few shot== a few data points from cross domain target dataset is added to the end of training data
+if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUBTASK_TYPE" = "few_shot" ]; then
 
-########
+echo "found task type is lex and task name as fever cross domain and SUBTASK_TYPE is few_shot"
+
+echo $DATA_DIR
+mkdir -p $DATA_DIR
+
+
+
+FILE=$DATA_DIR/train.tsv
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://osf.io/r6mdz/download -O $FILE
+    # for few shot learning
+    # here we download lex plain text version of fnc in domain with 4 labels and append it at the end of fever4 labels in domain training data
+    wget https://osf.io/a6tks/download -O cross_domain_train.tsv
+    tail -10 cross_domain_train.tsv >> $FILE
+fi
+
+FILE=$DATA_DIR/dev.tsv
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://osf.io/azf6t/download -O $FILE
+fi
+
+
+
+#note that the test file is fnc dev partition
+FILE=$DATA_DIR/test.tsv
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+      #fnc-dev-lexicalized/
+      wget https://osf.io/jfpbv//download -O $FILE
+
+      #fnc-test lexicalized/plaintext- use this only once for final testing
+      #wget https://osf.io/r5uvd/download -O $FILE
+
+
+fi
+fi
+
+
+#########################################################################################################################################################################################
+
 # fevercrossdomain with one model that uses lexicalized dataset (i.e training and dev will be in fever
 # (with 4 labels), and test on fnc-dev partition)
 if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] ; then
@@ -48,6 +97,9 @@ else
 
 fi
 fi
+
+
+
 #########fevercrossdomain delex where delexicalization was done using overlap aware (oa) technique (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
 #if [ "$TASK_TYPE" = "delex" ] && [ "$TASK_NAME" = "fevercrossdomain" ]  && [ "$SUB_TASK_TYPE" = "oa" ]; then
 #echo "found task type is lex and task name as fever cross domain and SUB_TASK_TYPE is oa"
