@@ -190,7 +190,7 @@ def run_training(model_args, data_args, training_args):
             cache_dir=model_args.cache_dir,
             )
             list_all_models.append(model_stu_teacher)
-
+        model=list_all_models
     else:
         model = AutoModelForSequenceClassification.from_pretrained(
             model_args.model_name_or_path,
@@ -318,12 +318,13 @@ def run_training(model_args, data_args, training_args):
 
     if training_args.do_train_student_teacher:
         #student teacher architecture expects 2 or more models
-        assert len(list_all_models)>1
+        assert len(model)>1
         assert len(test_dataset) > 1
+        assert len(train_dataset)>1
         trainer = StudentTeacherTrainer(
             tokenizer_delex,
             tokenizer_lex,
-            models=list_all_models,
+            models=model,
             args=training_args,
             train_datasets={"combined": train_dataset},
             eval_dataset=eval_dataset,
@@ -336,9 +337,9 @@ def run_training(model_args, data_args, training_args):
         trainer = OneModelAloneTrainer(
             tokenizer_delex,
             tokenizer_lex,
-            models=test_dataset,
+            models=model,
             args=training_args,
-            train_datasets={"combined": train_dataset},
+            train_datasets=train_dataset,
             eval_dataset=eval_dataset,
             test_datasets=test_dataset,
             test_compute_metrics=test_compute_metrics,
@@ -353,7 +354,7 @@ def run_training(model_args, data_args, training_args):
         test_partition_evaluation_result=None
 
         if (training_args.do_train_student_teacher == True):
-            dev_partition_evaluation_result,test_partition_evaluation_result=trainer.train_multiple_teachers_1student(
+            dev_partition_evaluation_result,test_partition_evaluation_result=trainer.train(
 
                 model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
             )

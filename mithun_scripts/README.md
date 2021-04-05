@@ -45,7 +45,7 @@ then run the code using:
 
 `bash run_all.sh --epochs_to_run 25 --machine_to_run_on hpc --use_toy_data false --download_fresh_data true `
 
-note: change the $MACHINE_TO_RUN_ON to whatever you picked aboce
+note: change the $MACHINE_TO_RUN_ON to whatever you picked above
 
 ### to run just 1 model
 remove command line argument `do_train_student_teacher`
