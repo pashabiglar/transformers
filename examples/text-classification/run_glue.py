@@ -268,17 +268,13 @@ def run_training(model_args, data_args, training_args):
                     else None
                 )
 
-
-
-
+    # if you are running in student teacher mode the task type must be combined, not lex or delex.
+    # also make sure the corresponding data has been downloaded using ./get_fever_fnc_data.sh
+    # extra info: in the student teacher mode the evaluation always happens in the delex cross domain dev data.
+    # here we are loading it as the test partition so that we can keep track of progress across epochs
+    # update: when using multiple teachers, we are going to have an array of test datasets- each delexicalized in a different way.
     if (training_args.do_train_student_teacher == True):
-        # if you are running in student teacher mode the task type must be combined, not lex or delex.
-        # also make sure the corresponding data has been downloaded using ./get_fever_fnc_data.sh
-        #extra info: in the student teacher mode the evaluation always happens in the delex cross domain dev data. here we are loading it as the test partition so that we can keep track of
-        # progress across epochs
-        #update: when using multiple teachers, we are going to have an array of test datasets- each delexicalized in a different way.
-
-        list_test_datasets=[]
+        list_test_datasets = []
         for n in range(training_args.total_no_of_test_datasets):
             test_dataset = (
                 GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test", cache_dir=model_args.cache_dir,index_in=n)
@@ -287,9 +283,23 @@ def run_training(model_args, data_args, training_args):
             list_test_datasets.append(test_dataset)
         assert len(list_test_datasets) > 0
         assert len(list_test_datasets) == training_args.total_no_of_test_datasets
+        test_dataset=list_test_datasets
     else:
-        print("training_args.do_train_student_teacher is false. going to exit")
-        sys.exit()
+        if (training_args.task_type == "lex"):
+            test_dataset = (
+                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="dev",
+                            cache_dir=model_args.cache_dir)
+                if training_args.do_eval
+                else None
+            )
+        else:
+            if (training_args.task_type == "delex"):
+                test_dataset = (
+                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
+                                cache_dir=model_args.cache_dir)
+                    if training_args.do_eval
+                    else None
+                )
 
     def build_compute_metrics_fn(task_name: str) -> Callable[[EvalPrediction], Dict]:
         def compute_metrics_fn(p: EvalPrediction):
@@ -309,6 +319,7 @@ def run_training(model_args, data_args, training_args):
     if training_args.do_train_student_teacher:
         #student teacher architecture expects 2 or more models
         assert len(list_all_models)>1
+        assert len(test_dataset) > 1
         trainer = StudentTeacherTrainer(
             tokenizer_delex,
             tokenizer_lex,
@@ -316,24 +327,22 @@ def run_training(model_args, data_args, training_args):
             args=training_args,
             train_datasets={"combined": train_dataset},
             eval_dataset=eval_dataset,
-            test_datasets=list_test_datasets,
+            test_datasets=test_dataset,
             test_compute_metrics=test_compute_metrics,
             eval_compute_metrics=dev_compute_metrics
-
         )
     else:
         #if we want to just train one model.
         trainer = OneModelAloneTrainer(
             tokenizer_delex,
             tokenizer_lex,
-            models=list_all_models,
+            models=test_dataset,
             args=training_args,
             train_datasets={"combined": train_dataset},
             eval_dataset=eval_dataset,
-            test_datasets=list_test_datasets,
+            test_datasets=test_dataset,
             test_compute_metrics=test_compute_metrics,
             eval_compute_metrics=dev_compute_metrics
-
         )
 
 
