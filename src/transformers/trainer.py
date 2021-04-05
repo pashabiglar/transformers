@@ -2362,6 +2362,10 @@ class OneModelAloneTrainer:
                 output_eval_file=dev_partition_evaluation_output_file_path,
                 description="dev_partition", model_to_test_with=self.model)
 
+            accuracy_dev_partition = dev_partition_evaluation_result['eval_acc']['cross_domain_acc']
+
+            logger.info(f"found that in epoch {epoch+1}  accuracy_dev_partition : {accuracy_dev_partition} ")
+
             if  accuracy_test_partition> best_acc:
                 logger.info(
                     f"found that the current accuracy:{accuracy_test_partition} in epoch {epoch} beats the best accuracy so far i.e ={best_acc}")
