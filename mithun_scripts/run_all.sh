@@ -42,8 +42,10 @@ fi
 
 
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training_4models_classweight0.1/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/huggingface_bert_fever_to_fnc_run_training_4models_classweight0.1/data"
+        wandb on
+        wandb online
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/factverification_lex_standalone/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/factverification_lex_standalone/data"
 fi
 
 
@@ -55,8 +57,8 @@ if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
 fi
 
 if [ $MACHINE_TO_RUN_ON == "clara" ]; then
-
-        wandb off
+        wandb on
+        wandb online
         export OUTPUT_DIR_BASE="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v1/output"
         export DATA_DIR_BASE="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v1/data"
 
@@ -69,21 +71,31 @@ echo "DATA_DIR_BASE=$DATA_DIR_BASE"
 echo "EPOCHS=$EPOCHS"
 
 
-export DATASET="fnc"
-export basedir="$DATA_DIR_BASE/$DATASET"
-export TASK_TYPE="3t1s" #options for task type include lex,delex,and combined"". combined is used in case of student teacher architecture which will load a paralleldataset from both mod1 and mod2 folders
-export TASK_NAME="fnccrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
-export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/"
-export TOY_DATA_DIR="toydata"
-export TOY_DATA_DIR_PATH="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$TOY_DATA_DIR/"
-export PYTHONPATH="../src"
+export DATASET="fever" #the name of the home/in-domain dataset . options include [fever, fnc]
+
+# Will your model be a stand alone model (lex,delex) or a student teacher architecture one (combined) with two models,
+#update: if using group_learning setup (more than 2 models), use :3t1s
+export TASK_TYPE="lex" #[lex, delex, combined, 3t1s]
+
+#if your TASK_TYPE is combined,  what types of delexiccalizations will your student teacher model be using.
+# also if you want to add fewshot learning to your models (irrespective of the number of models), use: few_shot
+#note: in case of having more than 2 models, (i.e group learning), this variable is not checked (i.e the order of delexicalizations are fixed)
+# unless you are using few_shot+3t1s
+export SUBTASK_TYPE="" #['few_shot',"oa","figer_specific", "figer_abstract"]
+
+export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
 export BERT_MODEL_NAME="google/bert_uncased_L-12_H-128_A-2" #options include things like [bert-base-uncased,bert-base-cased] etc. refer src/transformers/tokenization_bert.py for more.
 export MAX_SEQ_LENGTH="128"
+
+export basedir="$DATA_DIR_BASE/$DATASET"
+export PYTHONPATH="../src"
+export DATA_DIR="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE"
+export TOY_DATA_DIR="toydata"
+export TOY_DATA_DIR_PATH="$DATA_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$TOY_DATA_DIR/"
 export OUTPUT_DIR="$OUTPUT_DIR_BASE/$DATASET/$TASK_NAME/$TASK_TYPE/$BERT_MODEL_NAME/$MAX_SEQ_LENGTH/"
 echo $OUTPUT_DIR
 
-wandb on
-wandb online
+
 
 
 echo "OUTPUT_DIR=$OUTPUT_DIR"
@@ -99,9 +111,12 @@ if [ $DOWNLOAD_FRESH_DATA == "true" ]; then
     ./get_fever_fnc_data.sh
     ./convert_to_mnli_format.sh
 fi
+
+
 echo "value of toy_data_path is $TOY_DATA_DIR_PATH"
 #create a small part of data as toy data. this will be used to run regresssion tests before the actual run starts
 ./reduce_size.sh  --data_path $TOY_DATA_DIR_PATH
+
 
 
 
@@ -123,15 +138,16 @@ echo "done with data download part . datapath now is $DATA_DIR"
 
 
 
-export CUDA_VISIBLE_DEVICES=0
-set CUDA_VISIBLE_DEVICES=0
+export CUDA_VISIBLE_DEVICES=2
+set CUDA_VISIBLE_DEVICES=2
 
 
 export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME      --do_train   --do_eval   --do_predict    \
 --data_dir $DATA_DIR    --max_seq_length $MAX_SEQ_LENGTH      --per_device_eval_batch_size=16        --per_device_train_batch_size=16       \
 --learning_rate 1e-5      --num_train_epochs $EPOCHS     --output_dir $OUTPUT_DIR --overwrite_output_dir  \
 --weight_decay 0.01 --adam_epsilon 1e-6  --evaluate_during_training \
---task_type $TASK_TYPE --machine_to_run_on $MACHINE_TO_RUN_ON --toy_data_dir_path $TOY_DATA_DIR_PATH  "
+--task_type $TASK_TYPE --machine_to_run_on $MACHINE_TO_RUN_ON --toy_data_dir_path $TOY_DATA_DIR_PATH  \
+--overwrite_cache --total_no_of_models_including_student_and_its_teachers 1 --total_no_of_test_datasets 1 "
 
 
 

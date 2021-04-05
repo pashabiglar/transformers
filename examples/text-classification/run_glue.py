@@ -32,13 +32,14 @@ from transformers import (
     HfArgumentParser,
     TrainingArguments,
     StudentTeacherTrainer,
+    OneModelAloneTrainer,
     glue_compute_metrics,
     glue_output_modes,
     glue_tasks_num_labels,
     set_seed,
 )
 import math
-from transformers.data.datasets import ParallelDataDataset,Read3DatasetsParallely
+from transformers.data.datasets import ReadDatasetsParallely
 
 
 def get_git_info():
@@ -189,7 +190,7 @@ def run_training(model_args, data_args, training_args):
             cache_dir=model_args.cache_dir,
             )
             list_all_models.append(model_stu_teacher)
-
+        model=list_all_models
     else:
         model = AutoModelForSequenceClassification.from_pretrained(
             model_args.model_name_or_path,
@@ -211,12 +212,9 @@ def run_training(model_args, data_args, training_args):
         assert tokenizer_delex is not None
 
         train_dataset = (
-            Read3DatasetsParallely(training_args,args=data_args, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex, data_type_1="lex", data_type_2="delex",
-                                cache_dir=model_args.cache_dir) if training_args.do_train else None
+            ReadDatasetsParallely(training_args, args=data_args, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex, data_type_1="lex", data_type_2="delex",
+                                  cache_dir=model_args.cache_dir) if training_args.do_train else None
         )
-
-
-
     else:
         if(training_args.task_type=="lex"):
             train_dataset = (
@@ -239,9 +237,7 @@ def run_training(model_args, data_args, training_args):
 
 
     # in the student teacher mode we will keep the dev as in-domain dev delex partition. The goal here is to find how the
-
     # combined model_stu_teacher performs in a delexicalized dataset. This will serve as a verification point
-
     #to confirm the accuracy (we got 92.91% for fever delx in domain) if something goes wrong in the prediction phase below
 
 
@@ -270,17 +266,13 @@ def run_training(model_args, data_args, training_args):
                     else None
                 )
 
-
-
-
+    # if you are running in student teacher mode the task type must be combined, not lex or delex.
+    # also make sure the corresponding data has been downloaded using ./get_fever_fnc_data.sh
+    # extra info: in the student teacher mode the evaluation always happens in the delex cross domain dev data.
+    # here we are loading it as the test partition so that we can keep track of progress across epochs
+    # update: when using multiple teachers, we are going to have an array of test datasets- each delexicalized in a different way.
     if (training_args.do_train_student_teacher == True):
-        # if you are running in student teacher mode the task type must be combined, not lex or delex.
-        # also make sure the corresponding data has been downloaded using ./get_fever_fnc_data.sh
-        #extra info: in the student teacher mode the evaluation always happens in the delex cross domain dev data. here we are loading it as the test partition so that we can keep track of
-        # progress across epochs
-        #update: when using multiple teachers, we are going to have an array of test datasets- each delexicalized in a different way.
-
-        list_test_datasets=[]
+        list_test_datasets = []
         for n in range(training_args.total_no_of_test_datasets):
             test_dataset = (
                 GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test", cache_dir=model_args.cache_dir,index_in=n)
@@ -289,9 +281,23 @@ def run_training(model_args, data_args, training_args):
             list_test_datasets.append(test_dataset)
         assert len(list_test_datasets) > 0
         assert len(list_test_datasets) == training_args.total_no_of_test_datasets
+        test_dataset=list_test_datasets
     else:
-        print("training_args.do_train_student_teacher is false. going to exit")
-        sys.exit()
+        if (training_args.task_type == "lex"):
+            test_dataset = (
+                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="dev",
+                            cache_dir=model_args.cache_dir)
+                if training_args.do_eval
+                else None
+            )
+        else:
+            if (training_args.task_type == "delex"):
+                test_dataset = (
+                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
+                                cache_dir=model_args.cache_dir)
+                    if training_args.do_eval
+                    else None
+                )
 
     def build_compute_metrics_fn(task_name: str) -> Callable[[EvalPrediction], Dict]:
         def compute_metrics_fn(p: EvalPrediction):
@@ -309,19 +315,35 @@ def run_training(model_args, data_args, training_args):
 
 
     if training_args.do_train_student_teacher:
-        assert len(list_all_models)>1
+        #student teacher architecture expects 2 or more models
+        assert len(model)>1
+        assert len(test_dataset) > 1
+        assert len(train_dataset)>1
         trainer = StudentTeacherTrainer(
             tokenizer_delex,
             tokenizer_lex,
-            models=list_all_models,
+            models=model,
             args=training_args,
             train_datasets={"combined": train_dataset},
             eval_dataset=eval_dataset,
-            test_datasets=list_test_datasets,
+            test_datasets=test_dataset,
             test_compute_metrics=test_compute_metrics,
             eval_compute_metrics=dev_compute_metrics
-
         )
+    else:
+        #if we want to just train one model.
+        trainer = OneModelAloneTrainer(
+            tokenizer_delex,
+            tokenizer_lex,
+            models=model,
+            args=training_args,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            test_dataset=test_dataset,
+            test_compute_metrics=test_compute_metrics,
+            eval_compute_metrics=dev_compute_metrics
+        )
+
 
 
 
@@ -330,7 +352,7 @@ def run_training(model_args, data_args, training_args):
         test_partition_evaluation_result=None
 
         if (training_args.do_train_student_teacher == True):
-            dev_partition_evaluation_result,test_partition_evaluation_result=trainer.train_multiple_teachers_1student(
+            dev_partition_evaluation_result,test_partition_evaluation_result=trainer.train(
 
                 model_path=model_args.model_name_or_path if os.path.isdir(model_args.model_name_or_path) else None
             )
