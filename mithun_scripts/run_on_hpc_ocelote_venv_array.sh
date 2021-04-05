@@ -55,7 +55,7 @@ pip install stop-words  --no-cache-dir
 
 cd /home/u11/mithunpaul/xdisk/factverification_lex_standalone/code/mithun_scripts
 
-bash run_all.sh --epochs_to_run 25 --machine_to_run_on hpc --use_toy_data false --download_fresh_data true #options include [laptop, hpc,clara]
+bash run_all.sh --epochs_to_run 55 --machine_to_run_on hpc --use_toy_data false --download_fresh_data true #options include [laptop, hpc,clara]
 
 
 
