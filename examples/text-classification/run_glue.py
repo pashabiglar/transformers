@@ -39,7 +39,7 @@ from transformers import (
     set_seed,
 )
 import math
-from transformers.data.datasets import ParallelDataDataset,Read3DatasetsParallely
+from transformers.data.datasets import ReadDatasetsParallely
 
 
 def get_git_info():
@@ -212,12 +212,9 @@ def run_training(model_args, data_args, training_args):
         assert tokenizer_delex is not None
 
         train_dataset = (
-            Read3DatasetsParallely(training_args,args=data_args, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex, data_type_1="lex", data_type_2="delex",
-                                cache_dir=model_args.cache_dir) if training_args.do_train else None
+            ReadDatasetsParallely(training_args, args=data_args, tokenizer_lex=tokenizer_lex, tokenizer_delex=tokenizer_delex, data_type_1="lex", data_type_2="delex",
+                                  cache_dir=model_args.cache_dir) if training_args.do_train else None
         )
-
-
-
     else:
         if(training_args.task_type=="lex"):
             train_dataset = (

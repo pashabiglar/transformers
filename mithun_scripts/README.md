@@ -47,13 +47,16 @@ then run the code using:
 
 note: change the $MACHINE_TO_RUN_ON to whatever you picked aboce
 
-### #to run just 1 model
+### to run just 1 model
 remove command line argument `do_train_student_teacher`
 pass command line args:
-total_no_of_models_including_student_and_its_teachers=1
-total_no_of_test_datasets=1
 
-e.g.,`--total_no_of_models_including_student_and_its_teachers 1 --total_no_of_test_datasets 1`
+total_no_of_models_including_student_and_its_teachers=1
+
+total_no_of_test_datasets=1
+task_type=[lex or delex]
+
+e.g.,`--total_no_of_models_including_student_and_its_teachers 1 --total_no_of_test_datasets 1 --task_type lex`
 
 
 ## to run 1+ models
@@ -73,6 +76,22 @@ Note, here is the mapping
 3= 1t, 1student as before+ another student with delexicalized using oaner
 4= 4 models, with : lex, figerspecific, oaner, figerabstract
 
+## other command line arguments
+
+`--overwrite_cache` : add this if you want the cache to be overwritten. Usually the 
+tokenized data is stored and reused from the cache. Especially when `--download_fresh_data` is set
+to True, it is imperative that `--overwrite_cache` is added to the list of arguments.
+
+
+
+## Typical examples of command line arguments. 
+
+- to run a stand alone model which trains on lexicalized plain text data. This is the classic training of any neural network. 
+
+```
+--model_name_or_path google/bert_uncased_L-12_H-128_A-2 --task_name fevercrossdomain --do_train --do_eval --do_predict --data_dir /Users/mordor/research/huggingface/src/transformers/data/datasets/fever/fevercrossdomain/lex/toydata/ --max_seq_length 128 --per_device_eval_batch_size=16 --per_device_train_batch_size=16 --learning_rate 1e-5 --num_train_epochs 2 --output_dir /Users/mordor/research/huggingface/mithun_scripts/output/fever/fevercrossdomain/lex/google/bert_uncased_L-12_H-128_A-2/128/ --overwrite_output_dir --weight_decay 0.01 --adam_epsilon 1e-6 --evaluate_during_training --task_type lex --machine_to_run_on laptop --toy_data_dir_path /Users/mordor/research/huggingface/src/transformers/data/datasets/fever/fevercrossdomain/lex/toydata/ --overwrite_cache --total_no_of_models_including_student_and_its_teachers 1 --total_no_of_test_datasets 1
+
+```
 
 #### for internal uofa reference
 

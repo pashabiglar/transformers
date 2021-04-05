@@ -187,7 +187,7 @@ class GlueDataset(Dataset):
 
 
 
-class Read3DatasetsParallely(Dataset):
+class ReadDatasetsParallely(Dataset):
     """
     Same as GlueDataset, but here you can read 3 datasets together. For example you can read the lexicalixed
      2 delexicalized versions(each delexicalized differently) of the same datasets, with each data point corresponding
@@ -280,18 +280,6 @@ class Read3DatasetsParallely(Dataset):
                         if limit_length is not None:
                             each_dataset = each_dataset[:limit_length]
 
-                #treate separately when we have only one dataset. multiple datasets need more parallel processing
-                # if(len(list_all_datasets))==1:
-                #     self.features = _glue_convert_examples_to_features(
-                #         list_all_datasets,
-                #         tokenizer_lex,
-                #         tokenizer_delex,
-                #         max_length=args.max_seq_length,
-                #         label_list=label_list,
-                #         output_mode=self.output_mode,
-                #     )
-                #
-                # else:
 
                     self.features = glue_convert_examples_from_list_of_datasets_to_features(
                         list_all_datasets,
@@ -301,116 +289,6 @@ class Read3DatasetsParallely(Dataset):
                         label_list=label_list,
                         output_mode=self.output_mode,
                     )
-                start = time.time()
-                torch.save(self.features, cached_features_file)
-                # ^ This seems to take a lot of time so I want to investigate why and how we can improve.
-                logger.info(
-                    "Saving features into cached file %s [took %.3f s]", cached_features_file, time.time() - start
-                )
-
-    def __len__(self):
-        return len(self.features)
-
-    def __getitem__(self, i) -> InputFeatures:
-        return self.features[i]
-
-    def get_labels(self):
-        return self.label_list
-
-
-class ParallelDataDataset(Dataset):
-    """
-    Same as GlueDataset, but here you can read two datasets together. For example you can read the lexicalixed
-    and delexicalized version of the same datasets, with each data point corresponding to its equivalent in the other dataset.
-    """
-
-    args: GlueDataTrainingArguments
-    output_mode: str
-    features: List[InputFeatures]
-
-    def __init__(
-        self,
-
-        args: GlueDataTrainingArguments,
-        tokenizer_lex: PreTrainedTokenizer,
-        tokenizer_delex: PreTrainedTokenizer,
-        data_type_1: Optional[str] = None,
-        data_type_2: Optional[str] = None,
-        limit_length: Optional[int] = None,
-        mode: Union[str, Split] = Split.train,
-        cache_dir: Optional[str] = None,
-
-
-    ):
-        self.args = args
-        self.processor = glue_processors[args.task_name]()
-        self.output_mode = glue_output_modes[args.task_name]
-        if isinstance(mode, str):
-            try:
-                mode = Split[mode]
-            except KeyError:
-                raise KeyError("mode is not a valid split name")
-        # Load data features from cache or dataset file
-        cached_features_file = os.path.join(
-            cache_dir if cache_dir is not None else args.data_dir,
-            "cached_{}_{}_{}_{}".format(
-                mode.value, tokenizer_lex.__class__.__name__, str(args.max_seq_length), args.task_name,
-            ),
-        )
-        label_list = self.processor.get_labels()
-        if args.task_name in ["mnli", "mnli-mm"] and tokenizer_lex.__class__ in (
-            RobertaTokenizer,
-            RobertaTokenizerFast,
-            XLMRobertaTokenizer,
-        ):
-            # HACK(label indices are swapped in RoBERTa pretrained model)
-            label_list[1], label_list[2] = label_list[2], label_list[1]
-        self.label_list = label_list
-
-        # Make sure only the first process in distributed training processes the dataset,
-        # and the others will use the cache.
-
-        #note: when running student teacher first time a long time, pass--overwrite_cache so that parallell dataset is created and tokenized.
-
-        lock_path = cached_features_file + ".lock"
-        with FileLock(lock_path):
-            if os.path.exists(cached_features_file) and not args.overwrite_cache:
-                start = time.time()
-                self.features = torch.load(cached_features_file)
-                logger.info(
-                    f"Loading features from cached file {cached_features_file} [took %.3f s]", time.time() - start
-                )
-            else:
-                logger.info(f"Creating features from dataset file at {args.data_dir}")
-                #data_dir = os.path.join(args.data_dir, data_type_1)
-                if mode == Split.dev:
-                    examples = self.processor.get_dev_examples(args.data_dir)
-                elif mode == Split.test:
-                    examples = self.processor.get_test_examples(args.data_dir)
-                else:
-                    #when using parallel datasets get two features of examples and pass it to glue_convert_pair_examples_to_features
-                    #which in turn creates features and combines them both
-                    examples1 = self.processor.get_train_examples_set1(args.data_dir)
-                    examples2 = self.processor.get_train_examples_set2(args.data_dir)
-
-                    # assert both datasets are congruent
-                    for index,(x, y) in enumerate(zip(examples1, examples2)):
-                        assert x.label == y.label
-                        assert x.guid == y.guid
-
-                if limit_length is not None:
-                    examples1 = examples1[:limit_length]
-                    examples2 = examples2[:limit_length]
-                self.features = glue_convert_pair_examples_to_features(
-                    examples1,
-                    examples2,
-                    tokenizer_lex,
-                    tokenizer_delex,
-                    max_length=args.max_seq_length,
-                    label_list=label_list,
-                    output_mode=self.output_mode,
-                    task=args.task_name
-                )
                 start = time.time()
                 torch.save(self.features, cached_features_file)
                 # ^ This seems to take a lot of time so I want to investigate why and how we can improve.

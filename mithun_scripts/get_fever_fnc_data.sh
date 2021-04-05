@@ -4,46 +4,50 @@
 
 
 
-#
-#
-########fevercrossdomain lex (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
-#if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUB_TASK_TYPE" = "figerspecific" ]; then
-#
-#echo "found task type is lex and task name as fever cross domain"
-#
-#
-#echo $DATA_DIR
-#mkdir -p $DATA_DIR
-#
-#
-#
-#FILE=$DATA_DIR/train.tsv
-#if test -f "$FILE";then
-#    echo "$FILE exists"
-#else
-#    wget https://osf.io/r6mdz/download -O $FILE
-#fi
-#
-#FILE=$DATA_DIR/dev.tsv
-#if test -f "$FILE";then
-#    echo "$FILE exists"
-#else
-#    wget https://osf.io/azf6t/download -O $FILE
-#fi
-#
-#
-#
-##note that the test file is fnc dev partition
-#FILE=$DATA_DIR/test.tsv
-#if test -f "$FILE";then
-#    echo "$FILE exists"
-#else
-#
-#        # fnc-test lexicalized/plaintext
-#      wget https://osf.io/r5uvd/download -O $FILE
-#
-#fi
-#fi
+
+########
+# fevercrossdomain with one model that uses lexicalized dataset (i.e training and dev will be in fever
+# (with 4 labels), and test on fnc-dev partition)
+if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] ; then
+
+echo "found task type is lex and task name as fever cross domain"
+
+
+echo $DATA_DIR
+mkdir -p $DATA_DIR
+
+
+
+FILE=$DATA_DIR/train.tsv
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://osf.io/r6mdz/download -O $FILE
+fi
+
+FILE=$DATA_DIR/dev.tsv
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://osf.io/azf6t/download -O $FILE
+fi
+
+
+
+#note that the test file is fnc dev partition
+FILE=$DATA_DIR/test.tsv
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+      #fnc-dev-lexicalized/
+      wget https://osf.io/jfpbv//download -O $FILE
+
+      #fnc-test lexicalized/plaintext- use this only once for final testing
+      #wget https://osf.io/r5uvd/download -O $FILE
+
+
+fi
+fi
 #########fevercrossdomain delex where delexicalization was done using overlap aware (oa) technique (training and dev will be in fever (with 4 labels), and test on fnc-dev partition)
 #if [ "$TASK_TYPE" = "delex" ] && [ "$TASK_NAME" = "fevercrossdomain" ]  && [ "$SUB_TASK_TYPE" = "oa" ]; then
 #echo "found task type is lex and task name as fever cross domain and SUB_TASK_TYPE is oa"
