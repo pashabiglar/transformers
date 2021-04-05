@@ -2349,6 +2349,14 @@ class OneModelAloneTrainer:
                 self.epoch = epoch + (step + 1) / len(batch_iterator)
             assert self.model is not None
             assert self.test_dataset is not None
+
+            dev_partition_evaluation_result, _, _, _ = self._intermediate_eval(
+                datasets=self.eval_dataset,
+                epoch=epoch,
+                output_eval_file=dev_partition_evaluation_output_file_path,
+                description="dev_partition", model_to_test_with=self.model)
+
+
             test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = self._intermediate_eval(
                 datasets=self.test_dataset,
                 epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path,
@@ -2356,11 +2364,6 @@ class OneModelAloneTrainer:
                 model_to_test_with=self.model, model_number_in=0)
             accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
             logger.info(f"found that in epoch {epoch+1}  accuracy_test_partition : {accuracy_test_partition} ")
-            dev_partition_evaluation_result, _, _, _ = self._intermediate_eval(
-                datasets=self.eval_dataset,
-                epoch=epoch,
-                output_eval_file=dev_partition_evaluation_output_file_path,
-                description="dev_partition", model_to_test_with=self.model)
 
             accuracy_dev_partition = dev_partition_evaluation_result['eval_acc']['cross_domain_acc']
 
