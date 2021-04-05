@@ -59,22 +59,31 @@ task_type=[lex or delex]
 e.g.,`--total_no_of_models_including_student_and_its_teachers 1 --total_no_of_test_datasets 1 --task_type lex`
 
 
-## to run 1+ models
+## to run 2 models (as student teacher architecture)
 pass command line args:
-total_no_of_models_including_student_and_its_teachers=1
-total_no_of_test_datasets=1
+total_no_of_models_including_student_and_its_teachers=2
+total_no_of_test_datasets=2
+TASK_TYPE=combined
 
 
 e.g.,
-`--do_train_student_teacher  --total_no_of_models_including_student_and_its_teachers 1 --total_no_of_test_datasets 1`
+`--task_type combined --do_train_student_teacher  --total_no_of_models_including_student_and_its_teachers 2 --total_no_of_test_datasets 2`
 
 
+## to run 4 models (as  group learning architecture)
+pass command line args:
 
-Note, here is the mapping 
-1= just run lex alone
-2= lex as teacher, student will have data that is delexicalized with figerspecific
-3= 1t, 1student as before+ another student with delexicalized using oaner
-4= 4 models, with : lex, figerspecific, oaner, figerabstract
+total_no_of_models_including_student_and_its_teachers=4 
+
+total_no_of_test_datasets=4
+
+TASK_TYPE=3t1s
+
+
+e.g.,
+`--task_type 3t1s --do_train_student_teacher  --total_no_of_models_including_student_and_its_teachers 4 --total_no_of_test_datasets 4`
+
+order of 4 models= : lex, figerspecific, oaner, figerabstract
 
 ## other command line arguments
 
