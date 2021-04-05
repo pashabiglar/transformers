@@ -285,7 +285,7 @@ def run_training(model_args, data_args, training_args):
     else:
         if (training_args.task_type == "lex"):
             test_dataset = (
-                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="dev",
+                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="test",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_eval
                 else None
@@ -293,7 +293,7 @@ def run_training(model_args, data_args, training_args):
         else:
             if (training_args.task_type == "delex"):
                 test_dataset = (
-                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
+                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_eval
                     else None
