@@ -1857,7 +1857,7 @@ class OneModelAloneTrainer:
             test_dataset,
             sampler=sampler,
             batch_size=self.args.eval_batch_size,
-            collate_fn=self.default_data_collator,
+            collate_fn=self.data_collator,
         )
 
         return data_loader
@@ -2358,17 +2358,11 @@ class OneModelAloneTrainer:
                 self.global_step += 1
                 self.epoch = epoch + (step + 1) / len(batch_iterator)
 
-            # update @jan 28th 2021: now we are going to try predicting using each model on a correspondingly delexicalized dev partition of the cross domain dataset
-            assert len(self.list_test_datasets) == len(self.list_all_models)
-            all_accuracies_on_test_partition_by_all_models = []
-            all_prediction_logits = []
-            for index, (each_test_dataset, each_trained_model) in enumerate(
-                    zip(self.list_test_datasets, self.list_all_models)):
                 test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = self._intermediate_eval(
-                    datasets=each_test_dataset,
+                    datasets=self.test_dataset,
                     epoch=epoch, output_eval_file=test_partition_evaluation_output_file_path,
                     description="test_partition",
-                    model_to_test_with=each_trained_model, model_number_in=(index + 1))
+                    model_to_test_with=self.model, model_number_in=0)
                 fnc_score_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_fnc_score']
                 accuracy_test_partition = test_partition_evaluation_result['eval_acc']['cross_domain_acc']
                 all_accuracies_on_test_partition_by_all_models.append(accuracy_test_partition)
