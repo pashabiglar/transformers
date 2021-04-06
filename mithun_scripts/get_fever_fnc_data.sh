@@ -847,7 +847,6 @@ fi
 
 if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUBTASK_TYPE" = "few_shot" ] ; then
     echo "found task type to be 3t1s, taskname to be fevercrossdomain and subtask to be few shot"
-
 echo $DATA_DIR=
 mkdir -p $DATA_DIR
 
@@ -859,7 +858,7 @@ else
 
     # here we download lex plain text version of fnc in domain with 4 labels and append it at the end of fever4 labels in domain training data
     wget https://osf.io/a6tks/download -O cross_domain_train1.tsv
-    tail -200 cross_domain_train1.tsv >> $FILE
+    tail -2 cross_domain_train1.tsv >> $FILE
 
 
 fi
@@ -875,7 +874,7 @@ else
 
     # here we download delex figerspecific version of fnc in domain with 4 labels and append it at the end of fever4 labels in domain training data
     wget https://osf.io/78vbs/download -O cross_domain_train2.tsv
-    tail -200 cross_domain_train2.tsv >> $FILE
+    tail -2 cross_domain_train2.tsv >> $FILE
 
 
 fi
@@ -890,7 +889,7 @@ else
 
     # here we download delex oaner version of fnc in domain with 4 labels and append it at the end of fever4 labels in domain training data
     wget https://osf.io/djkg3/download -O cross_domain_train3.tsv
-    tail -200 cross_domain_train3.tsv >> $FILE
+    tail -2 cross_domain_train3.tsv >> $FILE
 
 
 fi
@@ -905,7 +904,7 @@ else
    wget https://osf.io/mauqv/download -O $FILE
     # here we download figerabstract delexicalised/version of fnc in domain with 4 labels and append it at the end of fever4 labels in domain training data
     wget https://osf.io/2grqh/download -O cross_domain_train4.tsv
-    tail -200 cross_domain_train4.tsv >> $FILE
+    tail -2 cross_domain_train4.tsv >> $FILE
 
 fi
 
