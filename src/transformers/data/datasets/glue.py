@@ -132,7 +132,11 @@ class GlueDataset(Dataset):
                     examples = self.processor.get_dev_examples(args.data_dir)
                     logger.info(f"Done readign dev data")
                 elif mode == Split.test:
-                    examples = self.processor.get_test_examples(args.data_dir)
+                    if index_in>0:
+                        #then we are using group learning.
+                        examples = self.processor.get_test_examples_given_dataset_index(args.data_dir,index_in)
+                    else:
+                        examples = self.processor.get_test_examples(args.data_dir)
                     logger.info(f"Done readign test data")
                 else:
                     examples = self.processor.get_train_examples(args.data_dir)
