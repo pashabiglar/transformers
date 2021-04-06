@@ -44,8 +44,8 @@ fi
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         wandb on
         wandb online
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/factverification_lex_standalone/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/factverification_lex_standalone/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/lex_standalone_fewshot/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/lex_standalone_fewshot/data"
 fi
 
 
@@ -81,7 +81,7 @@ export TASK_TYPE="lex" #[lex, delex, combined, 3t1s]
 # also if you want to add fewshot learning to your models (irrespective of the number of models), use: few_shot
 #note: in case of having more than 2 models, (i.e group learning), this variable is not checked (i.e the order of delexicalizations are fixed)
 # unless you are using few_shot+3t1s
-export SUBTASK_TYPE="" #['few_shot',"oa","figer_specific", "figer_abstract"]
+export SUBTASK_TYPE="few_shot" #['few_shot',"oa","figer_specific", "figer_abstract"]
 
 export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
 export BERT_MODEL_NAME="google/bert_uncased_L-12_H-128_A-2" #options include things like [bert-base-uncased,bert-base-cased] etc. refer src/transformers/tokenization_bert.py for more.
