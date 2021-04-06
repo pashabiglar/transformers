@@ -3,7 +3,7 @@
 #PBS -q standard
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
-#PBS -N 1model_lex_fevercrossdomain
+#PBS -N 3t1s_fewshot
 
 ### Specify the group name
 #PBS -W group_list=msurdeanu
