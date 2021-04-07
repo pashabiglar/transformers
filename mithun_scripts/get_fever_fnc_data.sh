@@ -25,7 +25,7 @@ else
     # for few shot learning
     # here we download lex plain text version of fnc in domain with 4 labels and append it at the end of fever4 labels in domain training data
     wget https://osf.io/a6tks/download -O cross_domain_train.tsv
-    tail -5 cross_domain_train.tsv >> $FILE
+    tail -7 cross_domain_train.tsv >> $FILE
 fi
 
 FILE=$DATA_DIR/dev.tsv
