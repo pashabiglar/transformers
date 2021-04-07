@@ -44,8 +44,8 @@ fi
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         wandb on
         wandb online
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/group_learning_fewshot_10percent/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/group_learning_fewshot_10percent/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/fewshot_fever2fnc_gl_20percent/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/fewshot_fever2fnc_gl_20percent/data"
 fi
 
 
