@@ -57,6 +57,10 @@ command line args:
 
 e.g.,`--total_no_of_models_including_student_and_its_teachers 1 --total_no_of_test_datasets 1 --task_type lex`
 
+- for few_shot also go to get_fever_fnc_data.sh and check if you have the right number of data points from cross domain
+under your condition. 
+e.g.,
+`if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUBTASK_TYPE" = "few_shot" ];`
 
 ## to run 2 models (as student teacher architecture)
 pass command line args:
