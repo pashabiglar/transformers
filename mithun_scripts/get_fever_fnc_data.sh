@@ -858,7 +858,7 @@ else
 
     # here we download lex plain text version of fnc in domain with 4 labels and append it at the end of fever4 labels in domain training data
     wget https://osf.io/a6tks/download -O cross_domain_train1.tsv
-    tail -8181 cross_domain_train1.tsv >> $FILE
+    tail -2 cross_domain_train1.tsv >> $FILE
 
 
 fi
@@ -874,7 +874,7 @@ else
 
     # here we download delex figerspecific version of fnc in domain with 4 labels and append it at the end of fever4 labels in domain training data
     wget https://osf.io/78vbs/download -O cross_domain_train2.tsv
-    tail -8181 cross_domain_train2.tsv >> $FILE
+    tail -2 cross_domain_train2.tsv >> $FILE
 
 
 fi
@@ -889,7 +889,7 @@ else
 
     # here we download delex oaner version of fnc in domain with 4 labels and append it at the end of fever4 labels in domain training data
     wget https://osf.io/djkg3/download -O cross_domain_train3.tsv
-    tail -8181 cross_domain_train3.tsv >> $FILE
+    tail -2 cross_domain_train3.tsv >> $FILE
 
 
 fi
@@ -904,7 +904,7 @@ else
    wget https://osf.io/mauqv/download -O $FILE
     # here we download figerabstract delexicalised/version of fnc in domain with 4 labels and append it at the end of fever4 labels in domain training data
     wget https://osf.io/2grqh/download -O cross_domain_train4.tsv
-    tail -8181 cross_domain_train4.tsv >> $FILE
+    tail -2 cross_domain_train4.tsv >> $FILE
 
 fi
 
