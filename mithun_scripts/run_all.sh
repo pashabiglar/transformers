@@ -44,8 +44,8 @@ fi
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         wandb on
         wandb online
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/group_learning_fever2fnc_lr10e5_classweight2_fewshot_50datapoints/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/group_learning_fever2fnc_lr10e5_classweight2_fewshot_50datapoints/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/group_learning_fever2fnc_lr10e5_classweight2_fewshot_200datapoints/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/group_learning_fever2fnc_lr10e5_classweight2_fewshot_200datapoints/data"
 fi
 
 
