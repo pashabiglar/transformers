@@ -25,7 +25,7 @@ else
     # for few shot learning
     # here we download lex plain text version of fnc in domain with 4 labels and append it at the end of fever4 labels in domain training data
     wget https://osf.io/a6tks/download -O cross_domain_train.tsv
-    tail -10 cross_domain_train.tsv >> $FILE
+    tail -300 cross_domain_train.tsv >> $FILE
 fi
 
 FILE=$DATA_DIR/dev.tsv
@@ -847,7 +847,6 @@ fi
 
 if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUBTASK_TYPE" = "few_shot" ] ; then
     echo "found task type to be 3t1s, taskname to be fevercrossdomain and subtask to be few shot"
-
 echo $DATA_DIR=
 mkdir -p $DATA_DIR
 

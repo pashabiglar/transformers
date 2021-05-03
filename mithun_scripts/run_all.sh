@@ -44,8 +44,8 @@ fi
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         wandb on
         wandb online
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/factverification_lex_standalone/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/factverification_lex_standalone/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/group_learning_fever2fnc_lr10e5_classweight2_fewshot_200datapoints/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/group_learning_fever2fnc_lr10e5_classweight2_fewshot_200datapoints/data"
 fi
 
 
@@ -75,13 +75,13 @@ export DATASET="fever" #the name of the home/in-domain dataset . options include
 
 # Will your model be a stand alone model (lex,delex) or a student teacher architecture one (combined) with two models,
 #update: if using group_learning setup (more than 2 models), use :3t1s
-export TASK_TYPE="lex" #[lex, delex, combined, 3t1s]
+export TASK_TYPE="3t1s" #[lex, delex, combined, 3t1s]
 
 #if your TASK_TYPE is combined,  what types of delexiccalizations will your student teacher model be using.
 # also if you want to add fewshot learning to your models (irrespective of the number of models), use: few_shot
 #note: in case of having more than 2 models, (i.e group learning), this variable is not checked (i.e the order of delexicalizations are fixed)
 # unless you are using few_shot+3t1s
-export SUBTASK_TYPE="" #['few_shot',"oa","figer_specific", "figer_abstract"]
+export SUBTASK_TYPE="few_shot" #['few_shot',"oa","figer_specific", "figer_abstract"]
 
 export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
 export BERT_MODEL_NAME="google/bert_uncased_L-12_H-128_A-2" #options include things like [bert-base-uncased,bert-base-cased] etc. refer src/transformers/tokenization_bert.py for more.
@@ -111,7 +111,6 @@ if [ $DOWNLOAD_FRESH_DATA == "true" ]; then
     ./get_fever_fnc_data.sh
     ./convert_to_mnli_format.sh
 fi
-
 
 echo "value of toy_data_path is $TOY_DATA_DIR_PATH"
 #create a small part of data as toy data. this will be used to run regresssion tests before the actual run starts
@@ -144,10 +143,10 @@ set CUDA_VISIBLE_DEVICES=2
 
 export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME      --do_train   --do_eval   --do_predict    \
 --data_dir $DATA_DIR    --max_seq_length $MAX_SEQ_LENGTH      --per_device_eval_batch_size=16        --per_device_train_batch_size=16       \
---learning_rate 1e-5      --num_train_epochs $EPOCHS     --output_dir $OUTPUT_DIR --overwrite_output_dir  \
+--learning_rate 10e-5      --num_train_epochs $EPOCHS     --output_dir $OUTPUT_DIR --overwrite_output_dir  \
 --weight_decay 0.01 --adam_epsilon 1e-6  --evaluate_during_training \
 --task_type $TASK_TYPE --machine_to_run_on $MACHINE_TO_RUN_ON --toy_data_dir_path $TOY_DATA_DIR_PATH  \
---overwrite_cache --total_no_of_models_including_student_and_its_teachers 1 --total_no_of_test_datasets 1 "
+--overwrite_cache --total_no_of_models_including_student_and_its_teachers 4 --total_no_of_test_datasets 4 --do_train_student_teacher"
 
 
 

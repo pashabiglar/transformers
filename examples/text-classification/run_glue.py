@@ -275,7 +275,7 @@ def run_training(model_args, data_args, training_args):
         list_test_datasets = []
         for n in range(training_args.total_no_of_test_datasets):
             test_dataset = (
-                GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test", cache_dir=model_args.cache_dir,index_in=n)
+                GlueDataset(data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test", cache_dir=model_args.cache_dir,index_in=n+1)
             )
 
             list_test_datasets.append(test_dataset)
@@ -285,7 +285,7 @@ def run_training(model_args, data_args, training_args):
     else:
         if (training_args.task_type == "lex"):
             test_dataset = (
-                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="dev",
+                GlueDataset(args=data_args, tokenizer=tokenizer_lex, task_type="lex", mode="test",
                             cache_dir=model_args.cache_dir)
                 if training_args.do_eval
                 else None
@@ -293,7 +293,7 @@ def run_training(model_args, data_args, training_args):
         else:
             if (training_args.task_type == "delex"):
                 test_dataset = (
-                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="dev",
+                    GlueDataset(args=data_args, tokenizer=tokenizer_delex, task_type="delex", mode="test",
                                 cache_dir=model_args.cache_dir)
                     if training_args.do_eval
                     else None
