@@ -891,17 +891,11 @@ class StudentTeacherTrainer:
         else:
             t_total = int(len(train_dataloader) // self.args.gradient_accumulation_steps * self.args.num_train_epochs)
             num_train_epochs = self.args.num_train_epochs
-
         weight_consistency_loss = 1
-        weight_classification_loss = 10
-
-
-        optimizer = None
-        scheduler = None
+        weight_classification_loss = 0.0875
         optimizer, scheduler = self.get_optimizers_for_multiple_models(num_training_steps=self.args.lr_max_value)
         assert optimizer is not None
         assert scheduler is not None
-
 
         # multi-gpu training (should be after apex fp16 initialization)
         if self.args.n_gpu > 1:
@@ -2218,8 +2212,6 @@ class OneModelAloneTrainer:
             t_total = int(len(train_dataloader) // self.args.gradient_accumulation_steps * self.args.num_train_epochs)
             num_train_epochs = self.args.num_train_epochs
 
-        weight_consistency_loss = 1
-        weight_classification_loss = 10
 
         optimizer = None
         scheduler = None

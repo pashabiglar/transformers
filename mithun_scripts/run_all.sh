@@ -44,8 +44,8 @@ fi
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         wandb on
         wandb online
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/fever2fnc_group_learning/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/fever2fnc_group_learning/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/fever2fnc_group_learning_classloss_weight_0pt0875/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/fever2fnc_group_learning_classloss_weight_0pt0875/data"
 fi
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
@@ -74,7 +74,7 @@ export DATASET="fever" #the name of the home/in-domain dataset . options include
 
 # Will your model be a stand alone model (lex,delex) or a student teacher architecture one (combined) with two models,
 #update: if using group_learning setup (more than 2 models), use :3t1s
-export TASK_TYPE="lex" #[lex, delex, combined, 3t1s]
+export TASK_TYPE="3t1s" #[lex, delex, combined, 3t1s]
 
 #if your TASK_TYPE is combined,  what types of delexiccalizations will your student teacher model be using.
 # also if you want to add fewshot learning to your models (irrespective of the number of models), use: few_shot
@@ -146,7 +146,7 @@ export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME     
 --learning_rate 1e-5      --num_train_epochs $EPOCHS     --output_dir $OUTPUT_DIR --overwrite_output_dir  \
 --weight_decay 0.01 --adam_epsilon 1e-6  --evaluate_during_training \
 --task_type $TASK_TYPE --machine_to_run_on $MACHINE_TO_RUN_ON --toy_data_dir_path $TOY_DATA_DIR_PATH  \
---overwrite_cache --total_no_of_models_including_student_and_its_teachers 1 --total_no_of_test_datasets 1"
+--overwrite_cache --total_no_of_models_including_student_and_its_teachers 4 --total_no_of_test_datasets 4 --do_train_student_teacher"
 
 
 

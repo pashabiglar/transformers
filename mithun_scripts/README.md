@@ -47,11 +47,11 @@ then run the code using:
 
 note: change the $MACHINE_TO_RUN_ON to whatever you picked above
 # Command Line Arguments
-
+command line args to change in ./run_all.sh:
 
 ### to train just 1 model (lex or delex)
 
-command line args to change in ./run_all.sh:
+
 - remove  `--do_train_student_teacher`
 - total_no_of_models_including_student_and_its_teachers=1
 - total_no_of_test_datasets=1
@@ -84,7 +84,12 @@ pass command line args:
 e.g.,
 `--task_type 3t1s --do_train_student_teacher  --total_no_of_models_including_student_and_its_teachers 4 --total_no_of_test_datasets 4`
 
-order of 4 models= : lex, figerspecific, oaner, figerabstract
+order of 4 models : 
+
+- model1=lex
+- model2=figerspecific
+- model3=oaner
+- model4=figerabstract
 
 ## Few Shot Learning with Group Learning
 - go to get_fever_fnc_data.sh and check if you have the right number of data points from cross domain
