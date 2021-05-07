@@ -109,7 +109,6 @@ if [ $DOWNLOAD_FRESH_DATA == "true" ]; then
     rm -rf $DATA_DIR
     ./get_fever_fnc_data.sh
     ./convert_to_mnli_format.sh
-    exit
 fi
 
 echo "value of toy_data_path is $TOY_DATA_DIR_PATH"
