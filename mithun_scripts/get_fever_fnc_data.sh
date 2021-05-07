@@ -59,13 +59,11 @@ fi
 # (with 4 labels), and test on fnc-dev partition)
 if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] ; then
 
-echo "found task type is lex and task name as fever cross domain"
+echo "found task type is lex and task name as fever cross domainsss"
 
 
 
 echo $DATA_DIR
-
-
 mkdir -p $DATA_DIR
 
 
@@ -75,7 +73,7 @@ if test -f "$FILE";then
 else
     wget https://osf.io/r6mdz/download -O $FILE
 fi
-exit
+
 
 FILE=$DATA_DIR/dev.tsv
 if test -f "$FILE";then
