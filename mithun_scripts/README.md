@@ -73,11 +73,12 @@ e.g.,
 ## to run 4 models (as  group learning architecture)
 pass command line args:
 
-total_no_of_models_including_student_and_its_teachers=4 
+- --do_train_student_teacher
+- total_no_of_models_including_student_and_its_teachers=4 
 
-total_no_of_test_datasets=4
+- total_no_of_test_datasets=4
 
-TASK_TYPE=3t1s
+- TASK_TYPE=3t1s
 
 
 e.g.,
