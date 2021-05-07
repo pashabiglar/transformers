@@ -62,9 +62,11 @@ if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] ; then
 echo "found task type is lex and task name as fever cross domain"
 
 
-echo $DATA_DIR
-mkdir -p $DATA_DIR
 
+echo $DATA_DIR
+
+
+mkdir -p $DATA_DIR
 
 
 FILE=$DATA_DIR/train.tsv
@@ -73,6 +75,7 @@ if test -f "$FILE";then
 else
     wget https://osf.io/r6mdz/download -O $FILE
 fi
+exit
 
 FILE=$DATA_DIR/dev.tsv
 if test -f "$FILE";then
