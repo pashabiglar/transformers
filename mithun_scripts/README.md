@@ -131,10 +131,22 @@ Then run this command in ./mithun_scripts.
 `bash run_all.sh --epochs_to_run 55 --machine_to_run_on clara --use_toy_data false --download_fresh_data true`
 
 
-Internal reference:
+# for Internal reference:
 
+to run on hpc:
 
+- make sure that this line is the last line in ./run_on_hpc_ocelote_venv_array.sh
 `bash run_all.sh --epochs_to_run 25 --machine_to_run_on hpc --use_toy_data false --download_fresh_data true #options include [laptop, hpc,clara]`
+
+- login to hpc (short cut keyh, followed by key o)
+- cd to right folder+ copy folder path
+
+- ./run_on_hpc_ocelote_venv_array.sh change absolute path to folder path at 3 locations
+export PYTHONPATH="/home/u11/mithunpaul/xdisk/lexStandAlone_fever2fnc/code/src"
+
+- go to ./run_all.sh, change the folderpath at 2 locations
+
+- qsub run_on_hpc_ocelote_venv_array.sh 
 
 `bash run_all.sh --epochs_to_run 2 --machine_to_run_on laptop --use_toy_data true --download_fresh_data true`
 
