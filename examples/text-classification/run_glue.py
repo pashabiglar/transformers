@@ -172,13 +172,13 @@ def run_training(model_args, data_args, training_args):
     #update@jan2021: when using multiple delexicalized dataset, we will use same delex vocabulary for all different types of delexicalization.
     #  this is because even though there are different tokens (like personC1 for oaner and actorc1 for figerspecific) ultimately we want it to be split into
     # person and c1- which any delex vocab will do
-
-    tokenizer_delex = AutoTokenizer.from_pretrained(
-        model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
-        cache_dir=model_args.cache_dir,
-        force_download=True,
-        tokenizer_type="delex"
-    )
+    if (training_args.do_train_student_teacher == True):
+        tokenizer_delex = AutoTokenizer.from_pretrained(
+            model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
+            cache_dir=model_args.cache_dir,
+            force_download=True,
+            tokenizer_type="delex"
+        )
 
     if (training_args.do_train_student_teacher == True):
         list_all_models = []
