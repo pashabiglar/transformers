@@ -172,6 +172,7 @@ def run_training(model_args, data_args, training_args):
     #update@jan2021: when using multiple delexicalized dataset, we will use same delex vocabulary for all different types of delexicalization.
     #  this is because even though there are different tokens (like personC1 for oaner and actorc1 for figerspecific) ultimately we want it to be split into
     # person and c1- which any delex vocab will do
+    tokenizer_delex=None
     if (training_args.do_train_student_teacher == True):
         tokenizer_delex = AutoTokenizer.from_pretrained(
             model_args.tokenizer_name if model_args.tokenizer_name else model_args.model_name_or_path,
@@ -313,7 +314,7 @@ def run_training(model_args, data_args, training_args):
     dev_compute_metrics = build_compute_metrics_fn(data_args.task_name)
     test_compute_metrics = build_compute_metrics_fn(data_args.task_name)
 
-
+    tokenizer_one_model_setup = None
     if training_args.do_train_student_teacher:
         #student teacher architecture expects 2 or more models
         assert len(model)>1
@@ -332,9 +333,16 @@ def run_training(model_args, data_args, training_args):
         )
     else:
         #if we want to just train one model.
+
+        if (training_args.task_type == "lex"):
+            assert tokenizer_lex is not None
+            tokenizer_one_model_setup=tokenizer_lex
+        else:
+            if (training_args.task_type == "delex"):
+                assert tokenizer_delex is not None
+                tokenizer_one_model_setup = tokenizer_delex
         trainer = OneModelAloneTrainer(
-            tokenizer_delex,
-            tokenizer_lex,
+            tokenizer_one_model_setup,
             models=model,
             args=training_args,
             train_dataset=train_dataset,

@@ -1607,8 +1607,7 @@ class OneModelAloneTrainer:
 
     def __init__(
             self,
-            tokenizer_delex,
-            tokenizer_lex,
+            tokenizer,
             models,
             test_dataset,
             args: TrainingArguments,
@@ -1632,8 +1631,8 @@ class OneModelAloneTrainer:
         """
         self.model = models
         self.eval_dataset = eval_dataset
-        self.lex_tokenizer = tokenizer_lex
-        self.delex_tokenizer = tokenizer_delex
+        self.tokenizer = tokenizer
+
 
         ###evaluate each model in the corresponding dataset
         self.test_dataset=test_dataset
@@ -2726,7 +2725,7 @@ class OneModelAloneTrainer:
 
         for inputs in tqdm(dataloader, desc=description):
             inputs = self._prepare_inputs(inputs, model)
-            plain_text_batch = self.delex_tokenizer.batch_decode(inputs['input_ids'])
+            plain_text_batch = self.tokenizer.batch_decode(inputs['input_ids'])
             plain_text_full.extend(plain_text_batch)
             loss, logits, labels = self.prediction_step(model, inputs, prediction_loss_only)
             if loss is not None:

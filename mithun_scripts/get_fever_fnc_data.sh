@@ -95,7 +95,6 @@ else
       #fnc-test lexicalized/plaintext- use this only once for final testing
       #wget https://osf.io/r5uvd/download -O $FILE
 
-
 fi
 fi
 
