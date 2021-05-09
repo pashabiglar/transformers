@@ -182,6 +182,9 @@ class TrainingArguments:
 
     learning_rate: float = field(default=1e-5, metadata={"help": "The initial learning rate for Adam."})
     weight_decay: float = field(default=0.0, metadata={"help": "Weight decay if we apply some."})
+
+
+    classification_loss_weight: float = field(default=1.0, metadata={"help": "used in group learning architecture."})
     adam_epsilon: float = field(default=1e-8, metadata={"help": "Epsilon for Adam optimizer."})
     max_grad_norm: float = field(default=1.0, metadata={"help": "Max gradient norm."})
 
