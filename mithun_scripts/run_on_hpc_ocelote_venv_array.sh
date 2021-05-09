@@ -34,7 +34,7 @@ module load python/3.6/3.6.5
 source my_virtual_env/bin/activate
 
 
-    export PYTHONPATH="/home/u11/mithunpaul/xdisk/fever2fnc_group_learning_bert_base_uncased_lr1e6_class_loss_weight_2/code/src"
+    export PYTHONPATH="/home/u11/mithunpaul/xdisk/fever2fnc_group_learning_bert_large_uncased_lr1e_6_class_loss_weight2/code/src"
 
 export CUDA_VISIBLE_DEVICES=0
 
@@ -45,7 +45,7 @@ python -m spacy download en_core_web_sm
 
    
 
-cd /home/u11/mithunpaul/xdisk/fever2fnc_group_learning_bert_base_uncased_lr1e6_class_loss_weight_2/code/examples
+cd /home/u11/mithunpaul/xdisk/fever2fnc_group_learning_bert_large_uncased_lr1e_6_class_loss_weight2/code/examples
 
 pip install -r requirements.txt
 pip install transformers
@@ -53,7 +53,7 @@ pip install wget
 pip install stop-words  --no-cache-dir
 
 
-cd /home/u11/mithunpaul/xdisk/fever2fnc_group_learning_bert_base_uncased_lr1e6_class_loss_weight_2/code/mithun_scripts
+cd /home/u11/mithunpaul/xdisk/fever2fnc_group_learning_bert_large_uncased_lr1e_6_class_loss_weight2/code/mithun_scripts
 
 bash run_all.sh --epochs_to_run 55 --machine_to_run_on hpc --use_toy_data false --download_fresh_data true #options include [laptop, hpc,clara]
 
