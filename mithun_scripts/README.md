@@ -136,7 +136,7 @@ Then run this command in ./mithun_scripts.
 
 `bash run_all.sh --epochs_to_run 55 --machine_to_run_on clara --use_toy_data false --download_fresh_data true`
 
-
+  
 # for Internal reference:
 
 to run on hpc:
