@@ -113,8 +113,8 @@ are the absolute paths to outputdirectory and the data directory you created ear
 `--use_toy_data false` : you can set this to True if you want to try on a very small sixe of data 
  --download_fresh_data true`
 
-
-
+`--classification_loss_weight`: how much weight you want to assign for classification loss as oppoosed to consistency loss (
+whose default weight is 1.). refer paper for details. used during training/tuning only
 
 ## Typical examples of command line arguments. 
 
