@@ -44,8 +44,8 @@ fi
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         wandb on
         wandb online
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/fever2fnc_group_learning_bert_large_uncased_lr1e_6_class_loss_weight2/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/fever2fnc_group_learning_bert_large_uncased_lr1e_6_class_loss_weight2/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/fever2fnc_group_learning_bert_base_uncased_lr1e5_class_loss_weight_0875_randomseed_23523/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/fever2fnc_group_learning_bert_base_uncased_lr1e5_class_loss_weight_0875_randomseed_23523/data"
 fi
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then

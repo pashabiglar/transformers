@@ -147,7 +147,7 @@ to run on hpc:
 - login to hpc (short cut keyh, followed by key o)
 - cd to right folder+ copy folder path
 
-- ./run_on_hpc_ocelote_venv_array.sh change absolute path to folder path at 3 locations
+- go to ./run_on_hpc_ocelote_venv_array.sh change absolute path to folder path at 3 locations
 export PYTHONPATH="/home/u11/mithunpaul/xdisk/lexStandAlone_fever2fnc/code/src"
 
 - go to ./run_all.sh, change the folderpath at 2 locations
