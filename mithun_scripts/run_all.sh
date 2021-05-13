@@ -83,7 +83,7 @@ export TASK_TYPE="3t1s" #[lex, delex, combined, 3t1s]
 #export SUBTASK_TYPE="few_shot" #['few_shot',"oa","figer_specific", "figer_abstract"]
 
 export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
-export BERT_MODEL_NAME="bert-large-uncased" #options include things like [bert-base-uncased,bert-base-cased , minibert(google/bert_uncased_L-12_H-128_A-2)] etc. refer src/transformers/tokenization_bert.py for more.
+export BERT_MODEL_NAME="bert-base-uncased" #options include things like [bert-base-uncased,bert-base-cased , minibert(google/bert_uncased_L-12_H-128_A-2)] etc. refer src/transformers/tokenization_bert.py for more.
 export MAX_SEQ_LENGTH="128"
 
 export basedir="$DATA_DIR_BASE/$DATASET"
@@ -142,10 +142,10 @@ set CUDA_VISIBLE_DEVICES=2
 
 export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME      --do_train   --do_eval   --do_predict    \
 --data_dir $DATA_DIR    --max_seq_length $MAX_SEQ_LENGTH      --per_device_eval_batch_size=16        --per_device_train_batch_size=16       \
---learning_rate 1e-6      --num_train_epochs $EPOCHS     --output_dir $OUTPUT_DIR --overwrite_output_dir  \
+--learning_rate 1e-5      --num_train_epochs $EPOCHS     --output_dir $OUTPUT_DIR --overwrite_output_dir  \
 --weight_decay 0.01 --adam_epsilon 1e-6  --evaluate_during_training \
 --task_type $TASK_TYPE --machine_to_run_on $MACHINE_TO_RUN_ON --toy_data_dir_path $TOY_DATA_DIR_PATH  \
---overwrite_cache --total_no_of_models_including_student_and_its_teachers 4 --total_no_of_test_datasets 4 --do_train_student_teacher --classification_loss_weight 2"
+--overwrite_cache --total_no_of_models_including_student_and_its_teachers 4 --total_no_of_test_datasets 4 --do_train_student_teacher --classification_loss_weight 0.0875"
 
 
 
