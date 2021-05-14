@@ -37,6 +37,11 @@ PRETRAINED_VOCAB_FILES_MAP = {
         #for uofa's student teacher model we use a vocab file built on top of bert-base-uncased-vocab.txt, but has mappings for delex tokens like PERSON-C1
         "bert-base-uncased-delex": "https://osf.io/zjrdv/download",
         "bert-base-cased-delex": "https://osf.io/3ubnh/download",
+
+        #note: bert-large also seems to be having the same vocab as bert-base. so reusing the same delex for both
+        "bert-large-uncased-delex": "https://osf.io/zjrdv/download",
+        "bert-large-cased-delex": "https://osf.io/3ubnh/download",
+
         "google/bert_uncased_L-12_H-128_A-2":"https://osf.io/r3sd5/download",
         "google/bert_uncased_L-12_H-128_A-2-delex":"https://osf.io/am492/download",
         "bert-base-uncased": "https://s3.amazonaws.com/models.huggingface.co/bert/bert-base-uncased-vocab.txt",

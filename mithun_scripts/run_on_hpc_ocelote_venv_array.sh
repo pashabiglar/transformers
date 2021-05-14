@@ -3,8 +3,7 @@
 #PBS -q standard
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
-#PBS -N 20dp_3t1s_fewshot
-
+#PBS -N 8rs_distbu_gl
 ### Specify the group name
 #PBS -W group_list=msurdeanu
 ### Used if job requires partial node only
@@ -34,7 +33,7 @@ module load python/3.6/3.6.5
 source my_virtual_env/bin/activate
 
 
-export PYTHONPATH="/home/u11/mithunpaul/xdisk/group_learning_fever2fnc_lr10e5_classweight2_fewshot_200datapoints/code/src"
+    export PYTHONPATH="/home/u11/mithunpaul/xdisk/fever2fnc_group_learning_distilbert_base_uncased_lr1e5_class_loss_weight_0875_randomseed_8/code/src"
 
 export CUDA_VISIBLE_DEVICES=0
 
@@ -45,7 +44,7 @@ python -m spacy download en_core_web_sm
 
    
 
-cd /home/u11/mithunpaul/xdisk/group_learning_fever2fnc_lr10e5_classweight2_fewshot_200datapoints/code/examples
+cd /home/u11/mithunpaul/xdisk/fever2fnc_group_learning_distilbert_base_uncased_lr1e5_class_loss_weight_0875_randomseed_8/code/examples
 
 pip install -r requirements.txt
 pip install transformers
@@ -53,7 +52,7 @@ pip install wget
 pip install stop-words  --no-cache-dir
 
 
-cd /home/u11/mithunpaul/xdisk/group_learning_fever2fnc_lr10e5_classweight2_fewshot_200datapoints/code/mithun_scripts
+cd /home/u11/mithunpaul/xdisk/fever2fnc_group_learning_distilbert_base_uncased_lr1e5_class_loss_weight_0875_randomseed_8/code/mithun_scripts
 
 bash run_all.sh --epochs_to_run 55 --machine_to_run_on hpc --use_toy_data false --download_fresh_data true #options include [laptop, hpc,clara]
 

@@ -46,21 +46,18 @@ then run the code using:
 `bash run_all.sh --epochs_to_run 25 --machine_to_run_on hpc --use_toy_data false --download_fresh_data true `
 
 note: change the $MACHINE_TO_RUN_ON to whatever you picked above
+# Command Line Arguments
+command line args to change in ./run_all.sh:
 
-### to run just 1 model
+### to train just 1 model (lex or delex)
 
-command line args:
+
 - remove  `--do_train_student_teacher`
 - total_no_of_models_including_student_and_its_teachers=1
 - total_no_of_test_datasets=1
 - task_type=[lex or delex]
 
 e.g.,`--total_no_of_models_including_student_and_its_teachers 1 --total_no_of_test_datasets 1 --task_type lex`
-
-- for few_shot also go to get_fever_fnc_data.sh and check if you have the right number of data points from cross domain
-under your condition. 
-e.g.,
-`if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUBTASK_TYPE" = "few_shot" ];`
 
 ## to run 2 models (as student teacher architecture)
 pass command line args:
@@ -76,17 +73,31 @@ e.g.,
 ## to run 4 models (as  group learning architecture)
 pass command line args:
 
-total_no_of_models_including_student_and_its_teachers=4 
+- --do_train_student_teacher
+- total_no_of_models_including_student_and_its_teachers=4 
 
-total_no_of_test_datasets=4
+- total_no_of_test_datasets=4
 
-TASK_TYPE=3t1s
+- TASK_TYPE=3t1s
 
 
 e.g.,
 `--task_type 3t1s --do_train_student_teacher  --total_no_of_models_including_student_and_its_teachers 4 --total_no_of_test_datasets 4`
 
-order of 4 models= : lex, figerspecific, oaner, figerabstract
+order of 4 models : 
+
+- model1=lex
+- model2=figerspecific
+- model3=oaner
+- model4=figerabstract
+
+## Few Shot Learning with Group Learning
+- go to get_fever_fnc_data.sh and check if you have the right number of data points from cross domain
+under your condition. 
+e.g.,look under
+`if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] && [ "$SUBTASK_TYPE" = "few_shot" ];`
+
+
 
 ## other command line arguments
 
@@ -94,7 +105,16 @@ order of 4 models= : lex, figerspecific, oaner, figerabstract
 tokenized data is stored and reused from the cache. Especially when `--download_fresh_data` is set
 to True, it is imperative that `--overwrite_cache` is added to the list of arguments.
 
+`--machine_to_run_on clara`: this is just the name of our machine here. You can use whatever machine you want. More important part is you need to change
+go to ./run_all.sh and under `--machine_to_run_on` export the paths for `OUTPUT_DIR_BASE` `DATA_DIR_BASE`, which 
+are the absolute paths to outputdirectory and the data directory you created earlier.
 
+
+`--use_toy_data false` : you can set this to True if you want to try on a very small sixe of data 
+ --download_fresh_data true`
+
+`--classification_loss_weight`: how much weight you want to assign for classification loss as oppoosed to consistency loss (
+whose default weight is 1.). refer paper for details. used during training/tuning only
 
 ## Typical examples of command line arguments. 
 
@@ -105,14 +125,36 @@ to True, it is imperative that `--overwrite_cache` is added to the list of argum
 
 ```
 
-#### for internal uofa reference
+# To start training
 
-scripts to run on each of the machines:
+go to ./run_all.sh
+- under --machine_to_run_onexport the paths for `OUTPUT_DIR_BASE` `DATA_DIR_BASE`, which 
+are the absolute paths to outputdirectory and the data directory you created earlier.
+e.g.,`export OUTPUT_DIR_BASE="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v1/output"`
 
+Then run this command in ./mithun_scripts. 
+
+`bash run_all.sh --epochs_to_run 55 --machine_to_run_on clara --use_toy_data false --download_fresh_data true`
+
+  
+# for Internal reference:
+
+to run on hpc:
+
+- make sure that this line is the last line in ./run_on_hpc_ocelote_venv_array.sh
 `bash run_all.sh --epochs_to_run 25 --machine_to_run_on hpc --use_toy_data false --download_fresh_data true #options include [laptop, hpc,clara]`
+
+- login to hpc (short cut keyh, followed by key o)
+- cd to right folder+ copy folder path
+
+- go to ./run_on_hpc_ocelote_venv_array.sh change absolute path to folder path at 3 locations
+export PYTHONPATH="/home/u11/mithunpaul/xdisk/lexStandAlone_fever2fnc/code/src"
+
+- go to ./run_all.sh, change the folderpath at 2 locations
+
+- qsub run_on_hpc_ocelote_venv_array.sh 
 
 `bash run_all.sh --epochs_to_run 2 --machine_to_run_on laptop --use_toy_data true --download_fresh_data true`
 
-`bash run_all.sh --epochs_to_run 55 --machine_to_run_on clara --use_toy_data false --download_fresh_data true`
 
 `bash run_all.sh --epochs_to_run 25 --machine_to_run_on clara --use_toy_data false --download_fresh_data true`
