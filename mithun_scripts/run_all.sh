@@ -44,8 +44,8 @@ fi
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         wandb on
         wandb online
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/fever2fnc_group_learning_bert_base_cased_lr1e5_class_loss_weight_0875_rs8/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/fever2fnc_group_learning_bert_base_cased_lr1e5_class_loss_weight_0875_rs8/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/fever2fnc_group_learning_distilbert_base_uncased_lr1e5_class_loss_weight_0875_randomseed_3082/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/fever2fnc_group_learning_distilbert_base_uncased_lr1e5_class_loss_weight_0875_randomseed_3082/data"
 fi
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
@@ -83,7 +83,7 @@ export TASK_TYPE="3t1s" #[lex, delex, combined, 3t1s]
 #export SUBTASK_TYPE="few_shot" #['few_shot',"oa","figer_specific", "figer_abstract"]
 
 export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
-export BERT_MODEL_NAME="bert-base-cased" #options include things like [bert-base-uncased,bert-base-cased , minibert(google/bert_uncased_L-12_H-128_A-2)] etc. refer src/transformers/tokenization_bert.py for more.
+export BERT_MODEL_NAME="distilbert-base-uncased" #options include things like [bert-base-uncased,bert-base-cased , minibert(google/bert_uncased_L-12_H-128_A-2)] etc. refer src/transformers/tokenization_bert.py for more.
 export MAX_SEQ_LENGTH="128"
 
 export basedir="$DATA_DIR_BASE/$DATASET"
