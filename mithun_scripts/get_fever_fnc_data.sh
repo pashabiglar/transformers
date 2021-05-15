@@ -1010,7 +1010,7 @@ fi
 
 
 if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fnccrossdomain" ] ; then
-    echo "found task type to be 3t1s, taskname to be fnccrossdomain and subtasktypes to be figerspecific and oa"
+    echo "found task type to be 3t1s, taskname to be fnccrossdomain "
 echo $DATA_DIR
 mkdir -p $DATA_DIR
 
