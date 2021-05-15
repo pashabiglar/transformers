@@ -3,7 +3,7 @@
 #PBS -q windfall
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
-#PBS -N 8rs_distbu_gl
+#PBS -N distb_lex
 ### Specify the group name
 #PBS -W group_list=msurdeanu
 ### Used if job requires partial node only
@@ -33,7 +33,7 @@ module load python/3.6/3.6.5
 source my_virtual_env/bin/activate
 
 
-    export PYTHONPATH="/home/u11/mithunpaul/xdisk/fever2fnc_group_learning_distilbert_base_uncased_lr1e5_class_loss_weight_0875_randomseed_8/code/src"
+    export PYTHONPATH="/home/u11/mithunpaul/xdisk/lexStandAlone_fever2fnc_distilbert_base_uncased_rs3082/code/src"
 
 export CUDA_VISIBLE_DEVICES=0
 
@@ -44,7 +44,7 @@ python -m spacy download en_core_web_sm
 
    
 
-cd /home/u11/mithunpaul/xdisk/fever2fnc_group_learning_distilbert_base_uncased_lr1e5_class_loss_weight_0875_randomseed_8/code/examples
+cd /home/u11/mithunpaul/xdisk/lexStandAlone_fever2fnc_distilbert_base_uncased_rs3082/code/examples
 
 pip install -r requirements.txt
 pip install transformers
