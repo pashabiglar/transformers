@@ -1,22 +1,37 @@
-# coding=utf-8
-# Copyright 2018 The Google AI Language Team Authors and The HuggingFace Inc. team.
-# Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-""" Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
+"""
+note from mithun @Sat Nov 28 15:25:43 MST 2020:
+
+This file loads a trained model and tests it on test partition.
+
+Steps:
+- got to mithun_scripts/run_all.sh and set export TASK_TYPE (i.e the type of trained model and data you are using eg."lex" or "combined")
+- uncomment the very last line to load model instead of training (i.e comment #./run_glue.sh and uncomment ./load_model_test.sh)
+- go to mithun_scripts/get_fever_fnc_data.sh
+- find the run corresponding to TASK_TYPE (e.g lex+fnccross domain)
+- change the download path of test partition to download cross domain test partition (during development time we were using cross domain dev partition)
+- note: its a good habit to confirm findings on dev
+
+- scroll down to model_path and specify where your model is (e.g: url or hardcoded  machine path :model_path)
+Note: the model might be too huge to load on local machine. or even download from url. its better to run on hpc with hardcoded path
+
+- To run: go to huggingface/mithun_scripts command line sand use the run script (e.g.using: bash run_all.sh --epochs_to_run 2 --machine_to_run_on laptop --use_toy_data true --download_fresh_data true)
+Note: The download_fresh_data true has to be done only once per  TASK_TYPE
+Note: if you are running from pycharm, the configuration you should use is "load combined trained model and get attention weights"
 
 
-import dataclasses
+
+additional steps if running on hpc:
+
+
+- find the name of the folder on hpc
+- Go to local machine.
+- change it in 3 files
+1)run_all.sh (2instances)
+2)run_on_hpc_ocelote_venv_array.sh (3 instances)
+3) the corresponding config file you are going to use (see below) 2 instances
+
+
+"""
 import logging
 import os
 import sys
@@ -32,12 +47,12 @@ from transformers import (
     HfArgumentParser,
     TrainingArguments,
     StudentTeacherTrainer,
+    OneModelAloneTrainer,
     glue_compute_metrics,
     glue_output_modes,
     glue_tasks_num_labels,
     set_seed,
 )
-import wget
 import torch
 
 
@@ -271,17 +286,16 @@ def run_loading_and_testing(model_args, data_args, training_args):
             test_compute_metrics=test_compute_metrics
         )
     else:
-        trainer = Trainer(
-            tokenizer_delex,
+        trainer = OneModelAloneTrainer(
             tokenizer_lex,
-            model=model,
-            args=training_args,
-            train_dataset=None,
-            eval_dataset=eval_dataset,
-            test_dataset=test_dataset,
-            eval_compute_metrics=dev_compute_metrics,
-            test_compute_metrics=test_compute_metrics
-        )
+        models=model,
+        args=training_args,
+        train_dataset=None,
+        eval_dataset=eval_dataset,
+        test_dataset=test_dataset,
+        test_compute_metrics=test_compute_metrics,
+        eval_compute_metrics=dev_compute_metrics
+    )
 
     #best student teacher trained (aka combined) models
     #url = 'https://osf.io/twbmu/download' # light-plasma combined trained model-this model gave 59.31 cross domain fnc score and 69.21for cross domain accuracy
@@ -330,16 +344,10 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #model_path = wget.download(url)
 
     #uncomment and use this if you want to load the model from local disk.
-    #model:with corresponding graph on wandb named:dulcet-thunder-1674
-    #model_path = "/work/mithunpaul/huggingface_bertmini_multiple_teachers_v1/output/fever/fevercrossdomain/3t1s/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/pytorch_model_e0c7ad.bin"
-    # model:with corresponding graph on wandb named:lilac-rain-1683
-    #model_path="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v5/output/fever/fevercrossdomain/3t1s/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/pytorch_model_a21010.bin"
-    # model:with corresponding graph on wandb named:playful-pond-1680
-    #model_path = "/work/mithunpaul/huggingface_bertmini_multiple_teachers_v2/output/fever/fevercrossdomain/3t1s/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/pytorch_model_423597.bin"
 
 
-    model_path="/home/u11/mithunpaul/xdisk/fnc2fever_gl_bert_base_cased_rs8939/output/fever/fevercrossdomain/lex/bert-base-cased/128"
-
+    model_path="/home/u11/mithunpaul/xdisk/fnc2fever_gl_bert_base_cased_rs8939/output/fever/fevercrossdomain/lex/bert-base-cased/128/pytorch_model_e07dd9.bin"
+    #model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/pytorch_model_e07dd9.bin"
 
     device = torch.device(training_args.device)
 
@@ -368,8 +376,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
         model_to_test_with=model)
     with open(predictions_on_dev_file_path, "w") as writer:
         writer.write("")
-    trainer.write_predictions_to_disk(plain_text, gold_labels, predictions_logits, predictions_on_dev_file_path,
-                                      eval_dataset)
+    #trainer.write_predictions_to_disk(plain_text, gold_labels, predictions_logits, predictions_on_dev_file_path,eval_dataset)
 
     # load the trained model and test it on test partition (which in this case is fnc-dev)
     output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
@@ -386,10 +393,11 @@ def run_loading_and_testing(model_args, data_args, training_args):
         model_to_test_with=model)
     with open(predictions_on_test_file_path, "w") as writer:
         writer.write("")
-    trainer.write_predictions_to_disk(plain_text, gold_labels, predictions_logits, predictions_on_test_file_path,
-                                               test_dataset)
-    logger.info(f"test partition prediction details written to {test_partition_evaluation_output_file_path}")
+    #trainer.write_predictions_to_disk(plain_text, gold_labels, predictions_logits, predictions_on_test_file_path,test_dataset)
+    #logger.info(f"test partition prediction details written to {test_partition_evaluation_output_file_path}")
 
+    print(f"dev_partition_evaluation_result={dev_partition_evaluation_result}")
+    print(f"test_partition_evaluation_result={test_partition_evaluation_result}")
 
     assert test_partition_evaluation_result is not None
     assert dev_partition_evaluation_result is not None
