@@ -24,12 +24,15 @@ Original file is located at
 # limitations under the License.
 
 """
-note from mithun @Sat Nov 28 15:25:43 MST 2020:to run this file, you need to set settings in two places. ./run_all.sh 
+note from mithun @Sat Nov 28 15:25:43 MST 2020:
+to run this file, you need to set settings in two places. ./run_all.sh 
 and here at the config file
-For example: to load a model trained on lexicalized data, and to run it over test partition (which is cross domain's  
+
+For example: to load a model trained on lexicalized data, and to run it over test partition (which should ideally be cross domain's  
 dev partition)
+
 1) got to ./run_all.sh and set export TASK_TYPE="lex" or "combined"
-2) pick either of CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC or CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP depending on 
+2) in this file (./load_trained_model_print_attention_weights.py)pick either of CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_HPC or CONFIG_FILE_TO_TEST_LEX_MODEL_WITH_LAPTOP depending on 
 whether you are running on laptop or hpc server
 
 3) download data from terminal at folder huggingface/mithun_scripts  using: bash run_all.sh --epochs_to_run 2 --machine_to_run_on laptop --use_toy_data true --download_fresh_data true
@@ -41,6 +44,10 @@ also if your running folder name is changed (which usually happens in hpc) you n
 3) the corresponding config file you are going to use (see below) 2 instances
 
 Note: if you are running from pycharm, the configuration you should use is "load combined trained model and get attention weights"
+
+4) go to ./run_all.sh . Comment #./run_glue.sh and uncomment ./load_model_test.sh
+5) go to hpc folder (which you created earlier and had copied path to ) and do `qsub run_on_hpc_ocelote_venv_array.sh` like we run any training runs    
+
 """
 
 

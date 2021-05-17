@@ -327,9 +327,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #url = 'https://osf.io/ja9b6/download'
 
     url = 'https://osf.io/uxv9n/download'
-    #""
-
-    model_path = wget.download(url)
+    #model_path = wget.download(url)
 
     #uncomment and use this if you want to load the model from local disk.
     #model:with corresponding graph on wandb named:dulcet-thunder-1674
@@ -339,8 +337,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
     # model:with corresponding graph on wandb named:playful-pond-1680
     #model_path = "/work/mithunpaul/huggingface_bertmini_multiple_teachers_v2/output/fever/fevercrossdomain/3t1s/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/pytorch_model_423597.bin"
 
-    # model:with corresponding graph on wandb named:olive-dawn-1721. this is a rerun of playful pond. we were saving wrong model till now.
-    #model_path="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v1/output/fever/fevercrossdomain/3t1s/figerspecific/google/bert_uncased_L-12_H-128_A-2/128/pytorch_model_55a068.bin"
+
+    model_path="/home/u11/mithunpaul/xdisk/fnc2fever_gl_bert_base_cased_rs8939/output/fever/fevercrossdomain/lex/bert-base-cased/128"
 
 
     device = torch.device(training_args.device)

@@ -44,8 +44,8 @@ fi
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         wandb on
         wandb online
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/lexStandAlone_fever2fnc_distilbert_base_uncased_rs3082/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/lexStandAlone_fever2fnc_distilbert_base_uncased_rs3082/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/load_trained_model_predict/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/load_trained_model_predict/data"
 fi
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
@@ -156,8 +156,8 @@ export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME     
 
 
 #actual code runs
-./run_glue.sh
-#./load_model_test.sh
+#./run_glue.sh
+./load_model_test.sh
 
 
 
