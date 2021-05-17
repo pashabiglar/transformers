@@ -783,7 +783,7 @@ class FncCrossDomainProcessor(DataProcessor):
         """See base class."""
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev")
 
-    #in multiple teacher land, we will be using each trained model to test on corresponding dataset. So now
+    # multiple teacher land, we will be using each trained model to test on corresponding dataset. So now
     # get data from the corresponding test dataset
     def get_test_examples_given_dataset_index(self, data_dir, index=0):
         """See base class."""
