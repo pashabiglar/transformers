@@ -44,8 +44,8 @@ fi
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         wandb on
         wandb online
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/fnc2fever_lexStandAlone_bert_base_uncased_rs8939/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/fnc2fever_lexStandAlone_bert_base_uncased_rs8939/data"
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/fnc2fever_lexStandAlone_base_uncased_rs8/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/fnc2fever_lexStandAlone_base_uncased_rs8/data"
 fi
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
