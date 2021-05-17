@@ -59,7 +59,7 @@ fi
 # (with 4 labels), and test on fnc-dev partition)
 if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fevercrossdomain" ] ; then
 
-echo "found task type is lex and task name as fever cross domainsss"
+echo "found task type is lex and task name as fever cross domainxxxx"
 
 
 
@@ -79,21 +79,24 @@ FILE=$DATA_DIR/dev.tsv
 if test -f "$FILE";then
     echo "$FILE exists"
 else
-    wget https://osf.io/azf6t/download -O $FILE
+    #wget https://osf.io/azf6t/download -O $FILE
+
+    #cross domain dev partition. use for sanity check when running on test partition
+    wget https://osf.io/jfpbv//download -O $FILE
 fi
 
 
 
-#note that the test file is fnc dev partition
+#note that the test partition file usually is cross domain(in this case fnc) dev partition
 FILE=$DATA_DIR/test.tsv
 if test -f "$FILE";then
     echo "$FILE exists"
 else
       #fnc-dev-lexicalized/
-      wget https://osf.io/jfpbv//download -O $FILE
+      #wget https://osf.io/jfpbv//download -O $FILE
 
       #fnc-test lexicalized/plaintext- use this only once for final testing
-      #wget https://osf.io/r5uvd/download -O $FILE
+      wget https://osf.io/r5uvd/download -O $FILE
 
 fi
 fi
