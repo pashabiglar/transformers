@@ -346,7 +346,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #uncomment and use this if you want to load the model from local disk.
 
 
-    model_path="/home/u11/mithunpaul/xdisk/fnc2fever_gl_bert_base_cased_rs8939/output/fever/fevercrossdomain/lex/bert-base-cased/128/pytorch_model_e07dd9.bin"
+    model_path="/home/u11/mithunpaul/xdisk/./toreuse14/output/fever/fevercrossdomain/lex/bert-base-uncased/128/pytorch_model_410817.bin"
     #model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/pytorch_model_e07dd9.bin"
 
     device = torch.device(training_args.device)
