@@ -82,7 +82,7 @@ else
     #wget https://osf.io/azf6t/download -O $FILE
 
     #in-domain test partition. to be used only once for paper
-    wget https://osf.io/q38pn/download -O $FILE
+    https://osf.io/85h4z/download -O $FILE
 
 
 fi
