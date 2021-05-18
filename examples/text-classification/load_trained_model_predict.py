@@ -354,13 +354,13 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #rosy lion
     #url = 'https://osf.io/ja9b6/download'
 
-    url = 'https://osf.io/4p76r/download'
-    #model_path = wget.download(url)
+    url = 'https://osf.io/4amsb/download'
+    model_path = wget.download(url)
 
     #uncomment and use this if you want to load the model from local disk.
 
 
-    model_path="/home/u11/mithunpaul/xdisk/fnc2fever_lexStandAlone_bert_base_uncased_rs8939/output/fever/fnccrossdomain/lex/bert-base-uncased/128/pytorch_model_abe124.bin"
+    #model_path="/home/u11/mithunpaul/xdisk/fnc2fever_lexStandAlone_bert_base_uncased_rs8939/output/fever/fnccrossdomain/lex/bert-base-uncased/128/pytorch_model_abe124.bin"
     #model_path = "/Users/mordor/Downloads/pytorch_model_abe124.bin"
 
     device = torch.device(training_args.device)
