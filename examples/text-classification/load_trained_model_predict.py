@@ -355,12 +355,12 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #url = 'https://osf.io/ja9b6/download'
 
     url = 'https://osf.io/4p76r/download'
-    model_path = wget.download(url)
+    #model_path = wget.download(url)
 
     #uncomment and use this if you want to load the model from local disk.
 
 
-    #model_path="./fnc2fever_gl_bert_base_cased_rs8/output/fever/fnccrossdomain/3t1s/bert-base-cased/128/pytorch_model_34e256.bin"
+    model_path="/home/u11/mithunpaul/xdisk/fnc2fever_gl_bert_base_uncased_rs8/output/fever/fnccrossdomain/3t1s/bert-base-uncased/128/pytorch_model_ce8c29.bin"
     #model_path = "/Users/mordor/Downloads/fnc2fever_bert_base_cased_eager_george_34e256.bin"
 
     device = torch.device(training_args.device)

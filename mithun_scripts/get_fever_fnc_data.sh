@@ -1016,8 +1016,11 @@ else
     # note: we are loading the dev partition of fnc dataset here..(which will be found in my osf.io account folder: student_teacher_fact_verification/all_input_files/fnc/in_domain/figerspecifid/dev.tsv)
     #wget https://osf.io/msxfg/download -O $FILE
 
+    #fnc-dev plainttext
+    wget https://osf.io/64syf/download  -O $FILE
+
     #delex oaner version of fnc-test- to be used for final papaer
-    wget https://osf.io/eywd2/download -O $FILE
+    #wget https://osf.io/eywd2/download -O $FILE
 fi
 
 
