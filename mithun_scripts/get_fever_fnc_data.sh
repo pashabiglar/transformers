@@ -1125,7 +1125,7 @@ else
      #wget https://osf.io/jfpbv/download -O $FILE
 
      #cross domain test partition. use it only once just before submitting paper.
-     #fnc-test lexicalized/plaintext- use this only once for final testing
+     #fnc-test lexicalized/plaintext-
       wget https://osf.io/r5uvd/download -O $FILE
 fi
 

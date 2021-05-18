@@ -9,7 +9,7 @@
 ### Used if job requires partial node only
 #PBS -l place=pack:shared
 ### Walltime is how long your job will run
-#PBS -l walltime=00:15:00
+#PBS -l walltime=00:30:00
 ### Joins standard error and standd out
 #PBS -j oe
 
