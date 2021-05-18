@@ -76,10 +76,14 @@ if test -f "$FILE";then
     echo "$FILE exists"
 else
     #indomain aka fnc-dev
-    wget https://osf.io/d9wnf/download  -O $FILE
+    #wget https://osf.io/d9wnf/download  -O $FILE
 
     #crossdomain dev aka fever-dev
     #wget https://osf.io/xdbh6/download -O $FILE
+
+    #fnc-test plaintext
+    wget https://osf.io/64syf/download  -O $FILE
+
 fi
 
 
@@ -88,10 +92,10 @@ if test -f "$FILE";then
 echo "$FILE exists"
 else
     #crossdomain dev aka fever-dev
-    wget https://osf.io/xdbh6/download -O $FILE
+    #wget https://osf.io/xdbh6/download -O $FILE
 
     #fever-test plainteext . to be used only once just before submitting paper
-    #wget https://osf.io/q38pn/download -O $FILE
+    wget https://osf.io/q38pn/download -O $FILE
 
 fi
 
