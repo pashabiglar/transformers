@@ -31,6 +31,13 @@ additional steps if running on hpc:
 3) the corresponding config file you are going to use (see below) 2 instances
 
 
+
+when loading and testing using a model that was trained on grouplearning setting.
+- just load it as if its a model trained using one model arch
+- dont use --do_student_teacher
+- change task_type to delex.
+- change data in get_fever_fnc_data.sh to download only test.tsv (not test1.tsv etc)
+
 """
 import logging
 import os
@@ -162,7 +169,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     # Distributed training:
     # The .from_pretrained methods guarantee that only one local process can concurrently
     # download model_teacher & vocab.
-  
+
     config = AutoConfig.from_pretrained(
         model_args.config_name if model_args.config_name else model_args.model_name_or_path,
         num_labels=num_labels,
@@ -350,8 +357,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #uncomment and use this if you want to load the model from local disk.
 
 
-    model_path="/home/u11/mithunpaul/xdisk/toreuse11/fever2fnc_group_learning_bert_base_cased_lr1e5_class_loss_weight_0875_rs8939/output/fever/fevercrossdomain/3t1s/bert-base-cased/128/pytorch_model_891a68.bin"
-    #model_path = "/Users/mordor/research/huggingface/mithun_scripts/trained_models/pytorch_model_e07dd9.bin"
+    #model_path="/home/u11/mithunpaul/xdisk/toreuse11/fever2fnc_group_learning_bert_base_cased_lr1e5_class_loss_weight_0875_rs8939/output/fever/fevercrossdomain/3t1s/bert-base-cased/128/pytorch_model_891a68.bin"
+    model_path = "/Users/mordor/Downloads/trained_model_bert_base_cased_group_learning_891a68.bin"
 
     device = torch.device(training_args.device)
 
@@ -391,10 +398,10 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #hardcoding the epoch value, since its needed down stream. that code was written assuming evaluation happens at the end of each epoch
     trainer.epoch=1
     test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = trainer._intermediate_eval(
-        datasets=test_dataset,
-        epoch=trainer.epoch,
-        output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",
-        model_to_test_with=model)
+            datasets=test_dataset,
+            epoch=trainer.epoch,
+            output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",
+            model_to_test_with=model)
     with open(predictions_on_test_file_path, "w") as writer:
         writer.write("")
     #trainer.write_predictions_to_disk(plain_text, gold_labels, predictions_logits, predictions_on_test_file_path,test_dataset)
