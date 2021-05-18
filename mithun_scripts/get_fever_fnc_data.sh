@@ -1110,10 +1110,10 @@ if test -f "$FILE";then
     echo "$FILE exists"
 else
     #loading fever-dev-figerspecific as dev dataset. note: ideally we must have four dev files also. but i am ignoring that since main goal is to test on cross domain, which we are doing in test partition
-    wget https://osf.io/r5pz3/download -O $FILE
+    #wget https://osf.io/r5pz3/download -O $FILE
 
     #in-domain test partition. to be used only once for paper
-    #wget https://osf.io/85h4z/download -O $FILE
+    wget https://osf.io/85h4z/download -O $FILE
 fi
 
 
