@@ -1062,7 +1062,8 @@ fi
 
 
 if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fevercrossdomain" ] ; then
-    echo "found task type to be 3t1s, taskname to be fevercrossdomain and subtasktypes to be figerspecific and oa"
+    echo "found task type to be 3t1s,v1"
+
 echo $DATA_DIR
 mkdir -p $DATA_DIR
 
@@ -1110,6 +1111,9 @@ if test -f "$FILE";then
 else
     #loading fever-dev-figerspecific as dev dataset. note: ideally we must have four dev files also. but i am ignoring that since main goal is to test on cross domain, which we are doing in test partition
     wget https://osf.io/r5pz3/download -O $FILE
+
+    #in-domain test partition. to be used only once for paper
+    #wget https://osf.io/85h4z/download -O $FILE
 fi
 
 
@@ -1118,7 +1122,11 @@ FILE="$DATA_DIR/test1.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
-     wget https://osf.io/jfpbv/download -O $FILE
+     #wget https://osf.io/jfpbv/download -O $FILE
+
+     #cross domain test partition. use it only once just before submitting paper.
+     #fnc-test lexicalized/plaintext- use this only once for final testing
+      wget https://osf.io/r5uvd/download -O $FILE
 fi
 
 
