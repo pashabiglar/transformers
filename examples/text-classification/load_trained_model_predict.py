@@ -361,7 +361,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
 
     model_path="/home/u11/mithunpaul/xdisk/fnc2fever_lexStandAlone_bert_base_uncased_rs8939/output/fever/fnccrossdomain/lex/bert-base-uncased/128/pytorch_model_abe124.bin"
-    #model_path = "/Users/mordor/Downloads/pytorch_model_1eccb2.bin"
+    #model_path = "/Users/mordor/Downloads/pytorch_model_abe124.bin"
 
     device = torch.device(training_args.device)
 
