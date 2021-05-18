@@ -360,8 +360,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #uncomment and use this if you want to load the model from local disk.
 
 
-    model_path="/home/u11/mithunpaul/xdisk/fnc2fever_gl_bert_base_uncased_rs8/output/fever/fnccrossdomain/3t1s/bert-base-uncased/128/pytorch_model_ce8c29.bin"
-    #model_path = "/Users/mordor/Downloads/fnc2fever_bert_base_cased_eager_george_34e256.bin"
+    model_path="/home/u11/mithunpaul/xdisk/load_trained_model_predict/output/fever/fnccrossdomain/lex/bert-base-cased/128/pytorch_model_446810.bin"
+    #model_path = "/Users/mordor/Downloads/fnc2fever_lex_bert_base_cased_dauntelessernenity.bin"
 
     device = torch.device(training_args.device)
 
@@ -401,7 +401,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     #hardcoding the epoch value, since its needed down stream. that code was written assuming evaluation happens at the end of each epoch
     trainer.epoch=1
-    if len(test_dataset)>0:
+    if training_args.task_type=="3t1s":
         for index, (each_test_dataset) in enumerate(test_dataset):
             test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = trainer._intermediate_eval(
                 datasets=each_test_dataset,

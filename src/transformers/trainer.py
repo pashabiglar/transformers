@@ -2240,7 +2240,6 @@ class OneModelAloneTrainer:
                     * (torch.distributed.get_world_size() if self.args.local_rank != -1 else 1)
             )
         logger.info("***** Running training *****")
-        logger.info("  Num examples = %d", self.num_examples(train_dataloader))
         logger.info("  Num Epochs = %d", num_train_epochs)
         logger.info("  Instantaneous batch size per device = %d", self.args.per_device_train_batch_size)
         logger.info("  Total train batch size (w. parallel, distributed & accumulation) = %d", total_train_batch_size)
@@ -2705,7 +2704,6 @@ class OneModelAloneTrainer:
 
         batch_size = dataloader.batch_size
         logger.debug("***** Running %s at epoch number:%s *****", description, self.epoch)
-        logger.debug("  Num examples = %d", self.num_examples(dataloader))
         logger.debug("  Batch size = %d", batch_size)
         eval_losses: List[float] = []
         preds: torch.Tensor = None
