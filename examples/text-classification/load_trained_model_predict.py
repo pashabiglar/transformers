@@ -360,8 +360,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #uncomment and use this if you want to load the model from local disk.
 
 
-    model_path="/home/u11/mithunpaul/xdisk/load_trained_model_predict/output/fever/fnccrossdomain/lex/bert-base-cased/128/pytorch_model_446810.bin"
-    #model_path = "/Users/mordor/Downloads/fnc2fever_lex_bert_base_cased_dauntelessernenity.bin"
+    model_path="/home/u11/mithunpaul/xdisk/fnc2fever_lexStandAlone_bert_base_uncased_rs8939/output/fever/fnccrossdomain/lex/bert-base-uncased/128/pytorch_model_abe124.bin"
+    #model_path = "/Users/mordor/Downloads/pytorch_model_1eccb2.bin"
 
     device = torch.device(training_args.device)
 
