@@ -242,6 +242,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
                     else None
                 )
 
+
+
     if (training_args.do_train_student_teacher == True):
         list_test_datasets = []
         for n in range(training_args.total_no_of_test_datasets):
@@ -281,10 +283,9 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
         return compute_metrics_fn
 
-    dev_compute_metrics = build_compute_metrics_fn("feverindomain")
-    test_compute_metrics = build_compute_metrics_fn("fevercrossdomain")
 
-
+    dev_compute_metrics = build_compute_metrics_fn(data_args.task_name)
+    test_compute_metrics = build_compute_metrics_fn(data_args.task_name)
 
     if training_args.do_train_student_teacher:
         trainer = StudentTeacherTrainer(
@@ -353,14 +354,14 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #rosy lion
     #url = 'https://osf.io/ja9b6/download'
 
-    url = 'https://osf.io/zx2sk/download'
+    url = 'https://osf.io/4p76r/download'
     model_path = wget.download(url)
 
     #uncomment and use this if you want to load the model from local disk.
 
 
-    #model_path="/home/u11/mithunpaul/xdisk/toreuse9/output/fever/fevercrossdomain/3t1s/bert-base-uncased/128/pytorch_model_e0201f.bin"
-    #model_path = "/Users/mordor/Downloads/trained_model_bert_base_uncased_group_learning_silverwave_e0201f.bin"
+    #model_path="./fnc2fever_gl_bert_base_cased_rs8/output/fever/fnccrossdomain/3t1s/bert-base-cased/128/pytorch_model_34e256.bin"
+    #model_path = "/Users/mordor/Downloads/fnc2fever_bert_base_cased_eager_george_34e256.bin"
 
     device = torch.device(training_args.device)
 

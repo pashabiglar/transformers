@@ -965,7 +965,7 @@ fi
 
 
 if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fnccrossdomain" ] ; then
-    echo "found task type to be 3t1s, taskname to be fnccrossdomain and subtasktypes to be figerspecific and oa"
+    echo "found task type to be 3t1s, taskname to be fnccrossdomain "
 echo $DATA_DIR
 mkdir -p $DATA_DIR
 
@@ -1012,47 +1012,67 @@ if test -f "$FILE";then
     echo "$FILE exists"
 else
 
-#note that we are loading the cross domain's dev partition as test partition here
-# note: we are loading the dev partition of fnc dataset here..(which will be found in my osf.io account folder: student_teacher_fact_verification/all_input_files/fnc/in_domain/figerspecifid/dev.tsv)
+    #note that we are loading the cross domain's dev partition as test partition here
+    # note: we are loading the dev partition of fnc dataset here..(which will be found in my osf.io account folder: student_teacher_fact_verification/all_input_files/fnc/in_domain/figerspecifid/dev.tsv)
+    #wget https://osf.io/msxfg/download -O $FILE
 
-    wget https://osf.io/msxfg/download -O $FILE
+    #delex oaner version of fnc-test- to be used for final papaer
+    wget https://osf.io/eywd2/download -O $FILE
 fi
 
 
 ####test partitions aka cross domain dev partitions
-#plain text version of fever-dev
+
 FILE="$DATA_DIR/test1.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
-     wget https://osf.io/xdbh6/download -O $FILE
+    #plain text version of fever-dev
+     #wget https://osf.io/xdbh6/download -O $FILE
+
+     #plain text version of fever-test partition. to be used for final paper only
+      wget https://osf.io/q38pn/download -O $FILE
+
 fi
 
 
-#figerspec delexicalized version of fever-dev
+
 FILE="$DATA_DIR/test2.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
-     wget https://osf.io/4n7b6/download -O $FILE
+
+    #figerspec delexicalized version of fever-dev
+     #wget https://osf.io/4n7b6/download -O $FILE
+
+       #figerspec delexicalized version of fever-test. only to be used for paper
+       wget https://osf.io/t2dua/download -O $FILE
 
 fi
 
 
-#fever-dev delexicalized with oaner
+
 FILE="$DATA_DIR/test3.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
-      wget https://osf.io/5qupx/download -O $FILE
+#fever-dev delexicalized with oaner
+      #wget https://osf.io/5qupx/download -O $FILE
+
+      #fever-test delexicalized with oaner 3 labels
+      wget https://osf.io/u2kw8/download -O $FILE
 fi
 
-#fever dev delexicalized with figer abstract
 FILE="$DATA_DIR/test4.tsv"
 if test -f "$FILE";then
 echo "$FILE exists"
 else
+        #fever dev delexicalized with figer abstract
       wget https://osf.io/khc9e/download -O $FILE
+
+      #fever ttest delexicalized with figer abstract
+      wget https://osf.io/fyq5s/download -O $FILE
+
 fi
 #fi of if corresponding to 3t1s check
 fi

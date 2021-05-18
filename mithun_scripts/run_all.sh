@@ -82,8 +82,8 @@ export TASK_TYPE="3t1s" #[lex, delex, combined, 3t1s]
 # unless you are using few_shot+3t1s
 #export SUBTASK_TYPE="few_shot" #['few_shot',"oa","figer_specific", "figer_abstract"]
 
-export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
-export BERT_MODEL_NAME="bert-base-uncased" #options include things like [bert-base-uncased,bert-base-cased , minibert(google/bert_uncased_L-12_H-128_A-2)] etc. refer src/transformers/tokenization_bert.py for more.
+export TASK_NAME="fnccrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
+export BERT_MODEL_NAME="bert-base-cased" #options include things like [bert-base-uncased,bert-base-cased , minibert(google/bert_uncased_L-12_H-128_A-2)] etc. refer src/transformers/tokenization_bert.py for more.
 export MAX_SEQ_LENGTH="128"
 
 export basedir="$DATA_DIR_BASE/$DATASET"
