@@ -44,8 +44,10 @@ fi
 if [ $MACHINE_TO_RUN_ON == "hpc" ]; then
         wandb on
         wandb online
-        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/lexStandAlone_fever2fnc_distilbert_base_uncased_rs3082/output"
-        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/lexStandAlone_fever2fnc_distilbert_base_uncased_rs3082/data"
+
+        export OUTPUT_DIR_BASE="/home/u11/mithunpaul/xdisk/fnc2fever_gl_bert_base_uncased_rs8/output"
+        export DATA_DIR_BASE="/home/u11/mithunpaul/xdisk/fnc2fever_gl_bert_base_uncased_rs8/data"
+
 fi
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
@@ -58,7 +60,7 @@ fi
 if [ $MACHINE_TO_RUN_ON == "clara" ]; then
         wandb on
         wandb online
-        export OUTPUT_DIR_BASE="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v1/output"
+            export OUTPUT_DIR_BASE="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v1/output"
         export DATA_DIR_BASE="/work/mithunpaul/huggingface_bertmini_multiple_teachers_v1/data"
 
 fi
@@ -82,8 +84,8 @@ export TASK_TYPE="lex" #[lex, delex, combined, 3t1s]
 # unless you are using few_shot+3t1s
 #export SUBTASK_TYPE="few_shot" #['few_shot',"oa","figer_specific", "figer_abstract"]
 
-export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
-export BERT_MODEL_NAME="distilbert-base-uncased" #options include things like [bert-base-uncased,bert-base-cased , minibert(google/bert_uncased_L-12_H-128_A-2)] etc. refer src/transformers/tokenization_bert.py for more.
+export TASK_NAME="fnccrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
+export BERT_MODEL_NAME="bert-base-uncased" #options include things like [bert-base-uncased,bert-base-cased , minibert(google/bert_uncased_L-12_H-128_A-2)] etc. refer src/transformers/tokenization_bert.py for more.
 export MAX_SEQ_LENGTH="128"
 
 export basedir="$DATA_DIR_BASE/$DATASET"
@@ -145,7 +147,10 @@ export args="--model_name_or_path $BERT_MODEL_NAME   --task_name $TASK_NAME     
 --learning_rate 1e-5      --num_train_epochs $EPOCHS     --output_dir $OUTPUT_DIR --overwrite_output_dir  \
 --weight_decay 0.01 --adam_epsilon 1e-6  --evaluate_during_training \
 --task_type $TASK_TYPE --machine_to_run_on $MACHINE_TO_RUN_ON --toy_data_dir_path $TOY_DATA_DIR_PATH  \
---overwrite_cache --total_no_of_models_including_student_and_its_teachers 1 --total_no_of_test_datasets 1"
+
+--overwrite_cache  \
+ --do_train_student_teacher --total_no_of_models_including_student_and_its_teachers 4 --total_no_of_test_datasets 4 --classification_loss_weight 10"
+
 
 
 

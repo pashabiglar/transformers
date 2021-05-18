@@ -563,6 +563,56 @@ fi
 
 fi
 
+####################################for 1 teacher 1 student ...cross domain , when all delex files are delexicalized with oa
+
+
+#this is used for plain text runs. on fnccrossdomain. i.e trained on fnc (with 3 labels) and tested on fever-dev (as test partition) which has 3 labels
+
+
+if [ "$TASK_TYPE" = "lex" ] && [ "$TASK_NAME" = "fnccrossdomain" ] ;then
+
+    echo "found task type to be lex, taskname to be fnccrossdomain "
+
+echo $DATA_DIR
+mkdir -p $DATA_DIR
+
+#this is fnc-train plain text
+FILE="$DATA_DIR/train.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    wget https://osf.io/dwef7/download -O $FILE
+fi
+
+#fnc-dev plain text version
+FILE="$DATA_DIR/dev.tsv"
+if test -f "$FILE";then
+    echo "$FILE exists"
+else
+    #indomain aka fnc-dev
+    wget https://osf.io/d9wnf/download  -O $FILE
+
+    #crossdomain dev aka fever-dev
+    #wget https://osf.io/xdbh6/download -O $FILE
+fi
+
+
+FILE="$DATA_DIR/test.tsv"
+if test -f "$FILE";then
+echo "$FILE exists"
+else
+    #crossdomain dev aka fever-dev
+    wget https://osf.io/xdbh6/download -O $FILE
+
+    #fever-test plainteext . to be used only once just before submitting paper
+    #wget https://osf.io/q38pn/download -O $FILE
+
+fi
+
+#fi of if corresponding to 3t1s check
+fi
+
+
 
 
 ####################################for 1 teacher 1 student ...cross domain , when all delex files are delexicalized with oa
@@ -960,7 +1010,7 @@ fi
 
 
 if [ "$TASK_TYPE" = "3t1s" ] && [ "$TASK_NAME" = "fnccrossdomain" ] ; then
-    echo "found task type to be 3t1s, taskname to be fnccrossdomain and subtasktypes to be figerspecific and oa"
+    echo "found task type to be 3t1s, taskname to be fnccrossdomain "
 echo $DATA_DIR
 mkdir -p $DATA_DIR
 
