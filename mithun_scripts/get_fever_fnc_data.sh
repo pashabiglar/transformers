@@ -1113,7 +1113,11 @@ else
     #wget https://osf.io/r5pz3/download -O $FILE
 
     #in-domain test partition. to be used only once for paper
-    wget https://osf.io/85h4z/download -O $FILE
+    #wget https://osf.io/85h4z/download -O $FILE
+
+
+    #fever-test partition delexicalized using oaner
+    wget https://osf.io/knuq8/download -O $FILE
 fi
 
 
