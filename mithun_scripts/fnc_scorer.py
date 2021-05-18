@@ -68,11 +68,11 @@ def report_score(actual,predicted):
     best_score, _,gold_label_spread = score_submission(actual,actual)
     print_gold_label_distribution(gold_label_spread)
     print_confusion_matrix(cm)
-    print("Score: " +str(score) + " out of " + str(best_score) + "\t("+str(score*100/best_score) + "%)")
+    print("FNC Score: " +str(score) + " out of " + str(best_score) + "\t("+str(score*100/best_score) + "%)")
     return score*100/best_score
 
 #read tsv predictions from sandeeps tensorflow code
-test_prediction_logits=pd.read_csv("predictions/predictions_on_test_partition_e4780a_lex_stand_alone_jan30th2021_aclpaper_acc67pt62.txt",sep="\t",header=None)
+test_prediction_logits=pd.read_csv("predictions/predictions_on_test_partition_3e310f.txt",sep="\t",header=None)
 test_gold=pd.read_csv("predictions/fnc_dev_gold.tsv",sep="\t",header=None)
 
 

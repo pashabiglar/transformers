@@ -4,6 +4,7 @@
 #PBS -l select=1:ncpus=28:mem=168gb:pcmem=6gb:ngpus=1:os7=True
 ### Specify a name for the job
 #PBS -N 8glbunfnf
+
 ### Specify the group name
 #PBS -W group_list=msurdeanu
 ### Used if job requires partial node only
@@ -32,8 +33,7 @@ module load python/3.6/3.6.5
 #this is the only line you need if you already have a virtual_env set up
 source my_virtual_env/bin/activate
 
-
-    export PYTHONPATH="/home/u11/mithunpaul/xdisk/fnc2fever_gl_bert_base_uncased_rs8/code/src"
+export PYTHONPATH="/home/u11/mithunpaul/xdisk/fnc2fever_gl_bert_base_uncased_rs8/code/src"
 
 export CUDA_VISIBLE_DEVICES=0
 
@@ -44,7 +44,9 @@ python -m spacy download en_core_web_sm
 
    
 
-cd /home/u11/mithunpaul/xdisk/fnc2fever_gl_bert_base_uncased_rs8/code/examples
+
+cd /home/u11/mithunpaul/xdisk/lexStandAlone_fever2fnc_distilbert_base_uncased_rs3082/code/examples
+
 
 pip install -r requirements.txt
 pip install transformers

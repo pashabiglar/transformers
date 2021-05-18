@@ -39,8 +39,11 @@ random.seed(334534)
 
 
 #note: the delex_predictions is veestigial. its not used. calculation for statistical signficance will bee only between lex_predictions and student_teacher_predictions
-delex_predictions=pd.read_csv("predictions/predictions_on_test_partition_e4780a_lex_stand_alone_jan30th2021_aclpaper_acc67pt62.txt", sep="\t")
-lex_predictions=pd.read_csv("predictions/predictions_on_test_partition_e4780a_lex_stand_alone_jan30th2021_aclpaper_acc67pt62.txt", sep="\t")
+delex_predictions=pd.read_csv("predictions/predictions_on_test_partition_a1ad54.txt", sep="\t")
+lex_predictions=pd.read_csv("predictions/predictions_on_test_partition_a1ad54.txt", sep="\t")
+
+#group learning bert-base-cased may 14th 2021. EMNLP paper
+student_teacher_predictions=pd.read_csv("predictions/predictions_on_test_partition_3e310f.txt", sep="\t")
 
 #73.72
 #student_teacher_predictions=pd.read_csv("predictions/predictions_on_test_partition_e0c7ad.txt", sep="\t")
@@ -176,8 +179,10 @@ find_which_system_is_better(accuracy_list_student_teacher,accuracy_list_lex)
 
 assert len(accuracy_list_student_teacher)==len(accuracy_list_lex)==NO_OF_RUNS
 
-scatter_plot_given_two_distributions(accuracy_list_student_teacher, accuracy_list_lex, np.arange(1, NO_OF_RUNS + 1))
-
-# average=sum(accuracy_list)/len(accuracy_list)
+#
+# average=sum(accuracy_list_student_teacher)/len(accuracy_list_lex)
 # print(f"average of given sample={average}")
 # pvalue_101(74.74,4.0,NO_OF_RUNS,average)
+
+scatter_plot_given_two_distributions(accuracy_list_student_teacher, accuracy_list_lex, np.arange(1, NO_OF_RUNS + 1))
+
