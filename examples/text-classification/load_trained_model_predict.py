@@ -34,9 +34,10 @@ additional steps if running on hpc:
 
 when loading and testing using a model that was trained on grouplearning setting.
 - just load it as if its a model trained using one model arch
-- dont use --do_student_teacher
-- change task_type to delex.
-- change data in get_fever_fnc_data.sh to download only test.tsv (not test1.tsv etc)
+- find of the 4 models which one was the best. and change data download accordingly (e.g. if oaner was the best model, set tasktype=delex, subtask=oa...if lex model was the best model, set tasktype=lex, and run like a lex model)
+- i.e dont use --do_student_teacher
+- use:  --total_no_of_models_including_student_and_its_teachers 1 --total_no_of_test_datasets 1
+
 
 """
 import logging
@@ -357,8 +358,8 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #uncomment and use this if you want to load the model from local disk.
 
 
-    #model_path="/home/u11/mithunpaul/xdisk/toreuse11/fever2fnc_group_learning_bert_base_cased_lr1e5_class_loss_weight_0875_rs8939/output/fever/fevercrossdomain/3t1s/bert-base-cased/128/pytorch_model_891a68.bin"
-    model_path = "/Users/mordor/Downloads/trained_model_bert_base_cased_group_learning_891a68.bin"
+    model_path="/home/u11/mithunpaul/xdisk/toreuse11/fever2fnc_group_learning_bert_base_cased_lr1e5_class_loss_weight_0875_rs8939/output/fever/fevercrossdomain/3t1s/bert-base-cased/128/pytorch_model_891a68.bin"
+    #model_path = "/Users/mordor/Downloads/trained_model_bert_base_cased_group_learning_891a68.bin"
 
     device = torch.device(training_args.device)
 
