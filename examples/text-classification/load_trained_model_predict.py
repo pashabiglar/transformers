@@ -40,6 +40,7 @@ when loading and testing using a model that was trained on grouplearning setting
 
 
 """
+import wget
 import logging
 import os
 import sys
@@ -352,13 +353,13 @@ def run_loading_and_testing(model_args, data_args, training_args):
     #rosy lion
     #url = 'https://osf.io/ja9b6/download'
 
-    url = 'https://osf.io/uxv9n/download'
-    #model_path = wget.download(url)
+    url = 'https://osf.io/q4hbx/download'
+    model_path = wget.download(url)
 
     #uncomment and use this if you want to load the model from local disk.
 
 
-    model_path="/home/u11/mithunpaul/xdisk/toreuse11/fever2fnc_group_learning_bert_base_cased_lr1e5_class_loss_weight_0875_rs8939/output/fever/fevercrossdomain/3t1s/bert-base-cased/128/pytorch_model_891a68.bin"
+    #model_path="/home/u11/mithunpaul/xdisk/toreuse11/fever2fnc_group_learning_bert_base_cased_lr1e5_class_loss_weight_0875_rs8939/output/fever/fevercrossdomain/3t1s/bert-base-cased/128/pytorch_model_891a68.bin"
     #model_path = "/Users/mordor/Downloads/trained_model_bert_base_cased_group_learning_891a68.bin"
 
     device = torch.device(training_args.device)
