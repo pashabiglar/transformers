@@ -74,7 +74,7 @@ export DATASET="fever" #the name of the home/in-domain dataset . options include
 
 # Will your model be a stand alone model (lex,delex) or a student teacher architecture one (combined) with two models,
 #update: if using group_learning setup (more than 2 models), use :3t1s
-export TASK_TYPE="lex" #[lex, delex, combined, 3t1s]
+export TASK_TYPE="3t1s" #[lex, delex, combined, 3t1s]
 
 #if your TASK_TYPE is combined,  what types of delexiccalizations will your student teacher model be using.
 # also if you want to add fewshot learning to your models (irrespective of the number of models), use: few_shot
@@ -83,7 +83,7 @@ export TASK_TYPE="lex" #[lex, delex, combined, 3t1s]
 #export SUBTASK_TYPE="few_shot" #['few_shot',"oa","figer_specific", "figer_abstract"]
 
 export TASK_NAME="fevercrossdomain" #options for TASK_NAME  include fevercrossdomain,feverindomain,fnccrossdomain,fncindomain
-export BERT_MODEL_NAME="bert-base-uncased" #options include things like [bert-base-uncased,bert-base-cased , minibert(google/bert_uncased_L-12_H-128_A-2)] etc. refer src/transformers/tokenization_bert.py for more.
+export BERT_MODEL_NAME="bert-base-cased" #options include things like [bert-base-uncased,bert-base-cased , minibert(google/bert_uncased_L-12_H-128_A-2)] etc. refer src/transformers/tokenization_bert.py for more.
 export MAX_SEQ_LENGTH="128"
 
 export basedir="$DATA_DIR_BASE/$DATASET"
