@@ -389,6 +389,7 @@ def run_loading_and_testing(model_args, data_args, training_args):
     with open(predictions_on_dev_file_path, "w") as writer:
         writer.write("")
     #trainer.write_predictions_to_disk(plain_text, gold_labels, predictions_logits, predictions_on_dev_file_path,eval_dataset)
+    print(f"dev_partition_evaluation_result={dev_partition_evaluation_result}")
 
     # load the trained model and test it on test partition (which in this case is fnc-dev)
     output_dir_absolute_path = os.path.join(os.getcwd(), training_args.output_dir)
@@ -398,18 +399,28 @@ def run_loading_and_testing(model_args, data_args, training_args):
 
     #hardcoding the epoch value, since its needed down stream. that code was written assuming evaluation happens at the end of each epoch
     trainer.epoch=1
-    test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = trainer._intermediate_eval(
+    if len(test_dataset)>0:
+        for index, (each_test_dataset) in enumerate(test_dataset):
+            test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = trainer._intermediate_eval(
+                datasets=each_test_dataset,
+                epoch=trainer.epoch,
+                output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",
+                model_to_test_with=model)
+            print(f"test_partition_evaluation_result{index}={test_partition_evaluation_result}")
+    else:
+        test_partition_evaluation_result, plain_text, gold_labels, predictions_logits = trainer._intermediate_eval(
             datasets=test_dataset,
             epoch=trainer.epoch,
             output_eval_file=test_partition_evaluation_output_file_path, description="test_partition",
             model_to_test_with=model)
+        print(f"test_partition_evaluation_result={test_partition_evaluation_result}")
+
     with open(predictions_on_test_file_path, "w") as writer:
         writer.write("")
     #trainer.write_predictions_to_disk(plain_text, gold_labels, predictions_logits, predictions_on_test_file_path,test_dataset)
     #logger.info(f"test partition prediction details written to {test_partition_evaluation_output_file_path}")
 
-    print(f"dev_partition_evaluation_result={dev_partition_evaluation_result}")
-    print(f"test_partition_evaluation_result={test_partition_evaluation_result}")
+
 
     assert test_partition_evaluation_result is not None
     assert dev_partition_evaluation_result is not None
