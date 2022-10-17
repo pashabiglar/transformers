@@ -52,9 +52,12 @@ fi
 
 if [ $MACHINE_TO_RUN_ON == "laptop" ]; then
         wandb off
-        export DATA_DIR_BASE="/Users/mordor/research/huggingface/src/transformers/data/datasets"
-        export OUTPUT_DIR_BASE="/Users/mordor/research/huggingface/mithun_scripts/output"
-        export PYTHONPATH="/Users/mordor/research/huggingface/src/"
+        export DATA_DIR_BASE="/Users/pasha/Documents/GitHub/QNLP_MitchPy/factverification/code/transformers/data/datasets"
+        # "/Users/mordor/research/huggingface/src/transformers/data/datasets"
+        export OUTPUT_DIR_BASE="/Users/pasha/Documents/GitHub/QNLP_MitchPy/factverification/code/transformers/mithun_scripts/output"
+        # "/Users/mordor/research/huggingface/mithun_scripts/output"
+        export PYTHONPATH="/Users/pasha/Documents/GitHub/QNLP_MitchPy/factverification/code/transformers/src"
+        # /Users/mordor/research/huggingface/src/"
 fi
 
 if [ $MACHINE_TO_RUN_ON == "clara" ]; then
